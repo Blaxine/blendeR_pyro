@@ -96,6 +96,12 @@ def scene():
     return bpy.context.scene
 
 
+def clear_scene():
+    """Remove the factory startup's cube, lamp and camera."""
+    for obj in list(scene().objects):
+        bpy.data.objects.remove(obj, do_unlink=True)
+
+
 def eevee_id():
     """BLENDER_EEVEE on 5.x, BLENDER_EEVEE_NEXT on 4.5."""
     items = bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items

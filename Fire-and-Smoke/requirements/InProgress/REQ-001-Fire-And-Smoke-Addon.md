@@ -188,8 +188,8 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S023 | S | Add light modes | A per-effect mode that shows or hides the owned light and sets the plane ray visibility from Architectural decisions. | S013 | add-on package |
-|  | S024 | T | Test light modes | New `tests/test_light.py`: visibility flags per mode; flicker changes over frames with handlers absent; Real's mean brightness stays close across engines, using the measured 0.2034 and 0.2057 as the reference. | S023 | `tests/test_light.py` |
+| ✅ | S023 | S | Add light modes | A per-effect mode that shows or hides the owned light and sets the plane ray visibility from Architectural decisions. | S013 | add-on package |
+| ✅ | S024 | T | Test light modes | New `tests/test_light.py`: visibility flags per mode; flicker changes over frames with handlers absent; Real's mean brightness stays close across engines, using the measured 0.2034 and 0.2057 as the reference. | S023 | `tests/test_light.py` |
 |  | S025 | O | Compare engines by eye | Compare Real in both engines in the look test scene on 5.1 and 5.2. | S023 | `docs/LOOK_TEST.md` |
 
 ### Slice 4 — Create, delete, ownership and copied scenes
@@ -407,3 +407,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-01 | Blaxine | Initial plan. |
 | 2026-11-01 | Blaxine | Slice 1 built. Later slices proceed before the look verdict on the owner's instruction; AC1 stays open until the owner records a verdict. Modifier inputs on 5.2 use modifier.properties.inputs. |
 | 2026-11-01 | Blaxine | Slice 2 built: facing rule, view sync, steep fade and glow card. View sync passes in real windows on 5.1 and 5.2; 4.5 unproven, so S016 stays open. |
+| 2026-11-01 | Blaxine | Slice 3 built: Real, Emissive and Both light modes. Real is about 6% apart across engines in the test scene. |

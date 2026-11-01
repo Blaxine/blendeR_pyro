@@ -6,6 +6,7 @@ import bpy
 from .. import constants as C
 from .nodekit import Kit
 
+INDIRECT_BOOST = 15.0
 FLAME_STOPS = (
     (0.02, (0.80, 0.030, 0.000, 1.0)),
     (0.28, (1.00, 0.115, 0.002, 1.0)),
@@ -73,7 +74,10 @@ def build_flame_material(name, speed=1.35, strength=0.8):
     kit.plug(emission.inputs["Color"], colour)
     strength_value = kit.node("ShaderNodeValue", name="fas_strength")
     strength_value.outputs[0].default_value = strength
-    kit.plug(emission.inputs["Strength"], strength_value.outputs[0])
+    # In Emissive and Both, the flames light the scene harder than they look.
+    light_path = kit.node("ShaderNodeLightPath")
+    indirect = kit.remap(light_path.outputs["Is Camera Ray"], 0.0, 1.0, INDIRECT_BOOST, 1.0)
+    kit.plug(emission.inputs["Strength"], kit.mul(strength_value.outputs[0], indirect))
 
     transparent = kit.node("ShaderNodeBsdfTransparent")
     mix = kit.node("ShaderNodeMixShader")

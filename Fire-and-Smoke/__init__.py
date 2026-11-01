@@ -17,9 +17,9 @@ for _name in [n for n in sys.modules if n.startswith(__name__ + ".")]:
 
 from . import constants as C
 from .core import view_sync
-from .effects import campfire
+from .effects import campfire, light_mode
 
-_MODULES = (campfire,)
+_MODULES = (campfire, light_mode)
 
 
 def _all_classes():

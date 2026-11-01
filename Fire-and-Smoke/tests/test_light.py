@@ -25,6 +25,7 @@ def _set(mode):
 
 
 def test_setup():
+    lib.clear_scene()
     lib.add_camera()
     lib.setup_render(background=(0.02, 0.02, 0.02))
     bpy.ops.mesh.primitive_plane_add(size=40.0)
