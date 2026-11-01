@@ -8,6 +8,8 @@
       --engines A,B       CYCLES, EEVEE or both (default both)
       --frames N          clip length (default 96)
       --size WxH          resolution (default 960x540)
+      --day               an overcast sky, for judging smoke
+      --distance M        camera distance (default 9)
       --speed             measure Cycles against an empty 1080p frame and print it
 
 The scene is built here so it stays the same on every Blender version and between
@@ -30,6 +32,7 @@ PRESET = lib._arg("--preset", "CAMPFIRE")
 ENGINES = lib._arg("--engines", "CYCLES,EEVEE").split(",")
 FRAMES = int(lib._arg("--frames", "96"))
 WIDTH, HEIGHT = (int(v) for v in lib._arg("--size", "960x540").split("x"))
+DISTANCE = float(lib._arg("--distance", "9"))
 STILL_FRAMES = (12, 24, 36, 48, 60, 72)
 VERSION = "%d.%d" % bpy.app.version[:2]
 
@@ -51,7 +54,9 @@ def build_scene():
 
     world = bpy.data.worlds.new("Dusk")
     world.use_nodes = True
-    world.node_tree.nodes["Background"].inputs[0].default_value = (0.006, 0.009, 0.018, 1.0)
+    # Smoke is judged against an overcast day, fire against dusk.
+    sky = (0.42, 0.5, 0.62, 1.0) if "--day" in lib.ARGS else (0.006, 0.009, 0.018, 1.0)
+    world.node_tree.nodes["Background"].inputs[0].default_value = sky
     scene.world = world
 
     bpy.ops.mesh.primitive_plane_add(size=60.0)
@@ -67,14 +72,14 @@ def build_scene():
     # Mid-ground: the fire fills about a third of the frame height.
     pivot = bpy.data.objects.new("CameraPivot", None)
     scene.collection.objects.link(pivot)
-    pivot.location = (0.0, 0.0, 0.9)
+    pivot.location = (0.0, 0.0, DISTANCE * 0.1)
     camera = bpy.data.objects.new("Camera", bpy.data.cameras.new("Camera"))
     camera.data.lens = 50.0
     scene.collection.objects.link(camera)
     scene.camera = camera
     camera.parent = pivot
-    camera.location = (0.0, -9.0, 0.7)
-    camera.rotation_euler = (math.radians(90.0 - math.degrees(math.atan2(0.7, 9.0))), 0.0, 0.0)
+    camera.location = (0.0, -DISTANCE, 0.7)
+    camera.rotation_euler = (math.radians(90.0), 0.0, 0.0)
     pivot.rotation_euler = (0.0, 0.0, 0.0)
     pivot.keyframe_insert("rotation_euler", index=2, frame=1)
     pivot.rotation_euler = (0.0, 0.0, math.radians(70.0))
@@ -84,8 +89,9 @@ def build_scene():
 
 
 def create_effect():
-    if "campfire_create" in dir(bpy.ops.fas) and PRESET == "CAMPFIRE":
-        return bpy.ops.fas.campfire_create()
+    direct = {"CAMPFIRE": "campfire_create", "SMOKE": "smoke_create", "COLUMN": "column_create"}
+    if PRESET in direct:
+        return getattr(bpy.ops.fas, direct[PRESET])()
     return bpy.ops.fas.effect_create(preset=PRESET)
 
 

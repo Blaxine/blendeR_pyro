@@ -213,10 +213,10 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S032 | S | Generalise the plane stack | Parameterise the stack so each effect kind sets size, count, spacing and scroll speed. Fire must not change appearance. | S026 | add-on package |
-|  | S033 | S | Build the smoke material | The shading and render method chosen in S013, with no fire light. | S032 | add-on package |
-|  | S034 | S | Add smoke kinds | Create operators for smoke on a point and smoke columns. | S033 | add-on package |
-|  | S035 | T | Test smoke | New `tests/test_smoke.py`: create and delete; pixels differ between frames; no black in Cycles; Campfire values unchanged. | S034 | `tests/test_smoke.py` |
+| ✅ | S032 | S | Generalise the plane stack | Parameterise the stack so each effect kind sets size, count, spacing and scroll speed. Fire must not change appearance. | S026 | add-on package |
+| ✅ | S033 | S | Build the smoke material | The shading and render method chosen in S013, with no fire light. | S032 | add-on package |
+| ✅ | S034 | S | Add smoke kinds | Create operators for smoke on a point and smoke columns. | S033 | add-on package |
+| ✅ | S035 | T | Test smoke | New `tests/test_smoke.py`: create and delete; pixels differ between frames; no black in Cycles; Campfire values unchanged. | S034 | `tests/test_smoke.py` |
 |  | S036 | O | Compare smoke by eye | Check both kinds in both engines on 5.1 and 5.2. | S034 | `docs/LOOK_TEST.md` |
 
 ### Slice 6 — Fire on a mesh
@@ -340,7 +340,7 @@ S055 → S056 → S057 → S058 → S059                            Slice 10
 - [x] **Q6 — Resolved.** Planes still evaluate and hold their last sensible direction, Face Viewport keeps working, Create warns, and the panel says the scene needs a camera before rendering. *(Claude, for owner review)*
 - [ ] **Q7 — Mesh fire light.** Where does the light go for a mesh fire? Deferred until S038.
 - [ ] **Q8 — Dense and missing sources.** What is the limit for dense or deforming meshes, and what happens when the source is deleted? Deferred until S039, using real measurements.
-- [ ] **Q9 — Smoke shading.** Does smoke react to scene lights or carry its own shading, and which render method does it use? It must match in both engines. Deferred until S013.
+- [x] **Q9 — Resolved.** Smoke carries its own shading, using the Blended render method, so it matches in both engines (mean pixel difference 0.001 to 0.004). It doesn't pick up scene lights or a nearby fire's colour. *(Claude, for owner review)*
 - [ ] **Q10 — Ground line.** How is the hard line hidden where planes cut through the ground or a mesh? If it can't be hidden, it joins the store page limits. Deferred until S013.
 - [ ] **Q11 — Legacy particles.** Do embers stay on legacy particles? Deferred until a supported Blender release deprecates them.
 
@@ -409,3 +409,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-01 | Blaxine | Slice 2 built: facing rule, view sync, steep fade and glow card. View sync passes in real windows on 5.1 and 5.2; 4.5 unproven, so S016 stays open. |
 | 2026-11-01 | Blaxine | Slice 3 built: Real, Emissive and Both light modes. Real is about 6% apart across engines in the test scene. |
 | 2026-11-01 | Blaxine | Slice 4 built: effect records, error pipeline, Delete, copied scenes and the tracked bounce limit. |
+| 2026-11-01 | Blaxine | Slice 5 built: smoke on a point and smoke columns, carrying their own shading so they match between engines. |

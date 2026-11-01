@@ -32,8 +32,12 @@ ROOT_PROP = "fas_effect_root"
 
 # --- Effect kinds -------------------------------------------------------------
 KIND_FIRE = "FIRE"
+KIND_SMOKE = "SMOKE"
+KIND_COLUMN = "COLUMN"
 KIND_LABELS = {
     KIND_FIRE: "Fire",
+    KIND_SMOKE: "Smoke",
+    KIND_COLUMN: "Smoke Column",
 }
 
 # Support address for bug reports. Empty until the public issues repo exists.
