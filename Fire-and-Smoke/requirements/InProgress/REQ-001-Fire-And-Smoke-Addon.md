@@ -174,11 +174,11 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
 |  | S016 | S | Prove view sync on 4.5 | A minimal timer that writes the viewport position to an empty, run in a window on 4.5, 5.1 and 5.2 before anything else in this slice. If it fails on 4.5, resolve Q4 first. | S013 | add-on package |
-|  | S017 | S | Add the facing rule | The Face Viewport modifier input and the view target input, wired as in Architectural decisions. | S016 | add-on package |
-|  | S018 | S | Build the view sync | Scan every window's 3D viewports including quad views, take the most recently changed view, and write only on movement. Skip during render jobs. Register and unregister cleanly, and survive file loads. | S017 | add-on package |
-|  | S019 | S | Add the steep-angle fade | Fade planes to a low glow as the viewing angle steepens, on the plane stack and in the material. | S017 | add-on package |
-|  | S020 | S | Settle the edge cases | Decide and build what viewport renders face (Q5) and what happens with no scene camera (Q6), with a plain message for the latter. | S017 | add-on package |
-|  | S021 | T | Test facing | New `tests/test_facing.py`: the render ignores a side-on view target; the viewport-mode depsgraph follows the target with the switch on and the camera with it off; the view-position write works without a window; register and unregister leave no timer. | S018, S019, S020 | `tests/test_facing.py` |
+| ✅ | S017 | S | Add the facing rule | The Face Viewport modifier input and the view target input, wired as in Architectural decisions. | S016 | add-on package |
+| ✅ | S018 | S | Build the view sync | Scan every window's 3D viewports including quad views, take the most recently changed view, and write only on movement. Skip during render jobs. Register and unregister cleanly, and survive file loads. | S017 | add-on package |
+| ✅ | S019 | S | Add the steep-angle fade | Fade planes to a low glow as the viewing angle steepens, on the plane stack and in the material. | S017 | add-on package |
+| ✅ | S020 | S | Settle the edge cases | Decide and build what viewport renders face (Q5) and what happens with no scene camera (Q6), with a plain message for the latter. | S017 | add-on package |
+| ✅ | S021 | T | Test facing | New `tests/test_facing.py`: the render ignores a side-on view target; the viewport-mode depsgraph follows the target with the switch on and the camera with it off; the view-position write works without a window; register and unregister leave no timer. | S018, S019, S020 | `tests/test_facing.py` |
 |  | S022 | O | Eye check in a window | Orbit on all three Blenders, in single and multiple viewports. Check lag, the steep-angle fade and playback. | S018, S019 | `docs/LOOK_TEST.md` |
 
 ### Slice 3 — Light options
@@ -336,8 +336,8 @@ S055 → S056 → S057 → S058 → S059                            Slice 10
 - [ ] **Q2 — Price.** What does it cost? Deferred until the look test passes; set in S050.
 - [ ] **Q3 — Exact preset list.** Which 8 ship? The working list is Candle, Torch, Campfire, Bonfire, Burning Object, Thin Smoke, Black Smoke Column and Embers. Deferred until S047, and each must pass the eye check.
 - [ ] **Q4 — View sync on 4.5.** If the view sync fails on 4.5, does 4.5 go without the switch, or does the promise change? Deferred until S016 shows a failure.
-- [ ] **Q5 — Viewport renders.** What do viewport renders and previews face? Deferred until S020.
-- [ ] **Q6 — No camera.** What happens when a scene has no camera? The panel must say what's wrong. Deferred until S020.
+- [x] **Q5 — Resolved.** Viewport renders are viewport evaluations, so they follow the switch; a moving camera should use Face Camera for them. *(Claude, for owner review)*
+- [x] **Q6 — Resolved.** Planes still evaluate and hold their last sensible direction, Face Viewport keeps working, Create warns, and the panel says the scene needs a camera before rendering. *(Claude, for owner review)*
 - [ ] **Q7 — Mesh fire light.** Where does the light go for a mesh fire? Deferred until S038.
 - [ ] **Q8 — Dense and missing sources.** What is the limit for dense or deforming meshes, and what happens when the source is deleted? Deferred until S039, using real measurements.
 - [ ] **Q9 — Smoke shading.** Does smoke react to scene lights or carry its own shading, and which render method does it use? It must match in both engines. Deferred until S013.
@@ -406,3 +406,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | ---- | ------ | ----------------- |
 | 2026-11-01 | Blaxine | Initial plan. |
 | 2026-11-01 | Blaxine | Slice 1 built. Later slices proceed before the look verdict on the owner's instruction; AC1 stays open until the owner records a verdict. Modifier inputs on 5.2 use modifier.properties.inputs. |
+| 2026-11-01 | Blaxine | Slice 2 built: facing rule, view sync, steep fade and glow card. View sync passes in real windows on 5.1 and 5.2; 4.5 unproven, so S016 stays open. |

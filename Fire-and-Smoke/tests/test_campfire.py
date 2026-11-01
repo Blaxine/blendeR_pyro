@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import fas_testlib as lib  # noqa: E402
 
 import bpy  # noqa: E402
+from fire_and_smoke.effects import plane_stack  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
 STATE = {}
@@ -31,7 +32,7 @@ def test_create():
     modifier = _fire().modifiers[0]
     lib.check("no node warnings", not list(modifier.node_warnings),
               str([w.message for w in modifier.node_warnings]))
-    lib.check("planes exist", lib.instance_count(_fire()) == 28, str(lib.instance_count(_fire())))
+    lib.check("planes exist", lib.instance_count(_fire()) == 29, str(lib.instance_count(_fire())))
 
 
 def test_hidden_from_lighting():
@@ -42,6 +43,8 @@ def test_hidden_from_lighting():
 
 def test_faces_the_camera_as_it_moves():
     camera = lib.scene().camera
+    plane_stack.set_inputs(_fire().modifiers[0], {"Face Viewport": False})
+    bpy.context.view_layer.update()
     facing = lib.first_instance_facing(_fire())
     lib.check("faces the camera", facing is not None and facing.dot(Vector((0, -1, 0))) > 0.99, str(facing))
     camera.location = (8.0, 0.0, 1.5)
@@ -55,7 +58,7 @@ def test_faces_the_camera_as_it_moves():
 
 def test_bounce_limit_above_planes():
     limit = lib.scene().cycles.transparent_max_bounces
-    lib.check("limit raised above the plane count", limit > 28, str(limit))
+    lib.check("limit raised above the plane count", limit > 29, str(limit))
 
 
 def test_time_reaches_the_material():
@@ -86,7 +89,7 @@ def test_no_black_in_cycles():
     pixels = lib.render("CYCLES")
     lib.check("the check does catch black at a low limit", lib.darkest(pixels) < 0.01,
               f"{lib.darkest(pixels):.4f}")
-    lib.scene().cycles.transparent_max_bounces = 29
+    lib.scene().cycles.transparent_max_bounces = 30
 
 
 lib.main(globals())

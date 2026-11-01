@@ -156,12 +156,17 @@ def darkest(pixels):
 
 
 def first_instance_facing(obj):
-    """The direction the object's first instance faces, in world space."""
+    """The direction the object's first upright plane faces, in world space."""
     from mathutils import Vector
     depsgraph = bpy.context.evaluated_depsgraph_get()
-    for inst in depsgraph.object_instances:
-        if inst.is_instance and inst.parent and inst.parent.original == obj:
-            return (inst.matrix_world.to_3x3() @ Vector((0.0, -1.0, 0.0))).normalized()
+    planes = [inst.matrix_world.copy() for inst in depsgraph.object_instances
+              if inst.is_instance and inst.parent and inst.parent.original == obj]
+    # The glow card is the one flat instance: its local Z stays unit length and
+    # its width and depth match, so skip anything scaled equally in X and Y.
+    for matrix in planes:
+        scale = matrix.to_scale()
+        if abs(scale.x - scale.y) > 1e-3:
+            return (matrix.to_3x3().normalized() @ Vector((0.0, -1.0, 0.0))).normalized()
     return None
 
 

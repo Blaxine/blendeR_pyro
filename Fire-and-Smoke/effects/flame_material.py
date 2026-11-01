@@ -15,11 +15,11 @@ FLAME_STOPS = (
 
 
 def plane_inputs(kit):
-    """(u, v, layer, random, time) from the plane stack's attributes."""
+    """(u, v, layer, random, time, steepness) from the plane stack's attributes."""
     uv = kit.node("ShaderNodeAttribute", attribute_type="GEOMETRY", attribute_name=C.UV_ATTR)
     u, v, _w = kit.split(uv.outputs["Vector"])
     attrs = []
-    for name in (C.ATTR_LAYER, C.ATTR_RANDOM, C.ATTR_TIME):
+    for name in (C.ATTR_LAYER, C.ATTR_RANDOM, C.ATTR_TIME, C.ATTR_STEEP):
         node = kit.node("ShaderNodeAttribute", attribute_type="INSTANCER", attribute_name=name)
         attrs.append(node.outputs["Fac"])
     return (u, v, *attrs)
@@ -43,7 +43,7 @@ def build_flame_material(name, speed=1.35, strength=0.8):
     tree = material.node_tree
     tree.nodes.clear()
     kit = Kit(tree)
-    u, v, layer, rand, time = plane_inputs(kit)
+    u, v, layer, rand, time, steep = plane_inputs(kit)
 
     # The whole tongue sways more towards its tip.
     sway_at = kit.xyz(kit.mul(rand, 37.0), kit.sub(kit.mul(v, 1.1), kit.mul(time, 0.8)), 0.0)
@@ -65,7 +65,8 @@ def build_flame_material(name, speed=1.35, strength=0.8):
     erode = kit.mul(kit.sub(fine, 0.5), kit.add(1.25, kit.mul(v, 2.2)))
     density = kit.sub(kit.add(kit.mul(shape, 1.05), erode), kit.mul(v, 0.5))
 
-    alpha = kit.remap(density, 0.14, 0.34, smooth=True)
+    # From steep angles the planes would read as thin slices, so they fade out.
+    alpha = kit.mul(kit.remap(density, 0.14, 0.34, smooth=True), kit.sub(1.0, steep))
     colour = kit.ramp(kit.remap(density, 0.12, 1.0), FLAME_STOPS)
 
     emission = kit.node("ShaderNodeEmission")
@@ -74,6 +75,34 @@ def build_flame_material(name, speed=1.35, strength=0.8):
     strength_value.outputs[0].default_value = strength
     kit.plug(emission.inputs["Strength"], strength_value.outputs[0])
 
+    transparent = kit.node("ShaderNodeBsdfTransparent")
+    mix = kit.node("ShaderNodeMixShader")
+    kit.plug(mix.inputs[0], alpha)
+    kit.plug(mix.inputs[1], transparent.outputs[0])
+    kit.plug(mix.inputs[2], emission.outputs[0])
+    output = kit.node("ShaderNodeOutputMaterial")
+    kit.plug(output.inputs["Surface"], mix.outputs[0])
+    return material
+
+
+def build_glow_material(name, colour=(1.0, 0.16, 0.012, 1.0), strength=1.1):
+    """The soft glow that replaces the planes from steep angles."""
+    material = bpy.data.materials.new(name)
+    material.use_nodes = True
+    material.surface_render_method = "BLENDED"
+    tree = material.node_tree
+    tree.nodes.clear()
+    kit = Kit(tree)
+    u, v, _layer, _rand, time, steep = plane_inputs(kit)
+
+    across = kit.vec("LENGTH", kit.xyz(kit.sub(u, 0.5), kit.sub(v, 0.5), 0.0))
+    at = kit.xyz(kit.mul(u, 3.0), kit.mul(v, 3.0), 0.0)
+    breathing = kit.remap(noise(kit, at, kit.mul(time, 1.2), 1.5, detail=2.0), 0.3, 0.7, 0.55, 1.0)
+    alpha = kit.mul(kit.mul(kit.remap(across, 0.5, 0.0, smooth=True), steep), breathing)
+
+    emission = kit.node("ShaderNodeEmission")
+    emission.inputs["Color"].default_value = colour
+    emission.inputs["Strength"].default_value = strength
     transparent = kit.node("ShaderNodeBsdfTransparent")
     mix = kit.node("ShaderNodeMixShader")
     kit.plug(mix.inputs[0], alpha)

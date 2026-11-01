@@ -16,6 +16,7 @@ for _name in [n for n in sys.modules if n.startswith(__name__ + ".")]:
     globals().pop(_name[len(__name__) + 1:], None)
 
 from . import constants as C
+from .core import view_sync
 from .effects import campfire
 
 _MODULES = (campfire,)
@@ -31,14 +32,28 @@ def register():
     if any(cls.is_registered for cls in _all_classes()):
         unregister()
     try:
-        for cls in _all_classes():
-            bpy.utils.register_class(cls)
+        _register()
     except Exception:
         unregister()
         raise
 
 
+def _register():
+    for cls in _all_classes():
+        bpy.utils.register_class(cls)
+    bpy.types.Scene.fas_view_target = bpy.props.PointerProperty(
+        type=bpy.types.Object, name="View Target",
+        description="The empty the planes face in Face Viewport")
+    view_sync.register()
+
+
 def unregister():
+    try:
+        view_sync.unregister()
+    except Exception as exc:
+        print(f"[{C.DISPLAY_NAME}] cleanup view sync: {exc}")
+    if hasattr(bpy.types.Scene, "fas_view_target"):
+        del bpy.types.Scene.fas_view_target
     for cls in reversed(list(_all_classes())):
         if cls.is_registered:
             try:

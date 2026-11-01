@@ -26,6 +26,7 @@ ADDON_VERSION = _manifest_version()
 ATTR_LAYER = "fas_layer"
 ATTR_RANDOM = "fas_random"
 ATTR_TIME = "fas_time"
+ATTR_STEEP = "fas_steep"
 UV_ATTR = "UVMap"
 
 # Cycles' hard maximum for transparent_max_bounces.

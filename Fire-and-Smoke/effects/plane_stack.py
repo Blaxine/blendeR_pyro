@@ -15,14 +15,77 @@ from .. import constants as C
 from .nodekit import Kit
 
 GOLDEN_ANGLE = math.pi * (3.0 - math.sqrt(5.0))
+# Sine of the view's elevation where planes start and finish fading.
+STEEP_START = 0.55
+STEEP_END = 0.92
 
 
-def _facing_target(kit):
-    """Location the planes turn towards, in the effect object's space."""
-    camera = kit.node("GeometryNodeInputActiveCamera")
+def _object_location(kit, object_socket):
     info = kit.node("GeometryNodeObjectInfo", transform_space="RELATIVE")
-    kit.plug(info.inputs["Object"], camera.outputs[0])
+    kit.plug(info.inputs["Object"], object_socket)
     return info.outputs["Location"]
+
+
+def _facing_target(kit, group_in):
+    """Location the planes turn towards, in the effect object's space.
+
+    Final renders are never viewport evaluations, so they always face the camera.
+    """
+    camera = _object_location(kit, kit.node("GeometryNodeInputActiveCamera").outputs[0])
+    view = _object_location(kit, group_in.outputs["View Target"])
+    use_view = kit.node("FunctionNodeBooleanMath", operation="AND")
+    kit.plug(use_view.inputs[0], kit.node("GeometryNodeIsViewport").outputs[0])
+    kit.plug(use_view.inputs[1], group_in.outputs["Face Viewport"])
+    switch = kit.node("GeometryNodeSwitch", input_type="VECTOR")
+    kit.plug(switch.inputs["Switch"], use_view.outputs[0])
+    kit.plug(switch.inputs["False"], camera)
+    kit.plug(switch.inputs["True"], view)
+    return switch.outputs[0]
+
+
+def _steepness(kit, target):
+    """0 when viewed from the side, 1 when viewed from straight above or below."""
+    position = kit.node("GeometryNodeInputPosition").outputs[0]
+    to_target = kit.vec("SUBTRACT", target, position)
+    _dx, _dy, dz = kit.split(to_target)
+    sine = kit.div(kit.math("ABSOLUTE", dz), kit.math("MAXIMUM", kit.vec("LENGTH", to_target), 1e-4))
+    return kit.remap(sine, STEEP_START, STEEP_END, smooth=True)
+
+
+def _store(kit, geometry, name, value, domain="POINT"):
+    store = kit.node("GeometryNodeStoreNamedAttribute", data_type="FLOAT", domain=domain)
+    kit.plug(store.inputs["Name"], name)
+    kit.plug(store.inputs["Geometry"], geometry)
+    kit.plug(store.inputs["Value"], value)
+    return store.outputs[0]
+
+
+def _glow_card(kit, group_in, target, material):
+    """A flat, soft glow that fades in as the view steepens and the planes fade out."""
+    point = kit.node("GeometryNodePoints")
+    kit.plug(point.inputs["Count"], 1)
+    stored = _store(kit, point.outputs[0], C.ATTR_STEEP, _steepness(kit, target))
+    size = kit.mul(kit.add(group_in.outputs["Width"], group_in.outputs["Spread"]), 1.6)
+    grid = kit.node("GeometryNodeMeshGrid")
+    grid.inputs["Vertices X"].default_value = 2
+    grid.inputs["Vertices Y"].default_value = 2
+    grid.inputs["Size X"].default_value = 1.0
+    grid.inputs["Size Y"].default_value = 1.0
+    uv = kit.node("GeometryNodeStoreNamedAttribute", data_type="FLOAT2", domain="CORNER")
+    kit.plug(uv.inputs["Name"], C.UV_ATTR)
+    kit.plug(uv.inputs["Geometry"], grid.outputs["Mesh"])
+    kit.plug(uv.inputs["Value"], grid.outputs["UV Map"])
+    lift = kit.node("GeometryNodeTransform")
+    lift.inputs["Translation"].default_value = (0.0, 0.0, 0.03)
+    kit.plug(lift.inputs["Geometry"], uv.outputs[0])
+    set_material = kit.node("GeometryNodeSetMaterial")
+    set_material.inputs["Material"].default_value = material
+    kit.plug(set_material.inputs["Geometry"], lift.outputs[0])
+    instance = kit.node("GeometryNodeInstanceOnPoints")
+    kit.plug(instance.inputs["Points"], stored)
+    kit.plug(instance.inputs["Instance"], set_material.outputs[0])
+    kit.plug(instance.inputs["Scale"], kit.xyz(size, size, 1.0))
+    return instance.outputs[0]
 
 
 def _sites(kit, sites, spread):
@@ -66,7 +129,7 @@ def _plane(kit, material):
     return set_material.outputs[0]
 
 
-def build_tree(name, material):
+def build_tree(name, material, glow_material=None):
     """A modifier node tree whose settings are its modifier inputs."""
     tree = bpy.data.node_groups.new(name, "GeometryNodeTree")
     tree.is_modifier = True
@@ -79,6 +142,9 @@ def build_tree(name, material):
     iface.new_socket("Width", in_out="INPUT", socket_type="NodeSocketFloat")
     iface.new_socket("Height", in_out="INPUT", socket_type="NodeSocketFloat")
     iface.new_socket("Seed", in_out="INPUT", socket_type="NodeSocketInt")
+    iface.new_socket("Face Viewport", in_out="INPUT", socket_type="NodeSocketBool",
+                     description="Preview only: final renders always face the scene camera")
+    iface.new_socket("View Target", in_out="INPUT", socket_type="NodeSocketObject")
 
     kit = Kit(tree)
     group_in = kit.node("NodeGroupInput")
@@ -93,7 +159,7 @@ def build_tree(name, material):
     layer_index = duplicate.outputs["Duplicate Index"]
 
     # Spread the layers along the flattened direction to the target.
-    target = _facing_target(kit)
+    target = _facing_target(kit, group_in)
     position = kit.node("GeometryNodeInputPosition").outputs[0]
     dx, dy, _dz = kit.split(kit.vec("SUBTRACT", target, position))
     flat = kit.vec("NORMALIZE", kit.xyz(dx, dy, 0.0))
@@ -105,17 +171,12 @@ def build_tree(name, material):
 
     # Per-plane data for the material.
     fraction = kit.div(layer_index, kit.math("MAXIMUM", kit.sub(layers, 1), 1))
-    store_layer = kit.node("GeometryNodeStoreNamedAttribute", data_type="FLOAT", domain="POINT")
-    kit.plug(store_layer.inputs["Name"], C.ATTR_LAYER)
-    kit.plug(store_layer.inputs["Geometry"], set_position.outputs[0])
-    kit.plug(store_layer.inputs["Value"], fraction)
+    stored = _store(kit, set_position.outputs[0], C.ATTR_LAYER, fraction)
+    stored = _store(kit, stored, C.ATTR_STEEP, _steepness(kit, target))
 
     random = kit.node("FunctionNodeRandomValue", data_type="FLOAT")
     kit.plug(random.inputs["Seed"], group_in.outputs["Seed"])
-    store_random = kit.node("GeometryNodeStoreNamedAttribute", data_type="FLOAT", domain="POINT")
-    kit.plug(store_random.inputs["Name"], C.ATTR_RANDOM)
-    kit.plug(store_random.inputs["Geometry"], store_layer.outputs[0])
-    kit.plug(store_random.inputs["Value"], random.outputs["Value"])
+    stored = _store(kit, stored, C.ATTR_RANDOM, random.outputs["Value"])
 
     # Spin around the vertical axis only: the plane's front is -Y.
     tx, ty, _tz = kit.split(kit.vec("SUBTRACT", target, position))
@@ -127,18 +188,21 @@ def build_tree(name, material):
                     kit.mul(group_in.outputs["Height"], site_scale_value))
 
     instance = kit.node("GeometryNodeInstanceOnPoints")
-    kit.plug(instance.inputs["Points"], store_random.outputs[0])
+    kit.plug(instance.inputs["Points"], stored)
     kit.plug(instance.inputs["Instance"], _plane(kit, material))
     kit.plug(instance.inputs["Rotation"], kit.xyz(0.0, 0.0, angle))
     kit.plug(instance.inputs["Scale"], scale)
 
-    time = kit.node("GeometryNodeInputSceneTime")
-    store_time = kit.node("GeometryNodeStoreNamedAttribute", data_type="FLOAT", domain="INSTANCE")
-    kit.plug(store_time.inputs["Name"], C.ATTR_TIME)
-    kit.plug(store_time.inputs["Geometry"], instance.outputs[0])
-    kit.plug(store_time.inputs["Value"], time.outputs["Seconds"])
+    geometry = instance.outputs[0]
+    if glow_material is not None:
+        join = kit.node("GeometryNodeJoinGeometry")
+        kit.plug(join.inputs[0], _glow_card(kit, group_in, target, glow_material))
+        kit.plug(join.inputs[0], geometry)
+        geometry = join.outputs[0]
 
-    kit.plug(group_out.inputs[0], store_time.outputs[0])
+    time = kit.node("GeometryNodeInputSceneTime")
+    stored_time = _store(kit, geometry, C.ATTR_TIME, time.outputs["Seconds"], domain="INSTANCE")
+    kit.plug(group_out.inputs[0], stored_time)
     return tree
 
 
