@@ -85,6 +85,10 @@ def _split(entry):
     for obj in root.all_objects:
         if naming.owned_by(obj, old):
             _own_object(obj, old, new, kind, seen)
+    # Shared particle settings pointed at the original's spark.
+    if entry.instance is not None and entry.primary is not None:
+        for system in entry.primary.particle_systems:
+            system.settings.instance_object = entry.instance
 
 
 def reidentify():

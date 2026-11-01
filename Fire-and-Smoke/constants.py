@@ -35,12 +35,16 @@ KIND_FIRE = "FIRE"
 KIND_SMOKE = "SMOKE"
 KIND_COLUMN = "COLUMN"
 KIND_MESH_FIRE = "MESH_FIRE"
+KIND_EMBERS = "EMBERS"
 KIND_LABELS = {
     KIND_FIRE: "Fire",
     KIND_SMOKE: "Smoke",
     KIND_COLUMN: "Smoke Column",
     KIND_MESH_FIRE: "Mesh Fire",
+    KIND_EMBERS: "Embers",
 }
+
+MAX_EMBERS = 20000
 
 # Support address for bug reports. Empty until the public issues repo exists.
 SUPPORT_URL = ""

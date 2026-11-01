@@ -239,9 +239,9 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S042 | S | Build the ember emitter | A legacy particle system on an owned emitter, with an owned instance object and material, tagged for delete. | S026 | add-on package |
-|  | S043 | S | Follow the timeline | Copy the range handling, keeping a range the buyer set. | S042 | add-on package |
-|  | S044 | T | Test embers | New `tests/test_embers.py`: create and delete leave no particle settings behind; range following, and a buyer-set range staying put; particles exist after a frame change. | S043 | `tests/test_embers.py` |
+| ✅ | S042 | S | Build the ember emitter | A legacy particle system on an owned emitter, with an owned instance object and material, tagged for delete. | S026 | add-on package |
+| ✅ | S043 | S | Follow the timeline | Copy the range handling, keeping a range the buyer set. | S042 | add-on package |
+| ✅ | S044 | T | Test embers | New `tests/test_embers.py`: create and delete leave no particle settings behind; range following, and a buyer-set range staying put; particles exist after a frame change. | S043 | `tests/test_embers.py` |
 |  | S045 | O | Check embers by eye | Check both engines on 5.1 and 5.2, and confirm the replay-from-start behaviour when scrubbing. | S043 | `docs/LOOK_TEST.md` |
 
 ### Slice 8 — Panel and 8 presets
@@ -411,3 +411,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-01 | Blaxine | Slice 4 built: effect records, error pipeline, Delete, copied scenes and the tracked bounce limit. |
 | 2026-11-01 | Blaxine | Slice 5 built: smoke on a point and smoke columns, carrying their own shading so they match between engines. |
 | 2026-11-01 | Blaxine | Slice 6 built: fire on a mesh with no change to the source. Measured about 15 ms per frame at a million faces, so the limit is 2 million with a warning from 500,000. |
+| 2026-11-01 | Blaxine | Slice 7 built: embers on legacy particles, following the timeline. |

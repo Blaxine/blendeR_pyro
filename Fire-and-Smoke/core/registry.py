@@ -43,6 +43,7 @@ class FAS_EffectEntry(bpy.types.PropertyGroup):
     primary: PointerProperty(type=bpy.types.Object, name="Effect Object")
     light: PointerProperty(type=bpy.types.Object, name="Fire Light")
     source: PointerProperty(type=bpy.types.Object, name="Burning Mesh")
+    instance: PointerProperty(type=bpy.types.Object, name="Ember Spark")
     root_collection: PointerProperty(type=bpy.types.Collection)
     planes: IntProperty(name="Planes", default=0, min=0)
     addon_version: StringProperty()

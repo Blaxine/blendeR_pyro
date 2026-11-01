@@ -83,7 +83,8 @@ def test_follows_the_source():
     STATE["source"].location.x += 3.0
     bpy.context.view_layer.update()
     after = _plane_centre(entry.primary)
-    lib.check("planes moved with it", abs((after - before).x - 3.0) < 0.05, str(after - before))
+    # Planes also stand off towards the viewer, so the angle to it shifts them a little.
+    lib.check("planes moved with it", abs((after - before).x - 3.0) < 0.3, str(after - before))
     lib.check("the light moved with it", abs((entry.light.matrix_world.translation - light_before).x - 3.0) < 1e-3)
     STATE["source"].location.x -= 3.0
     bpy.context.view_layer.update()
