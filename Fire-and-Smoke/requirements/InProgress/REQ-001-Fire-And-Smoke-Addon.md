@@ -14,6 +14,8 @@
 
 > Source PRD: REQ-001-PRD-Fire-And-Smoke-Addon.md
 
+> Status on 2026-11-01: all ten slices are built and committed, on the owner's instruction to build past the look gate. Automated tests pass on 5.1 and 5.2. Blender 4.5 isn't installed, so nothing has run on it. Every acceptance criterion stays open until its checks have also passed on 4.5, or until the owner has done its eye check. Steps left unticked are owner actions or wait on them.
+
 > Grilled from `Fire-and-Smoke-Addon-Plan.md` in the repo root. Where the two differ, this plan wins for implementation: see Constraints and the resolved Open Questions.
 
 ## Short Description
@@ -128,6 +130,17 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 - **Object visibility:** `visible_shadow`, `visible_diffuse` and `visible_glossy` on the object drive both engines.
 - **Viewport data:** `SpaceView3D.region_3d`, `SpaceView3D.region_quadviews` and `RegionView3D.view_matrix`, `view_location`, `view_perspective` and `is_perspective` all exist on 5.2. Test for the presence of `scene.cycles` before reading the limit.
 - **EEVEE identifier:** `BLENDER_EEVEE` on 5.1 and 5.2. Expected to be `BLENDER_EEVEE_NEXT` on 4.5, so tests read it from the engine enum.
+
+**Found while building, on 5.1 and 5.2:**
+
+- **Modifier inputs differ by version.** 5.1 uses `modifier[identifier]`. 5.2 has no ID properties on modifiers and uses `modifier.properties.inputs.<identifier>.value`. `plane_stack.set_input` handles both; 4.5 is expected to use the 5.1 form.
+- **Scene copies.** A full copy duplicates objects, meshes, lights, actions and collections, and remaps pointers on entries and modifier inputs, but shares node trees and materials and copies owner tags. A linked copy shares everything.
+- **A new scene doesn't always cause a depsgraph update,** so the view sync timer also checks for copies.
+- **`view_matrix` updates only on the next redraw.**
+- **Operators called from Python don't push undo steps** unless passed `undo=True`. A Scene reference kept across an undo is stale, and assigning it back to a window crashes Blender. No add-on code does this; an earlier test did.
+- **Mesh fire cost on 5.2:** 0.6 ms per frame at 1,000 faces, 4.2 ms at 200,000, 15 ms at 1,000,000, for a static mesh.
+
+**Windowed checks,** outside the suite since they need a window: `tests/gui_view_sync.py`, `tests/gui_undo.py`, `tests/gui_viewport_speed.py`.
 
 **Tests** follow AquaSuite's pattern: `tests/test_<area>.py` with `test_*` functions, ending in the helper's `main(globals())`. Run with `python tests/run_tests.py` from `Fire-and-Smoke/`.
 
@@ -375,6 +388,9 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 - **Viewport Transform node for Face Viewport.** Raises `Node must be run as tool` in a modifier on 5.1 and 5.2, and both manuals limit it to the Tool context.
 - **Scene camera only, fading from other angles.** Removes the timer, but orbiting shows planes that don't face the view, which beginners would report as a bug. Also fails story 3.
 - **Face Viewport as a Tool button.** Uses the node as intended, but isn't live, so planes go thin on orbit until clicked.
+- **Diffuse-lit smoke.** In EEVEE a Dithered test stack came out speckled, and lit smoke depends on each engine's lighting. Self-shaded smoke differs between engines by 0.001 to 0.004 mean per pixel.
+- **Planes passing through a burning mesh.** They cut hard vertical lines where the mesh sliced them, so they stand off towards the viewer by half their width.
+- **A light at a mesh fire's origin.** Inside a closed mesh it lit nothing, and the object and ground stayed dark.
 - **Viewport under the mouse wins.** Timers receive no mouse event. The most recently changed view identifies the same viewport during an orbit.
 - **Capping effects at 7 planes and leaving scene settings alone.** Two fires lined up from the camera add to 14 planes and still show black, and 7 planes could weaken the look test.
 - **Warning the buyer about the bounce limit.** A beginner's first Cycles render would be a black box until they read and acted on the warning.
@@ -415,3 +431,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-01 | Blaxine | Slice 8 built: panel with Simple and Advanced views, 8 presets with fixed stored numbers, sliders. Checked on a stand-in layout and in one real window on 5.2. |
 | 2026-11-01 | Blaxine | Slice 9 partly built: buyer docs, draft store text, the support link switch and its test. Name, price, issues repo and the link itself wait for the owner. |
 | 2026-11-01 | Blaxine | Slice 10 partly built: release checklist and a gate that refuses open boxes. Running the gate and launching wait for the owner. |
+| 2026-11-01 | Blaxine | Recorded final measurements and findings. Look verdict, eye checks, 4.5, name, price, issues repo and launch remain open. |
