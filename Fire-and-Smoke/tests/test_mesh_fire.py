@@ -105,8 +105,6 @@ def test_refuses_with_a_plain_message():
         lib.check("refuses with nothing selected", False)
     except RuntimeError as exc:
         lib.check("refuses with nothing selected", "Select a mesh" in str(exc), str(exc)[:100])
-    lib.check("no traceback", True)
-    lib.check("over-dense meshes are refused in words", mesh_fire.MAX_FACES > 0)
     lib.check("nothing half-built is left", len(lib.scene().fas_effects) == 1)
 
 
@@ -133,17 +131,16 @@ def test_density_limits():
     mesh = dense.data
     bpy.data.objects.remove(dense)
     bpy.data.meshes.remove(mesh)
-    for value in ("Over",):
-        bpy.ops.mesh.primitive_grid_add(x_subdivisions=460, y_subdivisions=460, location=(0, 8, 0))
-        big = bpy.context.object
-        limit = mesh_fire.MAX_FACES
-        mesh_fire.MAX_FACES = 1000
-        problem = mesh_fire.source_problem(big)
-        mesh_fire.MAX_FACES = limit
-        lib.check("past the limit it says so", problem is not None and "over the limit" in problem, str(problem))
-        mesh = big.data
-        bpy.data.objects.remove(big)
-        bpy.data.meshes.remove(mesh)
+    bpy.ops.mesh.primitive_grid_add(x_subdivisions=40, y_subdivisions=40, location=(0, 8, 0))
+    big = bpy.context.object
+    limit = mesh_fire.MAX_FACES
+    mesh_fire.MAX_FACES = 1000
+    problem = mesh_fire.source_problem(big)
+    mesh_fire.MAX_FACES = limit
+    lib.check("past the limit it says so", problem is not None and "over the limit" in problem, str(problem))
+    mesh = big.data
+    bpy.data.objects.remove(big)
+    bpy.data.meshes.remove(mesh)
 
 
 def test_source_deleted():

@@ -8,6 +8,7 @@ light follows it through a constraint that lives on the light.
 import math
 
 import bpy
+from mathutils import Vector
 
 from .. import constants as C
 from ..core import delete
@@ -15,11 +16,12 @@ from . import creation, flame_material
 
 MIN_SITES = 12
 MAX_SITES = 120
-SITES_PER_SQUARE_METRE = 2.5
+SITES_PER_SQUARE_METRE = 1.8
 LAYERS = 2
-# Above this the fire rebuilds too slowly on every frame to scrub.
-MAX_FACES = 200_000
-WARN_FACES = 50_000
+# The fire rebuilds on every frame: measured at about 15 ms per frame at a million
+# faces, against 41 ms per frame at 24 fps, before the source's own cost.
+MAX_FACES = 2_000_000
+WARN_FACES = 500_000
 
 
 def surface_area(obj):
@@ -32,9 +34,13 @@ def surface_area(obj):
     return sum(p.area for p in mesh.polygons) * uniform
 
 
-def _light_height(obj):
-    """Half way up the object, in its world-scaled size."""
-    return obj.dimensions.z * 0.5
+def _light_offset(obj):
+    """Above the object's top, from its origin: inside a closed mesh a light lights nothing."""
+    corners = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
+    centre = sum(corners, Vector()) / 8.0
+    top = max(corner.z for corner in corners)
+    above = top + max(obj.dimensions) * 0.6
+    return Vector((centre.x, centre.y, above)) - obj.matrix_world.translation
 
 
 def source_problem(obj):
@@ -63,11 +69,11 @@ def create_mesh_fire(context, source):
     sites = max(MIN_SITES, min(MAX_SITES, int(area * SITES_PER_SQUARE_METRE)))
     gap = math.sqrt(area / sites)
     stack = {"Sites": sites, "Layers": LAYERS, "Spread": 0.0, "Spacing": gap * 0.1,
-             "Width": gap * 2.2, "Height": gap * 3.6, "Seed": 2}
-    light = {"energy": min(40.0 + area * 6.0, 400.0), "radius": max(gap * 2.0, 0.2),
+             "Width": gap * 1.5, "Height": gap * 1.9, "Seed": 2}
+    light = {"energy": min(60.0 + area * 14.0, 800.0), "radius": max(gap * 2.0, 0.2),
              "height": 0.0}
     material = flame_material.build_flame_material(
-        "FAS_Flame", speed=1.5, strength=0.55, steep_floor=0.3)
+        "FAS_Flame", speed=1.5, strength=0.7, steep_floor=0.3)
     effect_uuid = creation.create_plane_effect(
         context, C.KIND_MESH_FIRE, "Mesh Fire", material, stack, (0.0, 0.0, 0.0), light=light,
         source=source, density=sites / area)
@@ -77,7 +83,7 @@ def create_mesh_fire(context, source):
     entry.light.parent = entry.primary
     entry.light.location = (0.0, 0.0, 0.0)
     constraint.use_offset = True
-    entry.light.location = (0.0, 0.0, _light_height(source))
+    entry.light.location = _light_offset(source)
     return effect_uuid
 
 

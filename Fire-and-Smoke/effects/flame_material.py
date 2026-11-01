@@ -37,7 +37,7 @@ def noise(kit, vector, w, scale, detail=4.0, roughness=0.5, distortion=0.0):
     return node.outputs["Fac"]
 
 
-def build_flame_material(name, speed=1.35, strength=0.8):
+def build_flame_material(name, speed=1.35, strength=0.8, steep_floor=0.0):
     material = bpy.data.materials.new(name)
     material.use_nodes = True
     material.surface_render_method = "BLENDED"
@@ -67,7 +67,8 @@ def build_flame_material(name, speed=1.35, strength=0.8):
     density = kit.sub(kit.add(kit.mul(shape, 1.05), erode), kit.mul(v, 0.5))
 
     # From steep angles the planes would read as thin slices, so they fade out.
-    alpha = kit.mul(kit.remap(density, 0.14, 0.34, smooth=True), kit.sub(1.0, steep))
+    fade = kit.sub(1.0, kit.mul(steep, 1.0 - steep_floor))
+    alpha = kit.mul(kit.remap(density, 0.14, 0.34, smooth=True), fade)
     colour = kit.ramp(kit.remap(density, 0.12, 1.0), FLAME_STOPS)
 
     emission = kit.node("ShaderNodeEmission")

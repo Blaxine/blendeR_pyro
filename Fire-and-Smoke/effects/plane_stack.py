@@ -101,11 +101,22 @@ def _sites(kit, sites, spread):
     kit.plug(points.inputs["Position"], position)
     # Outer sites burn lower, which rounds the fire's silhouette.
     falloff = kit.remap(fraction, 0.0, 1.0, 1.0, 0.55)
-    store = kit.node("GeometryNodeStoreNamedAttribute", data_type="FLOAT", domain="POINT")
-    kit.plug(store.inputs["Name"], "fas_site_scale")
-    kit.plug(store.inputs["Geometry"], points.outputs[0])
-    kit.plug(store.inputs["Value"], falloff)
-    return store.outputs[0]
+    return _store(kit, points.outputs[0], "fas_site_scale", falloff)
+
+
+def _mesh_sites(kit, group_in):
+    """Points scattered over the source mesh, each burning at its own size."""
+    info = kit.node("GeometryNodeObjectInfo", transform_space="RELATIVE")
+    kit.plug(info.inputs["Object"], group_in.outputs["Source"])
+    scatter = kit.node("GeometryNodeDistributePointsOnFaces", distribute_method="RANDOM")
+    kit.plug(scatter.inputs["Mesh"], info.outputs["Geometry"])
+    kit.plug(scatter.inputs["Density"], group_in.outputs["Density"])
+    kit.plug(scatter.inputs["Seed"], group_in.outputs["Seed"])
+    size = kit.node("FunctionNodeRandomValue", data_type="FLOAT")
+    kit.plug(size.inputs["Min"], 0.6)
+    kit.plug(size.inputs["Max"], 1.0)
+    kit.plug(size.inputs["Seed"], group_in.outputs["Seed"])
+    return _store(kit, scatter.outputs["Points"], "fas_site_scale", size.outputs["Value"])
 
 
 def _plane(kit, material):
@@ -129,7 +140,7 @@ def _plane(kit, material):
     return set_material.outputs[0]
 
 
-def build_tree(name, material, glow_material=None):
+def build_tree(name, material, glow_material=None, on_mesh=False):
     """A modifier node tree whose settings are its modifier inputs."""
     tree = bpy.data.node_groups.new(name, "GeometryNodeTree")
     tree.is_modifier = True
@@ -145,13 +156,17 @@ def build_tree(name, material, glow_material=None):
     iface.new_socket("Face Viewport", in_out="INPUT", socket_type="NodeSocketBool",
                      description="Preview only: final renders always face the scene camera")
     iface.new_socket("View Target", in_out="INPUT", socket_type="NodeSocketObject")
+    if on_mesh:
+        iface.new_socket("Source", in_out="INPUT", socket_type="NodeSocketObject")
+        iface.new_socket("Density", in_out="INPUT", socket_type="NodeSocketFloat")
+        iface.new_socket("Standoff", in_out="INPUT", socket_type="NodeSocketFloat")
 
     kit = Kit(tree)
     group_in = kit.node("NodeGroupInput")
     group_out = kit.node("NodeGroupOutput")
     sites, layers = group_in.outputs["Sites"], group_in.outputs["Layers"]
 
-    points = _sites(kit, sites, group_in.outputs["Spread"])
+    points = _mesh_sites(kit, group_in) if on_mesh else _sites(kit, sites, group_in.outputs["Spread"])
 
     duplicate = kit.node("GeometryNodeDuplicateElements", domain="POINT")
     kit.plug(duplicate.inputs["Geometry"], points)
@@ -164,7 +179,11 @@ def build_tree(name, material, glow_material=None):
     dx, dy, _dz = kit.split(kit.vec("SUBTRACT", target, position))
     flat = kit.vec("NORMALIZE", kit.xyz(dx, dy, 0.0))
     centred = kit.sub(layer_index, kit.div(kit.sub(layers, 1), 2.0))
-    offset = kit.vec("SCALE", flat, scale=kit.mul(centred, group_in.outputs["Spacing"]))
+    distance = kit.mul(centred, group_in.outputs["Spacing"])
+    if on_mesh:
+        # Stand clear of the mesh towards the viewer, so it doesn't slice the plane.
+        distance = kit.add(distance, group_in.outputs["Standoff"])
+    offset = kit.vec("SCALE", flat, scale=distance)
     set_position = kit.node("GeometryNodeSetPosition")
     kit.plug(set_position.inputs["Geometry"], duplicate.outputs["Geometry"])
     kit.plug(set_position.inputs["Offset"], offset)

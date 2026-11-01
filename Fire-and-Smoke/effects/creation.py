@@ -12,7 +12,7 @@ def planes_of(stack, has_glow):
 
 
 def create_plane_effect(context, kind, name, material, stack, location, glow=None, light=None,
-                        mode=light_mode.REAL):
+                        mode=light_mode.REAL, source=None, density=0.0):
     """A plane stack with an optional fire light.  Returns the new entry's uuid."""
     scene = context.scene
     effect_uuid = naming.new_uuid()
@@ -21,7 +21,7 @@ def create_plane_effect(context, kind, name, material, stack, location, glow=Non
         naming.tag(glow, kind, effect_uuid)
     collection = naming.new_effect_collection(scene, kind, effect_uuid)
 
-    tree = plane_stack.build_tree(f"FAS_{name}", material, glow)
+    tree = plane_stack.build_tree(f"FAS_{name}", material, glow, on_mesh=source is not None)
     naming.tag(tree, kind, effect_uuid)
     mesh = bpy.data.meshes.new(name)
     naming.tag(mesh, kind, effect_uuid)
@@ -33,10 +33,15 @@ def create_plane_effect(context, kind, name, material, stack, location, glow=Non
     target = view_sync.ensure_target(scene)
     modifier = obj.modifiers.new(name, "NODES")
     modifier.node_group = tree
-    plane_stack.set_inputs(modifier, {**stack, "Face Viewport": True, "View Target": target})
+    inputs = {**stack, "Face Viewport": True, "View Target": target}
+    if source is not None:
+        inputs.update({"Source": source, "Density": density, "Standoff": stack["Width"] * 0.5})
+    plane_stack.set_inputs(modifier, inputs)
 
     entry = registry.add(scene, kind, effect_uuid, primary=obj, root_collection=collection)
-    entry.planes = planes_of(stack, glow is not None)
+    entry.source = source
+    # Random scatter can land a little over its density, so leave room.
+    entry.planes = planes_of(stack, glow is not None) * (2 if source is not None else 1)
 
     light_obj = None
     if light is not None:

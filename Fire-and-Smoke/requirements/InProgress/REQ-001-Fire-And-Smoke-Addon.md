@@ -226,10 +226,10 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S037 | S | Build the mesh fire object | A separate owned object that reads the source and places plane stacks across its surface, with no change to the source. | S032 | add-on package |
-|  | S038 | S | Place its light | Decide and build the light position for mesh fires (Q7). | S037 | add-on package |
-|  | S039 | S | Set limits and handle a missing source | Measure dense and deforming meshes on this PC, then set the limit and the behaviour for a deleted source (Q8), each with a plain message. | S037 | add-on package |
-|  | S040 | T | Test mesh fire | New `tests/test_mesh_fire.py`: the source's modifiers, mesh and custom properties are identical before, during and after; it follows a moved source; deleted source and over-limit cases; delete leaves the source intact. | S038, S039 | `tests/test_mesh_fire.py` |
+| ✅ | S037 | S | Build the mesh fire object | A separate owned object that reads the source and places plane stacks across its surface, with no change to the source. | S032 | add-on package |
+| ✅ | S038 | S | Place its light | Decide and build the light position for mesh fires (Q7). | S037 | add-on package |
+| ✅ | S039 | S | Set limits and handle a missing source | Measure dense and deforming meshes on this PC, then set the limit and the behaviour for a deleted source (Q8), each with a plain message. | S037 | add-on package |
+| ✅ | S040 | T | Test mesh fire | New `tests/test_mesh_fire.py`: the source's modifiers, mesh and custom properties are identical before, during and after; it follows a moved source; deleted source and over-limit cases; delete leaves the source intact. | S038, S039 | `tests/test_mesh_fire.py` |
 |  | S041 | O | Check mesh fire by eye | Check both engines on 5.1 and 5.2, with a simple and a dense mesh. | S038 | `docs/LOOK_TEST.md` |
 
 ### Slice 7 — Embers
@@ -338,10 +338,10 @@ S055 → S056 → S057 → S058 → S059                            Slice 10
 - [ ] **Q4 — View sync on 4.5.** If the view sync fails on 4.5, does 4.5 go without the switch, or does the promise change? Deferred until S016 shows a failure.
 - [x] **Q5 — Resolved.** Viewport renders are viewport evaluations, so they follow the switch; a moving camera should use Face Camera for them. *(Claude, for owner review)*
 - [x] **Q6 — Resolved.** Planes still evaluate and hold their last sensible direction, Face Viewport keeps working, Create warns, and the panel says the scene needs a camera before rendering. *(Claude, for owner review)*
-- [ ] **Q7 — Mesh fire light.** Where does the light go for a mesh fire? Deferred until S038.
-- [ ] **Q8 — Dense and missing sources.** What is the limit for dense or deforming meshes, and what happens when the source is deleted? Deferred until S039, using real measurements.
+- [x] **Q7 — Resolved.** Above the top of the mesh's bounding box, following it through a constraint on the light. Inside a closed mesh a light lights nothing. *(Claude, for owner review)*
+- [x] **Q8 — Resolved.** Measured on 5.2: 4 ms per frame at 200,000 faces, 15 ms at 1,000,000. Over 500,000 faces warns, over 2,000,000 refuses. A deleted source leaves no planes and no errors, and the effect can still be deleted. Deforming meshes add their own cost on top, which isn't measured. *(Claude, for owner review)*
 - [x] **Q9 — Resolved.** Smoke carries its own shading, using the Blended render method, so it matches in both engines (mean pixel difference 0.001 to 0.004). It doesn't pick up scene lights or a nearby fire's colour. *(Claude, for owner review)*
-- [ ] **Q10 — Ground line.** How is the hard line hidden where planes cut through the ground or a mesh? If it can't be hidden, it joins the store page limits. Deferred until S013.
+- [x] **Q10 — Resolved, pending the owner's eye.** Flames fade out at their base, which hides the ground line, and mesh fires stand clear of the mesh towards the viewer, which removes the hard cuts. *(Claude, for owner review)*
 - [ ] **Q11 — Legacy particles.** Do embers stay on legacy particles? Deferred until a supported Blender release deprecates them.
 
 ## Smoke Test
@@ -410,3 +410,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-01 | Blaxine | Slice 3 built: Real, Emissive and Both light modes. Real is about 6% apart across engines in the test scene. |
 | 2026-11-01 | Blaxine | Slice 4 built: effect records, error pipeline, Delete, copied scenes and the tracked bounce limit. |
 | 2026-11-01 | Blaxine | Slice 5 built: smoke on a point and smoke columns, carrying their own shading so they match between engines. |
+| 2026-11-01 | Blaxine | Slice 6 built: fire on a mesh with no change to the source. Measured about 15 ms per frame at a million faces, so the limit is 2 million with a warning from 500,000. |
