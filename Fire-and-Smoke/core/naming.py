@@ -50,9 +50,9 @@ def ensure_root_collection(scene):
     return root
 
 
-def new_effect_collection(scene, kind, effect_uuid):
+def new_effect_collection(scene, kind, effect_uuid, name):
     root = ensure_root_collection(scene)
-    col = bpy.data.collections.new(f"{C.KIND_LABELS.get(kind, kind)} {short(effect_uuid)}")
+    col = bpy.data.collections.new(name)
     tag(col, kind, effect_uuid)
     root.children.link(col)
     return col

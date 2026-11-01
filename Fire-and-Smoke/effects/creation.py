@@ -7,8 +7,10 @@ from ..core import bounces, naming, registry, view_sync
 from . import fire_light, light_mode, plane_stack
 
 
-def planes_of(stack, has_glow):
-    return stack["Sites"] * stack["Layers"] + (1 if has_glow else 0)
+def plane_estimate(sites, layers, has_glow, on_mesh):
+    planes = sites * layers + (1 if has_glow else 0)
+    # Random scatter can land a little over its density, so leave room.
+    return planes * 2 if on_mesh else planes
 
 
 def create_plane_effect(context, kind, name, material, stack, location, glow=None, light=None,
@@ -19,7 +21,7 @@ def create_plane_effect(context, kind, name, material, stack, location, glow=Non
     naming.tag(material, kind, effect_uuid)
     if glow is not None:
         naming.tag(glow, kind, effect_uuid)
-    collection = naming.new_effect_collection(scene, kind, effect_uuid)
+    collection = naming.new_effect_collection(scene, kind, effect_uuid, name)
 
     tree = plane_stack.build_tree(f"FAS_{name}", material, glow, on_mesh=source is not None)
     naming.tag(tree, kind, effect_uuid)
@@ -40,8 +42,15 @@ def create_plane_effect(context, kind, name, material, stack, location, glow=Non
 
     entry = registry.add(scene, kind, effect_uuid, primary=obj, root_collection=collection)
     entry.source = source
-    # Random scatter can land a little over its density, so leave room.
-    entry.planes = planes_of(stack, glow is not None) * (2 if source is not None else 1)
+    entry.sites = stack["Sites"]
+    entry.has_glow = glow is not None
+    entry.planes = plane_estimate(stack["Sites"], stack["Layers"], glow is not None, source is not None)
+    entry.base_width, entry.base_height = stack["Width"], stack["Height"]
+    entry.base_spread, entry.base_spacing = stack["Spread"], stack["Spacing"]
+    for node_name, base in (("fas_strength", "base_strength"), ("fas_density", "base_density")):
+        node = material.node_tree.nodes.get(node_name)
+        if node is not None:
+            setattr(entry, base, node.outputs[0].default_value)
 
     light_obj = None
     if light is not None:
@@ -54,8 +63,11 @@ def create_plane_effect(context, kind, name, material, stack, location, glow=Non
         light_obj.parent = obj
         light_obj.location = (0.0, 0.0, height)
         entry.light = light_obj
+        entry.base_energy = light_obj.data.energy
     light_mode.apply(obj, light_obj, mode)
     entry.light_mode = mode
+    entry.seed = stack["Seed"]
+    entry.layers = stack["Layers"]
 
     bounces.after_create(scene)
     return effect_uuid

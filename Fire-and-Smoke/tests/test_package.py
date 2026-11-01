@@ -17,7 +17,7 @@ import bpy  # noqa: E402
 FORBIDDEN = ("requirements/", "tests/", ".git", "__pycache__", "look_test_output",
              "docs/THESAURUS.md", "docs/LOOK_TEST.md", "docs/RELEASE_CHECKLIST.md")
 REQUIRED = ("__init__.py", "blender_manifest.toml", "constants.py", "core/bounces.py",
-            "effects/plane_stack.py")
+            "effects/plane_stack.py", "effects/presets.py", "ui/panel.py")
 
 RUN_SCRIPT = r'''
 import addon_utils, bpy

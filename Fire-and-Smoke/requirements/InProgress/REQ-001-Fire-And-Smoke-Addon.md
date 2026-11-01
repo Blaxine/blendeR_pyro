@@ -251,9 +251,9 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S046 | U | Build the panel | Simple and Advanced views, Create, a box per effect, Delete, hints, the fixed wording and error messages. | S030, S034, S037, S042 | add-on package |
-|  | S047 | S | Define the preset list | Final list of 8 (Q3), as plain data with an append-only stored list and separate display order. Preset choices use `SKIP_SAVE`. | S046 | add-on package |
-|  | S048 | T | Test panel and presets | New `tests/test_panel.py` and `tests/test_presets.py`: panels draw on a stand-in layout, as in `tests/test_simple_view.py`; each preset creates and deletes; stored values keep their meaning when a preset is added; `SKIP_SAVE` is set. | S047 | listed files |
+| ✅ | S046 | U | Build the panel | Simple and Advanced views, Create, a box per effect, Delete, hints, the fixed wording and error messages. | S030, S034, S037, S042 | add-on package |
+| ✅ | S047 | S | Define the preset list | Final list of 8 (Q3), as plain data with an append-only stored list and separate display order. Preset choices use `SKIP_SAVE`. | S046 | add-on package |
+| ✅ | S048 | T | Test panel and presets | New `tests/test_panel.py` and `tests/test_presets.py`: panels draw on a stand-in layout, as in `tests/test_simple_view.py`; each preset creates and deletes; stored values keep their meaning when a preset is added; `SKIP_SAVE` is set. | S047 | listed files |
 |  | S049 | O | Eye check every preset | Check all 8 in both engines on 5.2. Replace any preset that fails. | S047 | `docs/LOOK_TEST.md` |
 
 ### Slice 9 — Name, issues repo, links and store text
@@ -334,7 +334,7 @@ S055 → S056 → S057 → S058 → S059                            Slice 10
 - [x] **Q-I — Resolved.** The add-on raises the bounce limit, tracks it and restores it. *(Blaxine)*
 - [ ] **Q1 — Add-on name.** What is the add-on called? Deferred until slice 9 starts, before the store page and issues repo. The plan's "before creating the repos" no longer applies, since the code repo exists.
 - [ ] **Q2 — Price.** What does it cost? Deferred until the look test passes; set in S050.
-- [ ] **Q3 — Exact preset list.** Which 8 ship? The working list is Candle, Torch, Campfire, Bonfire, Burning Object, Thin Smoke, Black Smoke Column and Embers. Deferred until S047, and each must pass the eye check.
+- [ ] **Q3 — Exact preset list.** Built as Candle, Torch, Campfire, Bonfire, Burning Object, Thin Smoke, Black Smoke Column and Embers. Deferred until the owner's eye check in S049; replace any that fail.
 - [ ] **Q4 — View sync on 4.5.** If the view sync fails on 4.5, does 4.5 go without the switch, or does the promise change? Deferred until S016 shows a failure.
 - [x] **Q5 — Resolved.** Viewport renders are viewport evaluations, so they follow the switch; a moving camera should use Face Camera for them. *(Claude, for owner review)*
 - [x] **Q6 — Resolved.** Planes still evaluate and hold their last sensible direction, Face Viewport keeps working, Create warns, and the panel says the scene needs a camera before rendering. *(Claude, for owner review)*
@@ -412,3 +412,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-01 | Blaxine | Slice 5 built: smoke on a point and smoke columns, carrying their own shading so they match between engines. |
 | 2026-11-01 | Blaxine | Slice 6 built: fire on a mesh with no change to the source. Measured about 15 ms per frame at a million faces, so the limit is 2 million with a warning from 500,000. |
 | 2026-11-01 | Blaxine | Slice 7 built: embers on legacy particles, following the timeline. |
+| 2026-11-01 | Blaxine | Slice 8 built: panel with Simple and Advanced views, 8 presets with fixed stored numbers, sliders. Checked on a stand-in layout and in one real window on 5.2. |

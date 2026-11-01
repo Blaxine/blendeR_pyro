@@ -42,7 +42,9 @@ def build_smoke_material(name, dark=(0.03, 0.03, 0.03, 1.0), light=(0.22, 0.22, 
                    kit.add(0.3, kit.mul(v, 0.3)))
     inside = kit.remap(edge, 0.0, 0.2, smooth=True)
     amount = kit.mul(kit.mul(kit.remap(body, 0.0, 0.5, smooth=True), inside), ends)
-    alpha = kit.mul(kit.mul(amount, density), kit.sub(1.0, kit.mul(steep, 0.75)))
+    density_value = kit.node("ShaderNodeValue", name="fas_density")
+    density_value.outputs[0].default_value = density
+    alpha = kit.mul(kit.mul(amount, density_value.outputs[0]), kit.sub(1.0, kit.mul(steep, 0.75)))
 
     # Lit tops of the billows, dark hollows between them.
     shade = kit.remap(billow, 0.38, 0.68, smooth=True)

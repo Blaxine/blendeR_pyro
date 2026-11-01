@@ -53,7 +53,7 @@ def create_embers(context, location, count=220, radius=0.45, lifetime=70, speed=
     scene = context.scene
     kind = C.KIND_EMBERS
     effect_uuid = naming.new_uuid()
-    collection = naming.new_effect_collection(scene, kind, effect_uuid)
+    collection = naming.new_effect_collection(scene, kind, effect_uuid, name)
 
     emitter_mesh = naming.tag(_emitter_mesh(name, radius), kind, effect_uuid)
     emitter = naming.tag(bpy.data.objects.new(name, emitter_mesh), kind, effect_uuid)
@@ -102,6 +102,8 @@ def create_embers(context, location, count=220, radius=0.45, lifetime=70, speed=
 
     entry = registry.add(scene, kind, effect_uuid, primary=emitter, root_collection=collection)
     entry.instance = spark
+    entry.base_count = count
+    entry.base_ember_size = size
     bounces.after_create(scene)
     return effect_uuid
 
