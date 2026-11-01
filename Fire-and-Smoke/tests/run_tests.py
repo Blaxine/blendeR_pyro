@@ -3,6 +3,7 @@
 """Run the Fire and Smoke test suite in every configured Blender.
 
     python tests/run_tests.py              the whole suite
+    python tests/run_tests.py --release    the release gate, then the whole suite
     python tests/run_tests.py -k stamp     only test files whose name contains "stamp"
 
 Blender executables are listed in tests/blender_paths.local.json (git-ignored;
@@ -15,6 +16,7 @@ import argparse
 import glob
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -88,12 +90,37 @@ def run_file(blender, test_file, workdir, info=None):
     return results
 
 
+def _read(*parts):
+    with open(os.path.join(REPO, *parts), encoding="utf-8") as fh:
+        return fh.read()
+
+
+def gate_passes(blenders):
+    """The hard block: no exceptions, and nothing here can be skipped."""
+    sys.path.insert(0, HERE)
+    import release_gate
+    url = re.search(r'^SUPPORT_URL = "([^"]*)"', _read("constants.py"), flags=re.M).group(1)
+    found = release_gate.problems(_read("docs", "RELEASE_CHECKLIST.md"), _read("blender_manifest.toml"),
+                                  [b["name"] for b in blenders], _read("docs", "STORE_PAGE.md"), url)
+    if found:
+        print(f"RELEASE REFUSED: {len(found)} problem(s).")
+        for problem in found:
+            print(f"  - {problem}")
+    else:
+        print("Release gate: every box is ticked for this version.")
+    return not found
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("-k", default="", help="only test files containing this text")
+    ap.add_argument("--release", action="store_true",
+                    help="refuse unless the release checklist is finished for this version")
     args = ap.parse_args()
 
     blenders = load_blenders()
+    if args.release and not gate_passes(blenders):
+        return 1
     files = sorted(f for f in glob.glob(os.path.join(HERE, "test_*.py"))
                    if args.k in os.path.basename(f))
     if not files:

@@ -277,8 +277,8 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S056 | D | Write the checklist | One box per AC19 item for the version under test, including the 32 eye checks and the scripted 4.5 walkthrough: install, add a preset, set a mesh on fire, render, delete. | S055 | `docs/RELEASE_CHECKLIST.md` |
-|  | S057 | T | Enforce the gate | A `--release` option on the test runner that fails unless the checklist names the manifest version and has no open box. | S056 | `tests/run_tests.py` |
+| ✅ | S056 | D | Write the checklist | One box per AC19 item for the version under test, including the 32 eye checks and the scripted 4.5 walkthrough: install, add a preset, set a mesh on fire, render, delete. | S055 | `docs/RELEASE_CHECKLIST.md` |
+| ✅ | S057 | T | Enforce the gate | A `--release` option on the test runner that fails unless the checklist names the manifest version and has no open box. | S056 | `tests/run_tests.py` |
 |  | S058 | O | Run the gate | Complete every box, then run `python tests/run_tests.py --release` on all versions. | S057 | `docs/RELEASE_CHECKLIST.md` |
 |  | S059 | X | Launch | Build the final zip, publish the store page, and move this plan and its PRD to `requirements/Done/`. | S058 | `requirements/` |
 
@@ -414,3 +414,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-01 | Blaxine | Slice 7 built: embers on legacy particles, following the timeline. |
 | 2026-11-01 | Blaxine | Slice 8 built: panel with Simple and Advanced views, 8 presets with fixed stored numbers, sliders. Checked on a stand-in layout and in one real window on 5.2. |
 | 2026-11-01 | Blaxine | Slice 9 partly built: buyer docs, draft store text, the support link switch and its test. Name, price, issues repo and the link itself wait for the owner. |
+| 2026-11-01 | Blaxine | Slice 10 partly built: release checklist and a gate that refuses open boxes. Running the gate and launching wait for the owner. |
