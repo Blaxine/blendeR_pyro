@@ -1,0 +1,38 @@
+schema_version = "1.0.0"
+
+# Blender 4.2+ extension manifest: the single source of the add-on version
+# (read at runtime by constants.ADDON_VERSION).
+
+id = "fire_and_smoke"
+version = "0.1.0"
+name = "Fire and Smoke"
+tagline = "Fire and smoke from presets that scrub with no baking"
+maintainer = "Blaxine"
+type = "add-on"
+
+tags = ["Geometry Nodes", "Render", "Lighting"]
+
+blender_version_min = "4.5.0"
+
+license = [
+  "SPDX:GPL-3.0-or-later",
+]
+
+# Only Blender's built-in Python modules and the standard library: no bundled
+# wheels, no network access, no permissions.
+
+# Only the add-on ships: plans, tests, local config and git data never do.
+[build]
+paths_exclude_pattern = [
+  "__pycache__/",
+  "/.git/",
+  "/.*",
+  "/*.zip",
+  "/dist/",
+  "/requirements/",
+  "/tests/",
+  "/look_test_output/",
+  "/docs/THESAURUS.md",
+  "/docs/LOOK_TEST.md",
+  "/docs/RELEASE_CHECKLIST.md",
+]
