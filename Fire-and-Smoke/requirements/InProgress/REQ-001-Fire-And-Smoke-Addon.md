@@ -267,8 +267,8 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 |  | S051 | F | Finalise identity | Update the display name, manifest id and prefix if they change, and confirm the suite still passes. Scenes saved under the working id aren't migrated. | S050 | `blender_manifest.toml`, add-on package, `tests/` |
 |  | S052 | O | Create the public issues repo | Create it with an issues-only README before any link is written. | S050 | GitHub |
 |  | S053 | U | Add support links | Add the manifest `website`, panel links and bug-report text, all pointing at the issues repo. | S052, S051 | `blender_manifest.toml`, add-on package |
-|  | S054 | T | Test links | Extend `tests/test_package.py`: the zip contains no link to the private repo, and shipped files exclude plans, tests and internal docs. | S053 | `tests/test_package.py` |
-|  | S055 | D | Write buyer docs and store text | README, troubleshooting and store text stating every limit in AC18. | S053 | `README.md`, `docs/` |
+| ✅ | S054 | T | Test links | Extend `tests/test_package.py`: the zip contains no link to the private repo, and shipped files exclude plans, tests and internal docs. | S053 | `tests/test_package.py` |
+| ✅ | S055 | D | Write buyer docs and store text | README, troubleshooting and store text stating every limit in AC18. | S053 | `README.md`, `docs/` |
 
 ### Slice 10 — Release gate
 
@@ -413,3 +413,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-01 | Blaxine | Slice 6 built: fire on a mesh with no change to the source. Measured about 15 ms per frame at a million faces, so the limit is 2 million with a warning from 500,000. |
 | 2026-11-01 | Blaxine | Slice 7 built: embers on legacy particles, following the timeline. |
 | 2026-11-01 | Blaxine | Slice 8 built: panel with Simple and Advanced views, 8 presets with fixed stored numbers, sliders. Checked on a stand-in layout and in one real window on 5.2. |
+| 2026-11-01 | Blaxine | Slice 9 partly built: buyer docs, draft store text, the support link switch and its test. Name, price, issues repo and the link itself wait for the owner. |

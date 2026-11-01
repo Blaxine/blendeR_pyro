@@ -106,6 +106,8 @@ class FAS_PT_main(bpy.types.Panel):
             _wrapped_label(row, NO_CAMERA_NOTE, icon="ERROR")
         else:
             self.layout.label(text="Pick a preset below to start", icon="INFO")
+        if C.SUPPORT_URL:
+            self.layout.operator("wm.url_open", text="Get Help", icon="HELP").url = C.SUPPORT_URL
 
 
 class FAS_PT_create(bpy.types.Panel):

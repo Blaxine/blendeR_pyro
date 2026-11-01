@@ -10,6 +10,8 @@ tagline = "Fire and smoke from presets that scrub with no baking"
 maintainer = "Blaxine"
 type = "add-on"
 
+# No website until the public issues repo exists; never the private code repo.
+
 tags = ["Geometry Nodes", "Render", "Lighting"]
 
 blender_version_min = "4.5.0"
@@ -35,4 +37,5 @@ paths_exclude_pattern = [
   "/docs/THESAURUS.md",
   "/docs/LOOK_TEST.md",
   "/docs/RELEASE_CHECKLIST.md",
+  "/docs/STORE_PAGE.md",
 ]

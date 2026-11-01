@@ -15,9 +15,11 @@ import fas_testlib as lib  # noqa: E402
 import bpy  # noqa: E402
 
 FORBIDDEN = ("requirements/", "tests/", ".git", "__pycache__", "look_test_output",
-             "docs/THESAURUS.md", "docs/LOOK_TEST.md", "docs/RELEASE_CHECKLIST.md")
+             "docs/THESAURUS.md", "docs/LOOK_TEST.md", "docs/RELEASE_CHECKLIST.md", "docs/STORE_PAGE.md")
 REQUIRED = ("__init__.py", "blender_manifest.toml", "constants.py", "core/bounces.py",
-            "effects/plane_stack.py", "effects/presets.py", "ui/panel.py")
+            "effects/plane_stack.py", "effects/presets.py", "ui/panel.py",
+            "README.md", "docs/TROUBLESHOOTING.md")
+PRIVATE_REPO = "blender_pyro"
 
 RUN_SCRIPT = r'''
 import addon_utils, bpy
@@ -55,6 +57,8 @@ def test_package():
     path = os.path.join(out_dir, zips[0])
     with zipfile.ZipFile(path) as zf:
         names = zf.namelist()
+        leaks = [n for n in names if PRIVATE_REPO in zf.read(n).decode("utf-8", "ignore").lower()]
+    lib.check("nothing in the zip mentions the private repo", not leaks, str(leaks))
     bad = [n for n in names if any(n.startswith(f) or f"/{f}" in f"/{n}" for f in FORBIDDEN)
            or n.endswith(".zip")]
     lib.check("zip ships no plans, tests, git or internal docs", not bad, str(bad[:10]))

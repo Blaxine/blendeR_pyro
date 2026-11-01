@@ -133,6 +133,19 @@ def test_problems_are_plain():
     lib.check("Delete cleans it up", len(lib.scene().fas_effects) == 0)
 
 
+def test_support_link_only_once_it_exists():
+    log = _draw(panel.FAS_PT_main)
+    if lib.C.SUPPORT_URL:
+        lib.check("the link is offered", "wm.url_open" in log["operators"])
+    else:
+        lib.check("with no issues repo there's no link", "wm.url_open" not in log["operators"])
+    original = panel.C.SUPPORT_URL
+    panel.C.SUPPORT_URL = "https://example.com/issues"
+    log = _draw(panel.FAS_PT_main)
+    panel.C.SUPPORT_URL = original
+    lib.check("setting the address is all it takes", "wm.url_open" in log["operators"])
+
+
 def test_a_broken_box_doesnt_blank_the_panel():
     bpy.ops.fas.effect_create(preset="CAMPFIRE")
     original = control_spec.controls
