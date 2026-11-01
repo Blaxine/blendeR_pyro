@@ -22,6 +22,23 @@ def _manifest_version():
 
 ADDON_VERSION = _manifest_version()
 
+# Saved-data layout version stamped on every effect entry.
+DATA_VERSION = 1
+
+# --- Ownership / naming ------------------------------------------------------
+OWNER_PROP = "fas_owner"          # "<kind>:<effect_uuid>"
+ROOT_COLLECTION = "Fire and Smoke"
+ROOT_PROP = "fas_effect_root"
+
+# --- Effect kinds -------------------------------------------------------------
+KIND_FIRE = "FIRE"
+KIND_LABELS = {
+    KIND_FIRE: "Fire",
+}
+
+# Support address for bug reports. Empty until the public issues repo exists.
+SUPPORT_URL = ""
+
 # Instance attributes the materials read through Instancer-type Attribute nodes.
 ATTR_LAYER = "fas_layer"
 ATTR_RANDOM = "fas_random"

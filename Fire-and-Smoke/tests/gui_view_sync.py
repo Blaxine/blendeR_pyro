@@ -100,6 +100,23 @@ def step_check_undo():
     report("a target moved by anything else returns to the view", (target.location - Vector((99, 99, 99))).length > 1)
 
 
+def step_copy_scene():
+    window = bpy.context.window_manager.windows[0]
+    FIRE["source"] = window.scene
+    with bpy.context.temp_override(window=window):
+        bpy.ops.scene.new(type="FULL_COPY")
+
+
+def step_check_copy():
+    copied, source = bpy.context.window_manager.windows[0].scene, FIRE["source"]
+    report("a copied scene was re-identified with no button pressed", copied != source
+           and copied.fas_effects[0].uuid != source.fas_effects[0].uuid,
+           f"{copied.name} {source.name} {[e.uuid[:8] for e in copied.fas_effects]} {[e.uuid[:8] for e in source.fas_effects]}")
+    report("the copy has its own node tree",
+           copied.fas_effects[0].primary.modifiers[0].node_group
+           != source.fas_effects[0].primary.modifiers[0].node_group)
+
+
 def step_finish():
     report("no errors from the timer", not __import__("fire_and_smoke.core.view_sync", fromlist=["x"])._error_logged[0])
     print(f"GUI done {bpy.app.version_string}: {len(FAILED)} failed", flush=True)
@@ -107,7 +124,7 @@ def step_finish():
 
 
 STEPS[:] = [step_setup, step_orbit_first, step_check_first, step_check_second, step_check_back,
-            step_undo_keeps_tracking, step_check_undo, step_finish]
+            step_undo_keeps_tracking, step_check_undo, step_copy_scene, step_check_copy, step_finish]
 
 
 def run():

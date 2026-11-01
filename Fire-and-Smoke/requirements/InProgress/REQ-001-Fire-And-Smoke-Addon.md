@@ -199,12 +199,12 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S026 | S | Add effect records | Copy tagging, the `Scene.fas_effects` registry, version stamps and create rollback, and tag every ID an effect creates, including the light data and action. | S013 | add-on package |
-|  | S027 | S | Add errors and operator guard | Copy the error pipeline, so no operator fails with a raw traceback. | S026 | add-on package |
-|  | S028 | S | Add the Delete operator | Delete only by owner tag, within this scene's effect. Release anything adopted elsewhere. Delete options use `SKIP_SAVE`. Remove the view target with the scene's last effect. | S026 | add-on package |
-|  | S029 | S | Give copied effects new IDs | Detect a scene copy's shared uuid and give that copy its own ID and tags before any delete acts on it. Confirm the view target input points at the copy's own target. | S028 | add-on package |
-|  | S030 | S | Track the bounce limit | The full rule from Architectural decisions, with the fire light following the same "only if it's still ours" check. | S028 | add-on package |
-|  | S031 | T | Test ownership | New `tests/test_create_delete.py`, `tests/test_ownership.py` and `tests/test_copied_scene.py`: renames; user-adopted data; failed create leaves nothing; both directions of copied-scene delete; bounce limit restored, and left alone if changed; two fires lined up from the camera render without black. | S029, S030 | listed files |
+| ✅ | S026 | S | Add effect records | Copy tagging, the `Scene.fas_effects` registry, version stamps and create rollback, and tag every ID an effect creates, including the light data and action. | S013 | add-on package |
+| ✅ | S027 | S | Add errors and operator guard | Copy the error pipeline, so no operator fails with a raw traceback. | S026 | add-on package |
+| ✅ | S028 | S | Add the Delete operator | Delete only by owner tag, within this scene's effect. Release anything adopted elsewhere. Delete options use `SKIP_SAVE`. Remove the view target with the scene's last effect. | S026 | add-on package |
+| ✅ | S029 | S | Give copied effects new IDs | Detect a scene copy's shared uuid and give that copy its own ID and tags before any delete acts on it. Confirm the view target input points at the copy's own target. | S028 | add-on package |
+| ✅ | S030 | S | Track the bounce limit | The full rule from Architectural decisions, with the fire light following the same "only if it's still ours" check. | S028 | add-on package |
+| ✅ | S031 | T | Test ownership | New `tests/test_create_delete.py`, `tests/test_ownership.py` and `tests/test_copied_scene.py`: renames; user-adopted data; failed create leaves nothing; both directions of copied-scene delete; bounce limit restored, and left alone if changed; two fires lined up from the camera render without black. | S029, S030 | listed files |
 
 ### Slice 5 — Smoke on a point and smoke columns
 
@@ -408,3 +408,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-01 | Blaxine | Slice 1 built. Later slices proceed before the look verdict on the owner's instruction; AC1 stays open until the owner records a verdict. Modifier inputs on 5.2 use modifier.properties.inputs. |
 | 2026-11-01 | Blaxine | Slice 2 built: facing rule, view sync, steep fade and glow card. View sync passes in real windows on 5.1 and 5.2; 4.5 unproven, so S016 stays open. |
 | 2026-11-01 | Blaxine | Slice 3 built: Real, Emissive and Both light modes. Real is about 6% apart across engines in the test scene. |
+| 2026-11-01 | Blaxine | Slice 4 built: effect records, error pipeline, Delete, copied scenes and the tracked bounce limit. |

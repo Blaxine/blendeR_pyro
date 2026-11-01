@@ -3,8 +3,9 @@
 
 import bpy
 
-from ..core import bounces, view_sync
-from . import fire_light, flame_material, plane_stack
+from .. import constants as C
+from ..core import delete
+from . import creation, flame_material
 
 CAMPFIRE = {"Sites": 7, "Layers": 4, "Spread": 0.42, "Spacing": 0.05,
             "Width": 1.05, "Height": 1.9, "Seed": 3}
@@ -12,27 +13,10 @@ CAMPFIRE_LIGHT = {"energy": 90.0, "radius": 0.3}
 
 
 def create_campfire(context, location):
-    scene = context.scene
-    material = flame_material.build_flame_material("FAS_Flame")
-    glow = flame_material.build_glow_material("FAS_Glow")
-    tree = plane_stack.build_tree("FAS_Campfire", material, glow)
-
-    obj = bpy.data.objects.new("Campfire", bpy.data.meshes.new("Campfire"))
-    obj.location = location
-    scene.collection.objects.link(obj)
-    modifier = obj.modifiers.new("Fire", "NODES")
-    modifier.node_group = tree
-    plane_stack.set_inputs(modifier, {**CAMPFIRE, "Face Viewport": True,
-                                      "View Target": view_sync.ensure_target(scene)})
-    plane_stack.hide_from_lighting(obj)
-
-    light, _action = fire_light.build_light("Campfire Light", **CAMPFIRE_LIGHT)
-    scene.collection.objects.link(light)
-    light.parent = obj
-    light.location = (0.0, 0.0, CAMPFIRE["Height"] * 0.4)
-
-    bounces.raise_for(scene, CAMPFIRE["Sites"] * CAMPFIRE["Layers"] + 1)  # + the glow card
-    return obj
+    return creation.create_plane_effect(
+        context, C.KIND_FIRE, "Campfire",
+        flame_material.build_flame_material("FAS_Flame"), CAMPFIRE, location,
+        glow=flame_material.build_glow_material("FAS_Glow"), light=dict(CAMPFIRE_LIGHT))
 
 
 class FAS_OT_campfire_create(bpy.types.Operator):
@@ -41,6 +25,7 @@ class FAS_OT_campfire_create(bpy.types.Operator):
     bl_description = "Add a Campfire at the 3D cursor"
     bl_options = {"REGISTER", "UNDO"}
 
+    @delete.guarded_create
     def execute(self, context):
         create_campfire(context, context.scene.cursor.location)
         if context.scene.camera is None:

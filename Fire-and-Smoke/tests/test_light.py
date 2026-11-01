@@ -19,8 +19,7 @@ def _mean_red(pixels):
 
 
 def _set(mode):
-    bpy.context.view_layer.objects.active = STATE["fire"]
-    lib.check(f"{mode} applies", bpy.ops.fas.light_mode(mode=mode) == {"FINISHED"})
+    lib.scene().fas_effects[0].light_mode = mode
     bpy.context.view_layer.update()
 
 
@@ -29,17 +28,16 @@ def test_setup():
     lib.add_camera()
     lib.setup_render(background=(0.02, 0.02, 0.02))
     bpy.ops.mesh.primitive_plane_add(size=40.0)
-    before = set(bpy.data.objects)
     bpy.ops.fas.campfire_create()
-    new = set(bpy.data.objects) - before
-    STATE["fire"] = next(o for o in new if o.type == "MESH")
-    STATE["light"] = next(o for o in new if o.type == "LIGHT")
+    entry = lib.scene().fas_effects[0]
+    STATE["fire"], STATE["light"] = entry.primary, entry.light
     lib.scene().frame_set(24)
 
 
 def test_flags():
     fire, light = STATE["fire"], STATE["light"]
-    lib.check("Real is the default", light.hide_render is False and not fire.visible_diffuse)
+    lib.check("Real is the default", light.hide_render is False and not fire.visible_diffuse
+              and lib.scene().fas_effects[0].light_mode == "REAL")
     _set("EMISSIVE")
     lib.check("Emissive: light off, planes light the scene",
               light.hide_render and fire.visible_diffuse and fire.visible_glossy)
@@ -74,13 +72,7 @@ def test_emissive_lights_the_ground_in_cycles():
     _set("REAL")
 
 
-def test_needs_a_fire():
-    bpy.context.view_layer.objects.active = None
-    try:
-        bpy.ops.fas.light_mode(mode="BOTH")
-        lib.check("refuses with nothing selected", False)
-    except RuntimeError as exc:
-        lib.check("refuses with nothing selected", "Select a fire" in str(exc), str(exc))
+def test_modes_keep_their_stored_values():
     lib.check("the modes keep their stored values",
               [item[3] for item in light_mode.ITEMS] == [0, 1, 2])
 

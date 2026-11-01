@@ -11,6 +11,7 @@ from bpy.app.handlers import persistent
 from mathutils import Vector
 
 from .. import constants as C
+from . import handlers, naming
 
 ACTIVE_INTERVAL = 1.0 / 30.0
 IDLE_INTERVAL = 0.5
@@ -67,7 +68,8 @@ def ensure_target(scene):
     target.hide_render = True
     target.hide_viewport = True
     target.location = _latest.get(scene.as_pointer(), default_position(scene))
-    scene.collection.objects.link(target)
+    naming.tag(target, "VIEW_TARGET", naming.new_uuid())
+    naming.ensure_root_collection(scene).objects.link(target)
     scene.fas_view_target = target
     return target
 
@@ -96,7 +98,10 @@ def tick():
     try:
         wm = bpy.context.window_manager
         windows = list(getattr(wm, "windows", ()))
-        if _rendering() or not any(s.fas_view_target for s in bpy.data.scenes):
+        if _rendering():
+            return IDLE_INTERVAL
+        handlers.check_scenes()
+        if not any(s.fas_view_target for s in bpy.data.scenes):
             return IDLE_INTERVAL
         for window in windows:
             scene = window.scene

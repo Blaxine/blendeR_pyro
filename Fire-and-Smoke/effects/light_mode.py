@@ -6,8 +6,6 @@ lighting depends on the render engine bouncing emission around the scene, so it 
 Cycles-focused.
 """
 
-import bpy
-
 REAL = "REAL"
 EMISSIVE = "EMISSIVE"
 BOTH = "BOTH"
@@ -29,29 +27,3 @@ def apply(fire, light, mode):
         hidden = mode == EMISSIVE
         light.hide_render = hidden
         light.hide_viewport = hidden
-
-
-def _fire_and_light(obj):
-    if obj is None or not any(m.type == "NODES" for m in obj.modifiers):
-        return None, None
-    return obj, next((c for c in obj.children if c.type == "LIGHT"), None)
-
-
-class FAS_OT_light_mode(bpy.types.Operator):
-    bl_idname = "fas.light_mode"
-    bl_label = "Set Fire Light Mode"
-    bl_description = "Choose what lights the scene for the selected fire"
-    bl_options = {"REGISTER", "UNDO"}
-
-    mode: bpy.props.EnumProperty(name="Light", items=ITEMS, options={"SKIP_SAVE"})
-
-    def execute(self, context):
-        fire, light = _fire_and_light(context.active_object)
-        if fire is None:
-            self.report({"ERROR"}, "Select a fire first")
-            return {"CANCELLED"}
-        apply(fire, light, self.mode)
-        return {"FINISHED"}
-
-
-CLASSES = (FAS_OT_light_mode,)
