@@ -10,7 +10,8 @@ from . import control_spec
 
 PREVIEW_NOTE = "Preview only: final renders always face the scene camera"
 EMISSIVE_NOTE = "Emissive lighting is Cycles-focused"
-EMBERS_NOTE = "Embers replay from the start when you scrub"
+EMBERS_NOTE = "Embers replay from the start: press play from the first frame to see them"
+SOLID_NOTE = "Solid view only shows rough shapes: switch to Material Preview or Rendered to see the effect"
 NO_CAMERA_NOTE = "This scene has no camera: add one before rendering"
 
 
@@ -106,6 +107,10 @@ class FAS_PT_main(bpy.types.Panel):
             _wrapped_label(row, NO_CAMERA_NOTE, icon="ERROR")
         else:
             self.layout.label(text="Pick a preset below to start", icon="INFO")
+        space = getattr(context, "space_data", None)
+        shading = getattr(space, "shading", None)
+        if len(context.scene.fas_effects) and shading is not None and shading.type in {"SOLID", "WIREFRAME"}:
+            _wrapped_label(self.layout, SOLID_NOTE, icon="SHADING_RENDERED")
         if C.SUPPORT_URL:
             self.layout.operator("wm.url_open", text="Get Help", icon="HELP").url = C.SUPPORT_URL
 

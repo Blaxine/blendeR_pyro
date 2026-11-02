@@ -82,6 +82,7 @@ Follow this scripted beginner walkthrough on 4.5 from a clean profile:
 
 - [ ] `python tests/run_tests.py` passes with 4.5, 5.1 and 5.2 in the config
 - [ ] `tests/gui_view_sync.py` passes in a window on 4.5, 5.1 and 5.2
+- [ ] `tests/gui_viewport_visible.py` passes in SOLID and RENDERED, in a window on 4.5, 5.1 and 5.2
 - [ ] `tests/gui_undo.py` passes every sequence in a window on 4.5, 5.1 and 5.2
 - [ ] `tests/gui_viewport_speed.py` run on 4.5, 5.1 and 5.2, with results in `docs/LOOK_TEST.md`
 - [ ] The built zip is installed from disk and tested in a clean profile on 4.5

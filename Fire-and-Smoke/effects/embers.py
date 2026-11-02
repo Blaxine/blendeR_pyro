@@ -14,6 +14,7 @@ from ..core import bounces, delete, naming, registry
 def _ember_material(name, strength):
     material = bpy.data.materials.new(name)
     material.use_nodes = True
+    material.diffuse_color = (1.0, 0.3, 0.03, 1.0)  # what Solid view shows
     tree = material.node_tree
     tree.nodes.clear()
     # Object Info's random value is per instance in both engines; Particle Info isn't.
@@ -30,10 +31,9 @@ def _ember_material(name, strength):
     return material
 
 
-def _spark_mesh(name):
+def _spark_mesh(name, r):
     """A small faceted shape: at this size nothing more is visible."""
     mesh = bpy.data.meshes.new(name)
-    r = 1.0
     mesh.from_pydata([(r, 0, 0), (-r, 0, 0), (0, r, 0), (0, -r, 0), (0, 0, r), (0, 0, -r)], [],
                      [(0, 2, 4), (2, 1, 4), (1, 3, 4), (3, 0, 4), (2, 0, 5), (1, 2, 5), (3, 1, 5), (0, 3, 5)])
     mesh.update()
@@ -48,9 +48,11 @@ def _emitter_mesh(name, radius):
     return mesh
 
 
-def create_embers(context, location, count=220, radius=0.45, lifetime=70, speed=1.5, size=0.012,
+def create_embers(context, location, per_frame=3.0, radius=0.45, lifetime=70, speed=1.5, size=0.024,
                   strength=18.0, name="Embers"):
+    """``per_frame`` sets the look: a total count would thin out on a longer timeline."""
     scene = context.scene
+    count = max(1, min(round(per_frame * (scene.frame_end - scene.frame_start + 1)), C.MAX_EMBERS))
     kind = C.KIND_EMBERS
     effect_uuid = naming.new_uuid()
     collection = naming.new_effect_collection(scene, kind, effect_uuid, name)
@@ -63,15 +65,17 @@ def create_embers(context, location, count=220, radius=0.45, lifetime=70, speed=
     collection.objects.link(emitter)
 
     material = naming.tag(_ember_material(f"FAS_{name}", strength), kind, effect_uuid)
-    spark_mesh = naming.tag(_spark_mesh(f"{name} Spark"), kind, effect_uuid)
+    # Built at real size, so showing it by accident (Alt+H) is just one more ember.
+    spark_mesh = naming.tag(_spark_mesh(f"{name} Spark", size), kind, effect_uuid)
     spark_mesh.materials.append(material)
     spark = naming.tag(bpy.data.objects.new(f"{name} Spark", spark_mesh), kind, effect_uuid)
     spark.parent = emitter
     collection.objects.link(spark)
-    # Only its instances show; the original stays out of the way.
+    # Only its instances show.  Never hide_viewport: that stops the viewport drawing
+    # them too, though final renders and particle counts stay correct.
     spark.hide_render = True
-    spark.hide_viewport = True
     spark.hide_select = True
+    spark.hide_set(True, view_layer=context.view_layer)
 
     modifier = emitter.modifiers.new(name, "PARTICLE_SYSTEM")
     settings = modifier.particle_system.settings
@@ -90,7 +94,7 @@ def create_embers(context, location, count=220, radius=0.45, lifetime=70, speed=
     settings.effector_weights.gravity = -0.05
     settings.render_type = "OBJECT"
     settings.instance_object = spark
-    settings.particle_size = size
+    settings.particle_size = 1.0
     settings.size_random = 0.7
     settings.use_rotations = True
     settings.rotation_mode = "NOR"
@@ -103,7 +107,7 @@ def create_embers(context, location, count=220, radius=0.45, lifetime=70, speed=
     entry = registry.add(scene, kind, effect_uuid, primary=emitter, root_collection=collection)
     entry.instance = spark
     entry.base_count = count
-    entry.base_ember_size = size
+    entry.base_ember_size = 1.0
     bounces.after_create(scene)
     return effect_uuid
 

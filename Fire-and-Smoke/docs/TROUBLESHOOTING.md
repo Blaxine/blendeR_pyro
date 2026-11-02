@@ -16,9 +16,19 @@ Viewport renders follow the **Viewport Preview** setting. Choose **Face Camera**
 
 Final renders need one. Add a camera with **Add > Camera**. Viewport previews keep working without one.
 
+## I can't see the embers
+
+Embers are particles, so they build up from the first frame. Go to the first frame and press play: there's nothing to see on frame 1 itself. This doesn't affect flames or smoke.
+
+They're small sparks made for mid-ground shots, and they show best against something dark. If they're still hard to see, raise **Ember Size** and **Amount** on the effect.
+
+## Flames or smoke look like flat shapes
+
+The default Solid view can't show them properly. Switch the viewport to **Material Preview** or **Rendered**.
+
 ## Embers look wrong after jumping along the timeline
 
-Embers are particles, so they build up from the first frame. Jump back to the start and play forward. This doesn't affect flames or smoke.
+Jump back to the first frame and play forward.
 
 ## Burning Object is refused
 

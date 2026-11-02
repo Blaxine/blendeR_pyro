@@ -53,6 +53,7 @@ def _follow_range(scene, old):
                 settings.frame_start = start
                 settings.frame_end = end
             settings.count = max(1, min(round(settings.count * ratio), C.MAX_EMBERS))
+            entry.base_count = max(1, min(round(entry.base_count * ratio), C.MAX_EMBERS))
 
 
 def follow_ranges():

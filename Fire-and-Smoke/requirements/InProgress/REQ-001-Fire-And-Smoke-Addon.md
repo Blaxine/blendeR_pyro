@@ -140,7 +140,10 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 - **Operators called from Python don't push undo steps** unless passed `undo=True`. A Scene reference kept across an undo is stale, and assigning it back to a window crashes Blender. No add-on code does this; an earlier test did.
 - **Mesh fire cost on 5.2:** 0.6 ms per frame at 1,000 faces, 4.2 ms at 200,000, 15 ms at 1,000,000, for a static mesh.
 
-**Windowed checks,** outside the suite since they need a window: `tests/gui_view_sync.py`, `tests/gui_undo.py`, `tests/gui_viewport_speed.py`.
+- **`hide_viewport` on a particle system's instance object stops the viewport drawing its instances.** Final renders and `depsgraph.object_instances` stay correct, so only a screenshot shows it. Hide it with `hide_set` instead.
+- **Solid view can't show the materials.** Without a display colour, planes draw as opaque grey cards. `Material.diffuse_color` with a low alpha gives soft coloured shapes, and alpha 0 hides the glow card.
+
+**Windowed checks,** outside the suite since they need a window: `tests/gui_viewport_visible.py`, `tests/gui_view_sync.py`, `tests/gui_undo.py`, `tests/gui_viewport_speed.py`.
 
 **Tests** follow AquaSuite's pattern: `tests/test_<area>.py` with `test_*` functions, ending in the helper's `main(globals())`. Run with `python tests/run_tests.py` from `Fire-and-Smoke/`.
 
@@ -391,6 +394,7 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 - **Diffuse-lit smoke.** In EEVEE a Dithered test stack came out speckled, and lit smoke depends on each engine's lighting. Self-shaded smoke differs between engines by 0.001 to 0.004 mean per pixel.
 - **Planes passing through a burning mesh.** They cut hard vertical lines where the mesh sliced them, so they stand off towards the viewer by half their width.
 - **A light at a mesh fire's origin.** Inside a closed mesh it lit nothing, and the object and ground stayed dark.
+- **A total ember count.** Spread over the default 250-frame timeline it left 42 alive at once, too thin to read. A rate per frame gives about 143.
 - **Viewport under the mouse wins.** Timers receive no mouse event. The most recently changed view identifies the same viewport during an orbit.
 - **Capping effects at 7 planes and leaving scene settings alone.** Two fires lined up from the camera add to 14 planes and still show black, and 7 planes could weaken the look test.
 - **Warning the buyer about the bounce limit.** A beginner's first Cycles render would be a black box until they read and acted on the warning.
@@ -432,3 +436,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-01 | Blaxine | Slice 9 partly built: buyer docs, draft store text, the support link switch and its test. Name, price, issues repo and the link itself wait for the owner. |
 | 2026-11-01 | Blaxine | Slice 10 partly built: release checklist and a gate that refuses open boxes. Running the gate and launching wait for the owner. |
 | 2026-11-01 | Blaxine | Recorded final measurements and findings. Look verdict, eye checks, 4.5, name, price, issues repo and launch remain open. |
+| 2026-11-01 | Blaxine | Fixed embers drawing nothing in the viewport, reported by the owner. Embers now emit at a rate, and sparks are larger. Added display colours for Solid view and a windowed visibility check. |

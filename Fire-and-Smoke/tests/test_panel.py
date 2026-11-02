@@ -43,9 +43,10 @@ class StandIn:
         return SimpleNamespace()
 
 
-def _draw(cls, active=None):
+def _draw(cls, active=None, shading=None):
     layout = StandIn()
-    context = SimpleNamespace(scene=lib.scene(), active_object=active)
+    space = SimpleNamespace(shading=SimpleNamespace(type=shading)) if shading else None
+    context = SimpleNamespace(scene=lib.scene(), active_object=active, space_data=space)
     cls.draw(SimpleNamespace(layout=layout), context)
     return layout.log
 
@@ -110,7 +111,19 @@ def test_embers_box():
     bpy.ops.fas.effect_create(preset="EMBERS")
     log = _draw(panel.FAS_PT_effects)
     lib.check("embers say they replay", "replay" in _text(log), _text(log))
+    lib.check("and how to see them", "press play" in _text(log), _text(log))
     lib.check("embers have no facing switch", "preview_facing" not in log["props"])
+    bpy.ops.fas.effect_delete(uuid=lib.scene().fas_effects[-1].uuid)
+
+
+def test_solid_view_is_explained():
+    log = _draw(panel.FAS_PT_main, shading="SOLID")
+    lib.check("no note with no effects", "Solid view" not in _text(log), _text(log))
+    bpy.ops.fas.effect_create(preset="CAMPFIRE")
+    log = _draw(panel.FAS_PT_main, shading="SOLID")
+    lib.check("Solid view says how to see the effect", "Material Preview" in _text(log), _text(log))
+    log = _draw(panel.FAS_PT_main, shading="MATERIAL")
+    lib.check("Material Preview doesn't", "Solid view" not in _text(log), _text(log))
     bpy.ops.fas.effect_delete(uuid=lib.scene().fas_effects[-1].uuid)
 
 

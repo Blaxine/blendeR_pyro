@@ -124,6 +124,8 @@ class FAS_OT_effect_create(bpy.types.Operator):
                                   "so the planes don't render black")
         if scene.camera is None:
             self.report({"WARNING"}, "This scene has no camera: add one before rendering")
+        elif self.preset == "EMBERS":
+            self.report({"INFO"}, "Press play from the first frame to see the embers")
         return {"FINISHED"}
 
 

@@ -40,6 +40,7 @@ def noise(kit, vector, w, scale, detail=4.0, roughness=0.5, distortion=0.0):
 def build_flame_material(name, speed=1.35, strength=0.8, steep_floor=0.0):
     material = bpy.data.materials.new(name)
     material.use_nodes = True
+    material.diffuse_color = (1.0, 0.28, 0.03, 0.12)  # what Solid view shows
     material.surface_render_method = "BLENDED"
     tree = material.node_tree
     tree.nodes.clear()
@@ -94,6 +95,7 @@ def build_glow_material(name, colour=(1.0, 0.16, 0.012, 1.0), strength=1.1):
     """The soft glow that replaces the planes from steep angles."""
     material = bpy.data.materials.new(name)
     material.use_nodes = True
+    material.diffuse_color = (1.0, 0.28, 0.03, 0.0)  # Solid view can't fade it, so hide it
     material.surface_render_method = "BLENDED"
     tree = material.node_tree
     tree.nodes.clear()

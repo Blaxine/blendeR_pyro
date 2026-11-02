@@ -15,6 +15,7 @@ def build_smoke_material(name, dark=(0.03, 0.03, 0.03, 1.0), light=(0.22, 0.22, 
                          density=0.5, speed=0.28, scale=1.9, base_width=0.1, top_width=0.5, aspect=1.5):
     material = bpy.data.materials.new(name)
     material.use_nodes = True
+    material.diffuse_color = (light[0], light[1], light[2], 0.1)  # what Solid view shows
     material.surface_render_method = "BLENDED"
     tree = material.node_tree
     tree.nodes.clear()
