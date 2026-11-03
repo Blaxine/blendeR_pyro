@@ -14,8 +14,8 @@ import fas_testlib as lib  # noqa: E402
 
 import bpy  # noqa: E402
 
-FORBIDDEN = ("requirements/", "tests/", ".git", "__pycache__", "look_test_output",
-             "docs/THESAURUS.md", "docs/LOOK_TEST.md", "docs/RELEASE_CHECKLIST.md", "docs/STORE_PAGE.md")
+FORBIDDEN = ("reqs/", "tests/", ".git", "__pycache__", "look_test_output",
+             "docs/LOOK_TEST.md", "docs/RELEASE_CHECKLIST.md", "docs/STORE_PAGE.md")
 REQUIRED = ("__init__.py", "blender_manifest.toml", "constants.py", "core/bounces.py",
             "effects/plane_stack.py", "effects/presets.py", "ui/panel.py",
             "README.md", "docs/TROUBLESHOOTING.md")

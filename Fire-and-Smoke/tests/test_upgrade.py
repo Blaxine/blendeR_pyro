@@ -14,7 +14,7 @@ import fas_testlib as lib  # noqa: E402
 import bpy  # noqa: E402
 
 NAME = "fas_upgrade_copy"
-SKIP = {"tests", "docs", "requirements", "look_test_output", "__pycache__"}
+SKIP = {"tests", "docs", "reqs", "look_test_output", "__pycache__"}
 
 
 def test_new_files_replace_the_old_modules():

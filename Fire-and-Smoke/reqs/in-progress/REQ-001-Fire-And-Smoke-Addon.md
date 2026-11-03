@@ -49,7 +49,7 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 
 ## Architectural decisions
 
-- **Repo layout:** `blendeR_pyro` is the private code repo. `Fire-and-Smoke/` is the add-on root: manifest, `__init__.py`, `tests/`, `docs/` and `requirements/` all sit there.
+- **Repo layout:** `blendeR_pyro` is the private code repo. `Fire-and-Smoke/` is the add-on root: manifest, `__init__.py`, `tests/`, `docs/` and `reqs/` all sit there.
 - **Working identity:** manifest id `fire_and_smoke`, property and datablock prefix `fas_`, with the display name in one constant. All three are final before the store page and issues repo exist.
 - **Effect:** the unit of creation and deletion, tracked in `Scene.fas_effects` and tagged on every ID it creates with `fas_owner = "<kind>:<uuid>"`. Each entry stores the add-on version and a data version.
 - **Plane stack:** a Geometry Nodes instance stack, spinning around the vertical axis only. Each instance stores `fas_layer` and `fas_time`, and the material reads them through Instancer-type Attribute nodes.
@@ -168,7 +168,7 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
 |  | S001 | O | Make the repo private | Switch `Blaxine/blendeR_pyro` to private before any add-on code is committed. Confirm that GitHub's API returns 404 without a login. | — | GitHub settings |
 |  | S002 | O | Install Blender 4.5 | Install 4.5 LTS beside 5.1 and 5.2, and rerun the measured checks in Constraints on it. Anything that differs goes in `docs/LOOK_TEST.md`. | — | `tests/blender_paths.local.json` |
-| ✅ | S003 | F | Scaffold the extension | Manifest with the working id, 4.5 minimum and build excludes for `requirements/`, `tests/`, `docs/THESAURUS.md`, `docs/LOOK_TEST.md` and `docs/RELEASE_CHECKLIST.md`. `__init__.py` with module clearing. One display-name constant. `.gitignore`. | S001 | `blender_manifest.toml`, `__init__.py`, `.gitignore` |
+| ✅ | S003 | F | Scaffold the extension | Manifest with the working id, 4.5 minimum and build excludes for `reqs/`, `tests/`, `docs/LOOK_TEST.md` and `docs/RELEASE_CHECKLIST.md`. `__init__.py` with module clearing. One display-name constant. `.gitignore`. | S001 | `blender_manifest.toml`, `__init__.py`, `.gitignore` |
 | ✅ | S004 | T | Bring over the test runner | Copy and rename the runner and helper, with the `FAS_TEST` tag and the three Blender paths in the example config. | S003 | `tests/run_tests.py`, test helper |
 | ✅ | S005 | S | Build the Campfire plane stack | The node tree from Technical Notes with hard-coded Campfire values, always facing the Active Camera. The object is hidden from shadow, diffuse and glossy rays. | S003 | add-on package |
 | ✅ | S006 | S | Build the flame material | Noise-driven emission and transparency reading the instance attributes, with no images. | S005 | add-on package |
@@ -180,7 +180,7 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 |  | S012 | O | Measure speed | Read the default Campfire's frame rate in an EEVEE viewport in a window. The script measures Cycles against an empty 1080p frame, discarding first-render compile time. Confirm or change the target. | S011 | `docs/LOOK_TEST.md` |
 |  | S013 | O | Judge the look: round 1 | Watch the clips in both engines and record pass or fail, the smoke shading choice and the ground-line decision. | S011, S012 | `docs/LOOK_TEST.md` |
 |  | S014 | S | Round 2, only after a fail | Add a few grayscale shape masks, which drops the "no images" rule and adds art and licensing work, then repeat S011 to S013. A second fail stops the project: record that and start no further slices. | S013 | add-on package, `docs/LOOK_TEST.md` |
-| ✅ | S015 | D | Add new terms to the thesaurus | Add Effect, Plane stack, View sync, View target, Look test, Release gate, Light mode and Bounce limit to `docs/THESAURUS.md`. | S013 | `docs/THESAURUS.md` |
+| ✅ | S015 | D | Add new terms to the thesaurus | Add Effect, Plane stack, View sync, View target, Look test, Release gate, Light mode and Bounce limit to `reqs/GLOSSARY.md`. | S013 | `reqs/GLOSSARY.md` |
 
 ### Slice 2 — Facing, preview switch and view sync
 
@@ -296,7 +296,7 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 | ✅ | S056 | D | Write the checklist | One box per AC19 item for the version under test, including the 32 eye checks and the scripted 4.5 walkthrough: install, add a preset, set a mesh on fire, render, delete. | S055 | `docs/RELEASE_CHECKLIST.md` |
 | ✅ | S057 | T | Enforce the gate | A `--release` option on the test runner that fails unless the checklist names the manifest version and has no open box. | S056 | `tests/run_tests.py` |
 |  | S058 | O | Run the gate | Complete every box, then run `python tests/run_tests.py --release` on all versions. | S057 | `docs/RELEASE_CHECKLIST.md` |
-|  | S059 | X | Launch | Build the final zip, publish the store page, and move this plan and its PRD to `requirements/Done/`. | S058 | `requirements/` |
+|  | S059 | X | Launch | Build the final zip, publish the store page, and move this plan and its PRD to `reqs/done/`. | S058 | `reqs/` |
 
 ### Dependency graph
 
@@ -437,3 +437,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-01 | Blaxine | Slice 10 partly built: release checklist and a gate that refuses open boxes. Running the gate and launching wait for the owner. |
 | 2026-11-01 | Blaxine | Recorded final measurements and findings. Look verdict, eye checks, 4.5, name, price, issues repo and launch remain open. |
 | 2026-11-01 | Blaxine | Fixed embers drawing nothing in the viewport, reported by the owner. Embers now emit at a rate, and sparks are larger. Added display colours for Solid view and a windowed visibility check. |
+| 2026-11-03 | Blaxine | Paths updated for the reqs/ rename. |
