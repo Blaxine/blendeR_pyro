@@ -129,7 +129,7 @@ def busy(entry):
 
 # --- What a preset wrote, and whether it's still there ----------------------------
 
-SNAPSHOT_ENTRY = ("detail", "flame_intensity", "smoke_amount", "light_strength", "volume_density",
+SNAPSHOT_ENTRY = ("detail", "flame_intensity", "flame_noise", "smoke_amount", "light_strength", "volume_density",
                   "emission_strength", "fire_temperature", "flame_tint", "smoke_colour")
 SNAPSHOT_DOMAIN = ("resolution_max",) + tuple(CATALOG[DEFAULT]["domain"])
 SNAPSHOT_FLOW = tuple(CATALOG[DEFAULT]["flow"])
@@ -259,6 +259,9 @@ def apply(context, entry, preset_id):
         _set_material(entry, package["material"])
         _set_light(entry, package["light"])
         entry.base_fuel = package["flow"]["fuel_amount"]
+        entry.base_vorticity = package["domain"]["vorticity"]
+        entry.base_flame_vorticity = package["domain"]["flame_vorticity"]
+        entry.flame_noise = 1.0
         entry.base_smoke = package["flow"]["density"]
         entry.base_energy = package["light"]["energy"]
         entry.flame_intensity = 1.0

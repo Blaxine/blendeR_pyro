@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Simulated Fire's look: Flame Colour, Emission Strength, Temperature, Density and
-Smoke Colour.  They're the volume material's, so they show straight away, with no new
+"""The Simulated Fire's Flame Noise, and its look: Flame Colour, Emission Strength,
+Temperature, Density and Smoke Colour.  They're the volume material's, so they show straight away, with no new
 simulation, and Apply puts the preset's look back."""
 
 import os
@@ -168,6 +168,72 @@ def test_an_older_fire_keeps_its_look():
               f"{strength_before} -> {strength.inputs[1].default_value}")
     lib.check("and its smoke keeps its colour", _close(node.inputs["Color"].default_value[:3], (0.3,) * 3)
               and _close(entry.smoke_colour, (0.3,) * 3))
+    bpy.ops.fas.apply_sim_preset(uuid=entry.uuid)
+
+
+def _flame_top(entry):
+    """How high up the domain the flames reach, 0 to 1."""
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    settings = sim_fire.find_modifier(entry.primary.evaluated_get(depsgraph), "DOMAIN").domain_settings
+    flame = list(settings.flame_grid)
+    rx, ry, rz = settings.domain_resolution
+    tops = [i // (rx * ry) for i, f in enumerate(flame) if f > 0.2]
+    return max(tops) / rz if tops else 0.0
+
+
+def _played_top(entry, noise):
+    scene = lib.scene()
+    scene.frame_set(1)
+    entry.flame_noise = noise
+    for frame in range(1, 41):
+        scene.frame_set(frame)
+    return _flame_top(entry)
+
+
+def test_flame_noise():
+    entry = _entry()
+    settings = sim_fire.domain_settings(entry)
+    domain = CATALOG[sim_presets.CAMPFIRE]["domain"]
+    lib.check("the box shows Flame Noise with the simulation's controls",
+              "entry:flame_noise" in control_spec.controls(entry.kind, False)
+              and control_spec.controls(entry.kind, False).index("entry:flame_noise")
+              < control_spec.controls(entry.kind, False).index("entry:flame_tint"))
+    lib.check("it starts at 1, the preset's own swirl", entry.flame_noise == 1.0
+              and _close(settings.vorticity, domain["vorticity"])
+              and _close(settings.flame_vorticity, domain["flame_vorticity"]))
+    with _Clears() as clears:
+        entry.flame_noise = 1.2
+    lib.check("it scales the swirl", _close(settings.vorticity, domain["vorticity"] * 1.2)
+              and _close(settings.flame_vorticity, domain["flame_vorticity"] * 1.2),
+              f"{settings.vorticity} {settings.flame_vorticity}")
+    entry.flame_noise = 3.0
+    lib.check("up to Blender's cap on flame vorticity", _close(settings.vorticity, domain["vorticity"] * 3.0)
+              and _close(settings.flame_vorticity, 2.0), f"{settings.vorticity} {settings.flame_vorticity}")
+    lib.check("and simulates again", entry.uuid in clears.cleared)
+    lib.check("an edit marks the preset modified", sim_presets.is_modified(entry))
+    bpy.ops.fas.apply_sim_preset(uuid=entry.uuid)
+    entry = _entry()
+    settings = sim_fire.domain_settings(entry)
+    lib.check("Apply puts it back", entry.flame_noise == 1.0
+              and _close(settings.flame_vorticity, domain["flame_vorticity"]) and not sim_presets.is_modified(entry))
+    calm, wild = _played_top(entry, 0.0), _played_top(entry, 3.0)
+    lib.info(f"flames reach {calm:.2f} of the domain calm, {wild:.2f} at noise 3")
+    lib.check("calm flames rise in tall tongues, noisy ones break up lower", calm > wild + 0.05,
+              f"{calm:.2f} against {wild:.2f}")
+    lib.scene().frame_set(1)
+    entry.flame_noise = 1.0
+
+
+def test_an_older_fire_keeps_its_swirl():
+    entry = _entry()
+    settings = sim_fire.domain_settings(entry)
+    for key in ("base_vorticity", "base_flame_vorticity"):
+        del entry[key]
+    settings.vorticity, settings.flame_vorticity = 0.4, 0.8
+    entry.flame_noise = 0.5
+    lib.check("what it had is what the slider scales",
+              _close(settings.vorticity, 0.2) and _close(settings.flame_vorticity, 0.4),
+              f"{settings.vorticity} {settings.flame_vorticity}")
     bpy.ops.fas.apply_sim_preset(uuid=entry.uuid)
 
 

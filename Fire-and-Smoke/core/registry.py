@@ -154,6 +154,22 @@ def _flame_intensity_update(self, _context):
     _simulation_change(self, change)
 
 
+@errors.guard_update("Fire and Smoke couldn't change the flame noise")
+def _flame_noise_update(self, _context):
+    def change(sim_fire):
+        settings = sim_fire.domain_settings(self)
+        if settings is None:
+            return
+        # A fire saved before the slider: what it has is what the slider scales.
+        if "base_vorticity" not in self.keys():
+            self["base_vorticity"] = settings.vorticity
+            self["base_flame_vorticity"] = settings.flame_vorticity
+        # Blender caps flame vorticity at 2: past that, only the general swirl rises.
+        settings.vorticity = min(self.base_vorticity * self.flame_noise, 4.0)
+        settings.flame_vorticity = min(self.base_flame_vorticity * self.flame_noise, 2.0)
+    _simulation_change(self, change)
+
+
 @errors.guard_update("Fire and Smoke couldn't change the smoke")
 def _smoke_amount_update(self, _context):
     def change(sim_fire):
@@ -223,6 +239,8 @@ class FAS_EffectEntry(bpy.types.PropertyGroup):
     base_fuel: FloatProperty(default=1.0)
     base_smoke: FloatProperty(default=1.0)
     base_blackbody: FloatProperty(default=1.0)
+    base_vorticity: FloatProperty(default=0.0)
+    base_flame_vorticity: FloatProperty(default=0.5)
     base_emission: FloatProperty(default=0.0)
 
     preview_facing: EnumProperty(name="Viewport Preview", items=PREVIEW_ITEMS, default=VIEWPORT,
@@ -253,6 +271,10 @@ class FAS_EffectEntry(bpy.types.PropertyGroup):
                                    update=_flame_intensity_update,
                                    description="How much fire the emitter makes. "
                                                "Play from the first frame to see a change")
+    flame_noise: FloatProperty(name="Flame Noise", default=1.0, min=0.0, soft_max=3.0, max=6.0,
+                               update=_flame_noise_update,
+                               description="How erratic the flames are: 0 is calm and smooth, higher licks, "
+                                           "splits and flickers more. Play from the first frame to see a change")
     # The Simulated Fire's look: its volume material, so changes show without simulating.
     flame_tint: FloatVectorProperty(name="Flame Colour", subtype="COLOR", size=3, default=(1.0, 1.0, 1.0),
                                     min=0.0, max=1.0, update=_look_update,

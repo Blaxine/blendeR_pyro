@@ -65,6 +65,7 @@ The owner couldn't see the fire. There were two causes, and both are now explain
 The owner then asked for a campfire that looks real, and for wind:
 
 - **The Campfire burns from eight log patches**, with more swirl in its flames and a flame colour ramp from red tips to a pale core. Normal Fire and Candle Fire are unchanged. Values and findings are in `docs/LOOK_TEST.md`.
+- **Flame Noise** scales the flames' swirl, from calm at 0 to wild at 3. A preset resets it.
 - **Look sliders** in the Simulated Fire's box: Flame Colour, Emission Strength, Temperature, Density and Smoke Colour. They change the volume material, so they show with no new simulation. A preset resets them.
 - **A Wind button** adds an owned Wind force field, with Power, Gusts and Direction in its box. Changing it makes every Simulated Fire simulate again.
 
@@ -82,3 +83,4 @@ The owner then asked for a campfire that looks real, and for wind:
 | 2026-11-04 | Blaxine | Warnings for a mesh hiding a fire and for Material Preview, after the owner couldn't see the fire. |
 | 2026-11-04 | Blaxine | A campfire that burns from logs, with a flame colour ramp, and a Wind button. |
 | 2026-11-04 | Blaxine | Look sliders for the Simulated Fire: colour, glow, temperature, density and smoke colour. |
+| 2026-11-04 | Blaxine | Flame Noise for the Simulated Fire. |

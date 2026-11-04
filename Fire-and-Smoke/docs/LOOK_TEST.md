@@ -213,6 +213,17 @@ The **Wind** button in the Add panel makes an owned Wind force field, a Plane fi
 - Wind is not a setting the Replay cache notices, so adding, changing or deleting a wind clears every Simulated Fire's cache. The buyer plays from the first frame again to see it.
 - The plane fires and smoke are animated noise, so wind doesn't move them. The box says so.
 
+### Flame Noise
+
+The owner asked for a noise slider for the flames. It scales the domain's vorticity and flame vorticity from the preset's, so it changes the simulation and clears the cache. Rendered in Cycles on 5.2.2 at frame 80, the Campfire at:
+
+- **0:** two or three calm, straight tongues, reaching high.
+- **1:** the preset.
+- **2:** broken, licking flames, lower.
+- **3.5:** a churning, rounded fire.
+
+After 40 frames the flames reach 0.62 of the way up the domain at 0, and about 0.35 at 3 (`tests/test_sim_look.py`). Blender caps flame vorticity at 2, so past about 1.3 on the Campfire only the general vorticity rises, which still makes it wilder. The first play-through gets slower as it rises: 60 headless frames took 3.0 s at 0, 3.5 s at 1 and 5.2 s at 3.5.
+
 ### The look sliders
 
 The owner asked to change the Simulated Fire's colour, density, emission strength and temperature. They're the volume material's, so they show at once, and the cache stays (`tests/test_sim_look.py`).
