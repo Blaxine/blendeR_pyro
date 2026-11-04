@@ -213,6 +213,20 @@ The **Wind** button in the Add panel makes an owned Wind force field, a Plane fi
 - Wind is not a setting the Replay cache notices, so adding, changing or deleting a wind clears every Simulated Fire's cache. The buyer plays from the first frame again to see it.
 - The plane fires and smoke are animated noise, so wind doesn't move them. The box says so.
 
+### The look sliders
+
+The owner asked to change the Simulated Fire's colour, density, emission strength and temperature. They're the volume material's, so they show at once, and the cache stays (`tests/test_sim_look.py`).
+
+| Slider | What it sets |
+| ------ | ------------ |
+| Flame Colour | The ramp's hue, through a Color blend whose factor is the colour's saturation, and its glow by the colour's value. Also Blackbody Tint, and the fire light's hue. |
+| Emission Strength | The ramp's strength and Blackbody Intensity, times the slider |
+| Temperature | The Principled Volume's Temperature (1000 times the slider), the ramp's input (so hotter reads towards the pale core) and the ramp's strength |
+| Density | The volume's Density, times Smoke Amount |
+| Smoke Colour | The volume's Color |
+
+Found by render on 5.2.2 on 2026-11-04: a Flame Colour that multiplied the ramp couldn't make blue, because the ramp has almost no blue in it. A blue came out yellow-green. The Color blend keeps the ramp's bright core and dark tips with the chosen hue, so blue and green flames render as blue and green. Blackbody can only be tinted, so a blue Normal Fire or Candle Fire is dim.
+
 ## Blender 4.5
 
 4.5.4 is installed now. The suite and every Simulated Campfire check above pass on it. The Campfire's own speed scripts haven't been rerun on it yet.

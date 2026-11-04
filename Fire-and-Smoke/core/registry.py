@@ -160,10 +160,18 @@ def _smoke_amount_update(self, _context):
         flow = sim_fire.flow_settings(self)
         if flow is not None:
             flow.density = self.base_smoke * self.smoke_amount
-        node = sim_fire.volume_node(self)
-        if node is not None:
-            node.inputs["Density"].default_value = self.base_density * self.smoke_amount
+        sim_fire.set_look(self)
     _simulation_change(self, change)
+
+
+@errors.guard_update("Fire and Smoke couldn't change the fire's look")
+def _look_update(self, _context):
+    """Render settings: they show straight away, so the cache stays."""
+    from ..effects import sim_fire
+    if self.primary is None:
+        return
+    sim_fire.set_look(self)
+    sim_presets.note_edit(self)
 
 
 @errors.guard_update("Fire and Smoke couldn't change the wind")
@@ -214,6 +222,8 @@ class FAS_EffectEntry(bpy.types.PropertyGroup):
     base_ember_size: FloatProperty(default=0.01)
     base_fuel: FloatProperty(default=1.0)
     base_smoke: FloatProperty(default=1.0)
+    base_blackbody: FloatProperty(default=1.0)
+    base_emission: FloatProperty(default=0.0)
 
     preview_facing: EnumProperty(name="Viewport Preview", items=PREVIEW_ITEMS, default=VIEWPORT,
                                  update=_preview_update)
@@ -243,6 +253,23 @@ class FAS_EffectEntry(bpy.types.PropertyGroup):
                                    update=_flame_intensity_update,
                                    description="How much fire the emitter makes. "
                                                "Play from the first frame to see a change")
+    # The Simulated Fire's look: its volume material, so changes show without simulating.
+    flame_tint: FloatVectorProperty(name="Flame Colour", subtype="COLOR", size=3, default=(1.0, 1.0, 1.0),
+                                    min=0.0, max=1.0, update=_look_update,
+                                    description="The flames' colour. White keeps the preset's own colours; "
+                                                "a more vivid colour colours them more")
+    emission_strength: FloatProperty(name="Emission Strength", default=1.0, min=0.0, soft_max=4.0,
+                                     update=_look_update,
+                                     description="How brightly the flames glow. Shows straight away")
+    fire_temperature: FloatProperty(name="Temperature", default=1.0, min=0.1, soft_min=0.5, soft_max=2.0, max=4.0,
+                                    update=_look_update,
+                                    description="How hot the flames look: cooler is redder and dimmer, "
+                                                "hotter is yellower and brighter. Shows straight away")
+    volume_density: FloatProperty(name="Density", default=1.0, min=0.0, soft_max=4.0, update=_look_update,
+                                  description="How thick the smoke and flames look. Shows straight away")
+    smoke_colour: FloatVectorProperty(name="Smoke Colour", subtype="COLOR", size=3, default=(0.05, 0.05, 0.05),
+                                      min=0.0, max=1.0, update=_look_update,
+                                      description="The colour of the smoke. Shows straight away")
     # The Simulated Fire's preset, as AquaSuite keeps its liquid presets: what was
     # applied, what it wrote, and the menu for applying another.
     sim_preset: StringProperty(name="Simulation Preset")

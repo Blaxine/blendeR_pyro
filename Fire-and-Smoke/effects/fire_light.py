@@ -86,7 +86,10 @@ def set_speed(light_data, speed):
         fcurve.update()
 
 
-def build_light(name, energy, colour=(1.0, 0.42, 0.13), radius=0.25, flicker=DEFAULT_FLICKER, speed=3.0,
+COLOUR = (1.0, 0.42, 0.13)
+
+
+def build_light(name, energy, colour=COLOUR, radius=0.25, flicker=DEFAULT_FLICKER, speed=3.0,
                 seed=0.0):
     """The light object (not linked anywhere yet) and its action."""
     data = bpy.data.lights.new(name, "POINT")

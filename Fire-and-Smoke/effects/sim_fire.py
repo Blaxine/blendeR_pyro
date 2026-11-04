@@ -15,6 +15,8 @@ objects.  The look values live in the presets.
 
 import math
 
+import colorsys
+
 import bpy
 
 from .. import constants as C
@@ -31,6 +33,13 @@ FLAME_RAMP = ((0.0, (0.0, 0.0, 0.0)), (0.12, (0.35, 0.03, 0.0)), (0.35, (1.0, 0.
               (0.65, (1.0, 0.42, 0.05)), (1.0, (1.0, 0.72, 0.3)))
 RAMP_NODE = "fas_flame_colour"
 STRENGTH_NODE = "fas_flame_strength"
+TINT_NODE = "fas_flame_tint"
+HEAT_NODE = "fas_flame_heat"
+INFO_NODE = "fas_flame_info"
+FLAME_NODES = (RAMP_NODE, STRENGTH_NODE, TINT_NODE, HEAT_NODE, INFO_NODE)
+# The Principled Volume's own Temperature: the simulation's temperature grid is
+# multiplied by it, so the Temperature slider scales it.
+TEMPERATURE = 1000.0
 
 
 def _fill(mesh, verts, faces):
@@ -73,24 +82,94 @@ def fill_patches(mesh, patches, sides=12):
     return _fill(mesh, verts, faces)
 
 
-def flame_colour(entry):
-    """The flame colour nodes, (ramp, strength).  A fire from an older file gets them added."""
+def flame_nodes(entry):
+    """The flame colour nodes, (ramp, strength, tint, heat).  A fire from an older file
+    gets them added, or rebuilt if some are missing."""
     node = volume_node(entry)
     if node is None:
-        return None, None
+        return None, None, None, None
     tree = node.id_data
-    ramp, strength = tree.nodes.get(RAMP_NODE), tree.nodes.get(STRENGTH_NODE)
-    if ramp is None or strength is None:
-        ramp, strength = _add_flame_colour(tree, node)
-    return ramp, strength
+    nodes = [tree.nodes.get(name) for name in (RAMP_NODE, STRENGTH_NODE, TINT_NODE, HEAT_NODE)]
+    if None in nodes:
+        for name in FLAME_NODES:
+            if tree.nodes.get(name) is not None:
+                tree.nodes.remove(tree.nodes[name])
+        nodes = _add_flame_colour(tree, node)
+    return tuple(nodes)
+
+
+def flame_colour(entry):
+    """The flame colour nodes, (ramp, strength)."""
+    return flame_nodes(entry)[:2]
+
+
+def _adopt(entry, node):
+    """A fire saved before the look sliders keeps its look: what its material shows
+    becomes what they scale."""
+    if "base_blackbody" in entry.keys():
+        return
+    strength = flame_nodes(entry)[1]
+    entry["base_blackbody"] = node.inputs["Blackbody Intensity"].default_value
+    entry["base_emission"] = strength.inputs[1].default_value
+    if "smoke_colour" not in entry.keys():
+        entry["smoke_colour"] = tuple(node.inputs["Color"].default_value)[:3]
+
+
+def set_look(entry):
+    """Write the box's look sliders onto the volume material.  They're render settings,
+    so a change shows straight away, with no new simulation.
+
+    Flame Colour gives the ramp its hue, as far as the colour is vivid, and keeps the
+    ramp's brightness from core to tips: white keeps the preset's own colours.  A
+    darker colour glows less.  Blackbody can only be tinted, so a blackbody fire's
+    strong blues come out dim."""
+    node = volume_node(entry)
+    if node is None:
+        return
+    _adopt(entry, node)
+    _ramp, strength, tint, heat = flame_nodes(entry)
+    node.inputs["Density"].default_value = entry.base_density * entry.smoke_amount * entry.volume_density
+    node.inputs["Color"].default_value = (*entry.smoke_colour, 1.0)
+    # A preset's flames glow either from blackbody or from the colour ramp.  Emission
+    # Strength scales both; Flame Colour tints both; Temperature heats both.
+    node.inputs["Blackbody Intensity"].default_value = entry.base_blackbody * entry.emission_strength
+    node.inputs["Blackbody Tint"].default_value = (*entry.flame_tint, 1.0)
+    node.inputs["Temperature"].default_value = TEMPERATURE * entry.fire_temperature
+    _hue, saturation, value = colorsys.rgb_to_hsv(*entry.flame_tint)
+    strength.inputs[1].default_value = (entry.base_emission * entry.emission_strength * entry.fire_temperature
+                                        * value)
+    _socket(tint.inputs, "Factor_Float").default_value = saturation
+    _socket(tint.inputs, "B_Color").default_value = (*entry.flame_tint, 1.0)
+    heat.inputs[1].default_value = entry.fire_temperature
+    if entry.light is not None and entry.light.type == "LIGHT":
+        entry.light.data.color = light_colour(entry.flame_tint)
+
+
+def light_colour(tint):
+    """The fire light's colour with the Flame Colour's hue, as the flames take it."""
+    hue, saturation, _value = colorsys.rgb_to_hsv(*tint)
+    _h, _s, value = colorsys.rgb_to_hsv(*fire_light.COLOUR)
+    coloured = colorsys.hsv_to_rgb(hue, saturation, value)
+    return tuple(a + (b - a) * saturation for a, b in zip(fire_light.COLOUR, coloured))
+
+
+def _socket(sockets, identifier):
+    return next(s for s in sockets if s.identifier == identifier)
 
 
 def _add_flame_colour(tree, volume):
     info = tree.nodes.new("ShaderNodeVolumeInfo")
-    info.location = (-600.0, 0.0)
+    info.name = INFO_NODE
+    info.location = (-800.0, 0.0)
+    # Hotter reads further along the ramp, towards its pale core.
+    heat = tree.nodes.new("ShaderNodeMath")
+    heat.name = HEAT_NODE
+    heat.operation = "MULTIPLY"
+    heat.location = (-600.0, 100.0)
+    heat.inputs[1].default_value = 1.0
     ramp = tree.nodes.new("ShaderNodeValToRGB")
     ramp.name = RAMP_NODE
-    ramp.location = (-350.0, 100.0)
+    ramp.location = (-400.0, 100.0)
     elements = ramp.color_ramp.elements
     while len(elements) < len(FLAME_RAMP):
         elements.new(0.5)
@@ -102,11 +181,21 @@ def _add_flame_colour(tree, volume):
     strength.operation = "MULTIPLY"
     strength.location = (-350.0, -150.0)
     strength.inputs[1].default_value = 0.0
-    tree.links.new(info.outputs["Flame"], ramp.inputs["Fac"])
+    # The Color blend: the ramp's brightness, the Flame Colour's hue.
+    tint = tree.nodes.new("ShaderNodeMix")
+    tint.name = TINT_NODE
+    tint.data_type = "RGBA"
+    tint.blend_type = "COLOR"
+    tint.location = (-150.0, 100.0)
+    _socket(tint.inputs, "Factor_Float").default_value = 0.0
+    _socket(tint.inputs, "B_Color").default_value = (1.0, 1.0, 1.0, 1.0)
+    tree.links.new(info.outputs["Flame"], heat.inputs[0])
+    tree.links.new(heat.outputs["Value"], ramp.inputs["Fac"])
     tree.links.new(info.outputs["Flame"], strength.inputs[0])
-    tree.links.new(ramp.outputs["Color"], volume.inputs["Emission Color"])
+    tree.links.new(ramp.outputs["Color"], _socket(tint.inputs, "A_Color"))
+    tree.links.new(_socket(tint.outputs, "Result_Color"), volume.inputs["Emission Color"])
     tree.links.new(strength.outputs["Value"], volume.inputs["Emission Strength"])
-    return ramp, strength
+    return ramp, strength, tint, heat
 
 
 def _volume_material(name):

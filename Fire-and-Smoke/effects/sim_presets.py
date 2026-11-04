@@ -129,7 +129,8 @@ def busy(entry):
 
 # --- What a preset wrote, and whether it's still there ----------------------------
 
-SNAPSHOT_ENTRY = ("detail", "flame_intensity", "smoke_amount", "light_strength")
+SNAPSHOT_ENTRY = ("detail", "flame_intensity", "smoke_amount", "light_strength", "volume_density",
+                  "emission_strength", "fire_temperature", "flame_tint", "smoke_colour")
 SNAPSHOT_DOMAIN = ("resolution_max",) + tuple(CATALOG[DEFAULT]["domain"])
 SNAPSHOT_FLOW = tuple(CATALOG[DEFAULT]["flow"])
 
@@ -214,17 +215,15 @@ def _reshape(entry, shape):
 
 
 def _set_material(entry, material):
-    from . import sim_fire
-    node = sim_fire.volume_node(entry)
-    if node is None:
-        return
-    node.inputs["Density"].default_value = material["density"]
-    grey = material["colour"]
-    node.inputs["Color"].default_value = (grey, grey, grey, 1.0)
-    node.inputs["Blackbody Intensity"].default_value = material["blackbody"]
-    _ramp, strength = sim_fire.flame_colour(entry)
-    if strength is not None:
-        strength.inputs[1].default_value = material["flame_colour"]
+    """What the look sliders scale, and the sliders back to the preset's own look."""
+    entry.base_density = material["density"]
+    entry.base_blackbody = material["blackbody"]
+    entry.base_emission = material["flame_colour"]
+    entry.volume_density = 1.0
+    entry.emission_strength = 1.0
+    entry.fire_temperature = 1.0
+    entry.flame_tint = (1.0, 1.0, 1.0)
+    entry.smoke_colour = (material["colour"],) * 3
 
 
 def _set_light(entry, light):
@@ -261,11 +260,11 @@ def apply(context, entry, preset_id):
         _set_light(entry, package["light"])
         entry.base_fuel = package["flow"]["fuel_amount"]
         entry.base_smoke = package["flow"]["density"]
-        entry.base_density = package["material"]["density"]
         entry.base_energy = package["light"]["energy"]
         entry.flame_intensity = 1.0
         entry.smoke_amount = 1.0
         entry.light_strength = 1.0
+        sim_fire.set_look(entry)
         entry.detail = package["entry"]["detail"]
         domain.resolution_max = entry.detail
         entry.primary.update_tag()

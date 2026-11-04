@@ -15,6 +15,7 @@ The project's ubiquitous-language reference. Code, docs, panel text and requirem
 | Effect | Everything one Create builds: objects, node tree, material, light and collection, tracked and deleted as one unit. | Recorded in `Scene.fas_effects`. |
 | Extension | Blender's add-on package format, described by `blender_manifest.toml` and built into a zip. | `blender --command extension build`. |
 | Flame colour | The Simulated Fire's ramp from its flame to its emission colour: dark red at the edges to a pale yellow core. | The Campfire uses it at strength 7; at 0 a flame shows only its blackbody glow. |
+| Look sliders | The Simulated Fire's Flame Colour, Emission Strength, Temperature, Density and Smoke Colour: volume material settings, so a change needs no new simulation. | Part of the preset snapshot; Apply resets them. |
 | Flow | A Mantaflow emitter: the object a simulated fire's flames and smoke come from. | The Simulated Fire's is a disc, or the Campfire's log patches, the domain's child, hidden from renders. |
 | Geometry Nodes | Blender's node system for generating geometry, run here through a modifier. | |
 | Instancer attribute | An Attribute node mode that reads data stored on an instance. | Works in Cycles and EEVEE. |

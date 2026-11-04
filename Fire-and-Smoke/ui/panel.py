@@ -18,6 +18,7 @@ SIM_EEVEE_NOTE = "EEVEE shows a weaker look than Cycles"
 SIM_VIEW_NOTE = "Material Preview doesn't show it: use Rendered or Solid view"
 MATERIAL_PREVIEW_NOTE = ("Material Preview doesn't show the Simulated Fire: switch to Rendered or Solid "
                          "to see it")
+LOOK_NOTE = "The look below shows straight away, with no new simulation"
 WIND_PLAY_NOTE = "After a change, press play from the first frame to see it"
 DETAIL_NOTE = "Higher Detail is slower and uses more disk space"
 SOLID_NOTE = "Solid view only shows rough shapes: switch to Material Preview or Rendered to see the effect"
@@ -80,6 +81,9 @@ def _draw_control(layout, entry, token):
     elif token == "entry:detail":
         layout.prop(entry, "detail")
         _wrapped_label(layout, DETAIL_NOTE, icon="INFO")
+    elif token == "entry:flame_tint":
+        _wrapped_label(layout, LOOK_NOTE, icon="INFO")
+        layout.prop(entry, "flame_tint")
     elif token == "entry:light_strength":
         row = layout.row()
         row.enabled = entry.light_mode != light_mode.EMISSIVE

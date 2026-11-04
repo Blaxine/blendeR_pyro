@@ -56,6 +56,10 @@ Your smoke domain has no **Flow** collection, so it takes every emitter in the s
 
 Above Power 1, flames lie flat and reach the side of the Simulated Fire's box, where they stop. Lower the wind's **Power**.
 
+## A coloured Normal Fire or Candle Fire looks dim
+
+Those two glow from blackbody heat, which Flame Colour can only tint, so strong blues and greens come out dim. Raise **Emission Strength**, or apply the **Campfire** preset: its flames take any colour.
+
 ## My Simulated Fire says (modified)
 
 You changed one of its settings since its preset was applied, in its box or in Blender's **Physics** panel. That's fine: the preset is only a starting point. To go back to the preset's values, pick it from the **Preset** menu and click **Apply**.
