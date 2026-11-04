@@ -85,6 +85,36 @@ def test_failed_create_leaves_nothing():
             bpy.data.materials.remove(material)
 
 
+def test_failed_simulated_create_leaves_no_folder():
+    from fire_and_smoke.core import cache_folder
+    from fire_and_smoke.effects import presets, sim_fire
+    original = sim_fire.create_sim_fire
+    made = []
+
+    def build_then_fail(context, location, **kwargs):
+        effect_uuid = original(context, location, **kwargs)
+        for frame in range(1, 4):
+            context.scene.frame_set(frame)
+        path = cache_folder.temp_path(effect_uuid)
+        made.append((path, os.path.isdir(path)))
+        raise RuntimeError("Testing a failed create")
+
+    presets.sim_fire.create_sim_fire = build_then_fail
+    errors.reset_session()
+    try:
+        try:
+            result = bpy.ops.fas.effect_create(preset="SIMULATED_CAMPFIRE")
+        except RuntimeError:
+            result = {"CANCELLED"}
+    finally:
+        presets.sim_fire.create_sim_fire = original
+    lib.check("reports cancelled", result == {"CANCELLED"})
+    lib.check("it had written a cache folder", bool(made) and made[0][1], str(made))
+    lib.check("a failed create leaves no folder", bool(made) and not os.path.exists(made[0][0]), str(made))
+    lib.check("and no tagged leftovers", not _tagged(), str(_tagged()))
+    lib.scene().frame_set(1)
+
+
 def test_bug_report_has_no_private_paths():
     errors.reset_session()
     err = errors.record("Testing", RuntimeError(f"failed at {os.path.expanduser('~')}/secret.blend"))

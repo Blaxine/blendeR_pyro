@@ -6,11 +6,14 @@ shares node trees and materials, and it copies the uuid and every owner tag too.
 The copy gets its own uuid and its own trees and materials, so deleting in either
 scene can't reach the other.  A linked copy shares its objects with the original, so
 it keeps the uuid and Delete only detaches it.
+
+A full copy also shares a simulated fire's cache folder, so the copy's domain gets the
+path for its new uuid.
 """
 
 import bpy
 
-from . import naming
+from . import cache_folder, naming
 
 
 def _own_material(material, old, new, kind, seen):
@@ -85,6 +88,7 @@ def _split(entry):
     for obj in root.all_objects:
         if naming.owned_by(obj, old):
             _own_object(obj, old, new, kind, seen)
+    cache_folder.repoint(entry)
     # Shared particle settings pointed at the original's spark.
     if entry.instance is not None and entry.primary is not None:
         for system in entry.primary.particle_systems:

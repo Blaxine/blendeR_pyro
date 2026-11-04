@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import fas_testlib as lib  # noqa: E402
 
 import bpy  # noqa: E402
+from fire_and_smoke.core import cache_folder  # noqa: E402
 from fire_and_smoke.effects import presets, sim_fire  # noqa: E402
 
 STATE = {}
@@ -39,6 +40,15 @@ def _grids(entry):
     settings = sim_fire.find_modifier(entry.primary.evaluated_get(depsgraph), "DOMAIN").domain_settings
     density, flame = list(settings.density_grid), list(settings.flame_grid)
     return sum(density), (max(flame) if flame else 0.0)
+
+
+def _folder(entry):
+    return os.path.realpath(bpy.path.abspath(sim_fire.domain_settings(entry).cache_directory))
+
+
+def _under(path, root):
+    path, root = os.path.normcase(os.path.realpath(path)), os.path.normcase(os.path.realpath(root))
+    return os.path.commonpath([path, root]) == root
 
 
 def _close(a, b, tolerance=0.15):
@@ -100,6 +110,11 @@ def test_create():
               and bpy.context.view_layer.objects.active == crate)
     lib.check("the selected object is unchanged", not list(crate.modifiers) and lib.C.OWNER_PROP not in crate.keys())
     lib.check("no transparent bounce change is needed", scene.fas_bounce_original == -1)
+    folder = settings.cache_directory
+    lib.check("unsaved, the cache lies in the session temp folder", os.path.isabs(folder)
+              and _under(folder, bpy.app.tempdir), folder)
+    lib.check("in fas_cache, under the effect's own uuid", os.path.basename(folder) == entry.uuid
+              and os.path.basename(os.path.dirname(folder)) == "fas_cache", folder)
     STATE["crate"] = crate.name
 
 
@@ -210,10 +225,100 @@ def test_no_fluid_is_refused_plainly():
 
 
 def test_delete_cleans_up():
+    folder = _folder(_entry(STATE["uuid"]))
+    lib.check("the cache folder exists before Delete", os.path.isdir(folder))
     bpy.ops.fas.effect_delete(uuid=STATE["uuid"])
     lib.check("nothing tagged left", not _tagged(), str(_tagged()))
+    lib.check("Delete removes the effect's cache folder", not os.path.exists(folder), folder)
+    lib.check("and leaves fas_cache itself", os.path.isdir(os.path.dirname(folder)))
     crate = bpy.data.objects.get(STATE["crate"])
     lib.check("the buyer's object stays", crate is not None and not list(crate.modifiers))
+
+
+def _make(path):
+    os.makedirs(path, exist_ok=True)
+    with open(os.path.join(path, "keep.txt"), "w") as fh:
+        fh.write("the buyer's")
+    return path
+
+
+def test_the_path_check_keeps_everything_else():
+    scene = lib.scene()
+    bpy.ops.fas.effect_create(preset="SIMULATED_CAMPFIRE")
+    entry = scene.fas_effects[-1]
+    effect_uuid = entry.uuid
+    temp = bpy.app.tempdir
+    cases = {
+        "a folder with another name": os.path.join(temp, "fas_cache", "not-" + effect_uuid),
+        "a folder not inside fas_cache": os.path.join(temp, "elsewhere", effect_uuid),
+        "a folder outside both roots": os.path.join(lib.WORKDIR, "outside", "fas_cache", effect_uuid),
+    }
+    for what, path in cases.items():
+        lib.check(f"the check refuses {what}", not cache_folder.removable(path, effect_uuid), path)
+    lib.check("the check accepts the effect's own folder",
+              cache_folder.removable(cache_folder.temp_path(effect_uuid), effect_uuid))
+    lib.check("and refuses it for another effect",
+              not cache_folder.removable(cache_folder.temp_path(effect_uuid), "0" * 32))
+    lib.check("and refuses fas_cache itself", not cache_folder.removable(os.path.join(temp, "fas_cache"), "fas_cache"))
+    for what, path in cases.items():
+        _make(path)
+        sim_fire.domain_settings(_entry(effect_uuid)).cache_directory = path
+        _play(3)
+    bpy.ops.fas.effect_delete(uuid=effect_uuid)
+    for what, path in cases.items():
+        lib.check(f"Delete never removes {what}", os.path.isfile(os.path.join(path, "keep.txt")), path)
+    lib.check("nothing tagged left", not _tagged(), str(_tagged()))
+    lib.scene().frame_set(1)
+
+
+def test_saving_puts_the_cache_beside_the_file():
+    scene = lib.scene()
+    scene.frame_set(1)
+    bpy.ops.fas.effect_create(preset="SIMULATED_CAMPFIRE")
+    effect_uuid = scene.fas_effects[-1].uuid
+    STATE["saved_uuid"] = effect_uuid
+    _play(3)
+    temp_folder = _folder(_entry(effect_uuid))
+    lib.check("unsaved, playing writes the temp folder", os.path.isdir(temp_folder))
+    folder = os.path.join(lib.WORKDIR, "first")
+    os.makedirs(folder, exist_ok=True)
+    path = os.path.join(folder, "campfire.blend")
+    bpy.ops.wm.save_as_mainfile(filepath=path)
+    settings = sim_fire.domain_settings(_entry(effect_uuid))
+    lib.check("saving re-points it beside the file", settings.cache_directory == f"//fas_cache/{effect_uuid}",
+              settings.cache_directory)
+    lib.check("and the old folder stays", os.path.isdir(temp_folder))
+    lib.scene().frame_set(1)
+    _play(5)
+    beside = os.path.join(folder, "fas_cache", effect_uuid)
+    lib.check("the next play writes fas_cache/<uuid> beside the .blend", os.path.isdir(beside), str(os.listdir(folder)))
+    density, _flame = _grids(_entry(effect_uuid))
+    lib.check("and it still burns", density > 0.1, f"{density:.2f}")
+
+    bpy.ops.wm.open_mainfile(filepath=path)
+    entry = _entry(effect_uuid)
+    lib.check("the saved file stores the path beside it",
+              sim_fire.domain_settings(entry).cache_directory == f"//fas_cache/{effect_uuid}",
+              sim_fire.domain_settings(entry).cache_directory)
+
+    other = os.path.join(lib.WORKDIR, "second")
+    os.makedirs(other, exist_ok=True)
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(other, "moved.blend"))
+    lib.check("Save As to another folder re-points it there",
+              sim_fire.domain_settings(_entry(effect_uuid)).cache_directory == f"//fas_cache/{effect_uuid}"
+              and _under(_folder(_entry(effect_uuid)), other), _folder(_entry(effect_uuid)))
+    lib.check("and the first folder stays where it was", os.path.isdir(beside))
+    bpy.ops.wm.open_mainfile(filepath=os.path.join(other, "moved.blend"))
+    lib.check("reopened, it points beside the moved file",
+              _under(_folder(_entry(effect_uuid)), other), _folder(_entry(effect_uuid)))
+    lib.scene().frame_set(1)
+    _play(3)
+    moved = _folder(_entry(effect_uuid))
+    lib.check("where the next play writes", os.path.isdir(moved))
+    bpy.ops.fas.effect_delete(uuid=effect_uuid)
+    lib.check("Delete removes the folder beside the file", not os.path.exists(moved))
+    lib.check("and leaves the one beside the first file, outside this file's folder", os.path.isdir(beside))
+    lib.check("nothing tagged left", not _tagged(), str(_tagged()))
 
 
 lib.main(globals())

@@ -138,11 +138,11 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-03, with a 0.35 m disc
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S008 | S | Apply the path rule at create | Session temp folder while unsaved, `//fas_cache/<uuid>` when saved. | S003 | add-on package |
-|  | S009 | S | Re-point after saving | A persistent `save_post` handler, registered and unregistered with the others, gives every Simulated Campfire domain in every scene the path the rule now gives. The folder at the old path stays. | S008 | `core/handlers.py` |
-|  | S010 | S | Remove the folder on Delete | After the ID sweep, remove the effect's cache folder when it passes the path check in Architectural decisions; otherwise leave it. Failed creates go through the same path. | S008 | `core/delete.py` |
-|  | S011 | S | Split the cache in copies | A domain re-owned by `_split` gets the path for its new uuid. Linked copies don't change. | S008 | `core/copies.py` |
-|  | S012 | T | Test the folder | Extend `tests/test_sim_fire.py`: an unsaved path lies under `bpy.app.tempdir`; saving re-points it; Delete removes the folder; a folder with another name, or outside both roots, is never removed. Extend `tests/test_copied_scene.py`: the copy gets its own folder, and deleting it leaves the original's. Extend `tests/test_create_delete.py`: a failed create leaves no folder. | S009, S010, S011 | listed files |
+| ✅ | S008 | S | Apply the path rule at create | Session temp folder while unsaved, `//fas_cache/<uuid>` when saved. | S003 | add-on package |
+| ✅ | S009 | S | Re-point after saving | A persistent `save_post` handler, registered and unregistered with the others, gives every Simulated Campfire domain in every scene the path the rule now gives. The folder at the old path stays. | S008 | `core/handlers.py` |
+| ✅ | S010 | S | Remove the folder on Delete | After the ID sweep, remove the effect's cache folder when it passes the path check in Architectural decisions; otherwise leave it. Failed creates go through the same path. | S008 | `core/delete.py` |
+| ✅ | S011 | S | Split the cache in copies | A domain re-owned by `_split` gets the path for its new uuid. Linked copies don't change. | S008 | `core/copies.py` |
+| ✅ | S012 | T | Test the folder | Extend `tests/test_sim_fire.py`: an unsaved path lies under `bpy.app.tempdir`; saving re-points it; Delete removes the folder; a folder with another name, or outside both roots, is never removed. Extend `tests/test_copied_scene.py`: the copy gets its own folder, and deleting it leaves the original's. Extend `tests/test_create_delete.py`: a failed create leaves no folder. | S009, S010, S011 | listed files |
 
 ### Slice 3 — Light and the flicker fix
 

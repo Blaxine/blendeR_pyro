@@ -74,8 +74,7 @@ def find_modifier(obj, fluid_type):
 
 
 def domain_settings(entry):
-    modifier = find_modifier(entry.primary, "DOMAIN")
-    return modifier.domain_settings if modifier is not None else None
+    return cache_folder.domain_settings(entry.primary)
 
 
 def flow_settings(entry):

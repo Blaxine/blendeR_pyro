@@ -124,6 +124,53 @@ def test_linked_copy_shares_and_detaches():
     delete.delete_effect(scene, second)
 
 
+def test_a_simulated_fire_copy_has_its_own_cache():
+    from fire_and_smoke.core import cache_folder
+    scene = next(s for s in bpy.data.scenes if s.name == "Fresh")
+    bpy.context.window.scene = scene
+    scene.frame_start, scene.frame_end = 1, 40
+    scene.frame_set(1)
+    bpy.ops.fas.effect_create(preset="SIMULATED_CAMPFIRE")
+    copy_scene = _copy("FULL_COPY")
+    copies.reidentify()
+    original, copied = scene.fas_effects[-1], copy_scene.fas_effects[-1]
+    first, second = original.uuid, copied.uuid
+    lib.check("the copy is a new effect", first != second)
+    mine, theirs = cache_folder.domain_settings(original.primary), cache_folder.domain_settings(copied.primary)
+    lib.check("the copy has its own domain", original.primary != copied.primary)
+    lib.check("with its own cache folder", mine.cache_directory != theirs.cache_directory
+              and theirs.cache_directory.endswith(second), theirs.cache_directory)
+    lib.check("taking flows from its own collection", theirs.fluid_group == copied.root_collection
+              and theirs.fluid_group != mine.fluid_group)
+    lib.check("from its own emitter", copied.emitter is not None and copied.emitter != original.emitter
+              and copied.emitter.parent == copied.primary)
+
+    def play(target):
+        bpy.context.window.scene = target
+        for frame in range(1, 11):
+            target.frame_set(frame)
+        bpy.context.window.scene = scene
+
+    play(scene)
+    play(copy_scene)
+    lib.check("each plays into its own folder", os.path.isdir(mine.cache_directory) and os.path.isdir(theirs.cache_directory))
+    kept = mine.cache_directory
+    copied_folder = theirs.cache_directory
+    delete.delete_effect(copy_scene, second)
+    lib.check("deleting the copy removes its folder", not os.path.exists(copied_folder))
+    lib.check("and leaves the original's", os.path.isdir(kept))
+    lib.check("and the original's effect", original.primary is not None
+              and cache_folder.domain_settings(scene.fas_effects[-1].primary) is not None)
+    play(scene)
+    bpy.context.window.scene = copy_scene
+    bpy.context.window.scene = scene
+    bpy.data.scenes.remove(copy_scene)
+    delete.delete_effect(scene, first)
+    lib.check("then deleting the original removes its own", not os.path.exists(kept))
+    lib.check("nothing tagged left", not [i.name for g in ("objects", "meshes", "materials", "collections")
+                                          for i in getattr(bpy.data, g) if OWNER in i.keys()])
+
+
 def test_copies_are_noticed_without_being_asked():
     scene = next(s for s in bpy.data.scenes if s.name == "Fresh")
     bpy.ops.fas.campfire_create()

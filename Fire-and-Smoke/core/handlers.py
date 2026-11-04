@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""App handlers: copied effects get re-identified, and embers follow the timeline."""
+"""App handlers: copied effects get re-identified, embers and simulated fires follow the
+timeline, and simulated fires keep their cache beside the saved .blend."""
 
 import bpy
 from bpy.app.handlers import persistent
 
 from .. import constants as C
-from . import copies, errors, naming
+from . import cache_folder, copies, errors, naming
 
 _scene_count = [0]
 _ranges = {}          # scene name -> (frame_start, frame_end) last seen
@@ -75,24 +76,55 @@ def fas_scene_watch(_scene, _depsgraph=None):
     follow_ranges()
 
 
+def _repoint(what, saved=False):
+    try:
+        cache_folder.repoint_all(saved)
+    except Exception as exc:
+        errors.record(f"Fire and Smoke couldn't point a simulation at its cache folder {what}", exc)
+        errors.schedule()
+
+
 @persistent
 def fas_on_load(_dummy=None):
     _scene_count[0] = 0
     check_scenes()
     note_ranges()
+    # A Save As to another folder stored a path back to the old folder.
+    if bpy.data.filepath:
+        _repoint("when the file opened")
+
+
+@persistent
+def fas_before_save(filepath="", *_args):
+    """The file stores the path beside it, so a first save isn't left with changes."""
+    if filepath:
+        _repoint("before saving", saved=True)
+
+
+@persistent
+def fas_after_save(_filepath="", *_args):
+    _repoint("after saving")
+
+
+_HANDLERS = (
+    ("depsgraph_update_post", "fas_scene_watch"),
+    ("load_post", "fas_on_load"),
+    ("save_pre", "fas_before_save"),
+    ("save_post", "fas_after_save"),
+)
 
 
 def register():
     _scene_count[0] = len(bpy.data.scenes) if hasattr(bpy.data, "scenes") else 0
     _ranges.clear()
-    if fas_scene_watch not in bpy.app.handlers.depsgraph_update_post:
-        bpy.app.handlers.depsgraph_update_post.append(fas_scene_watch)
-    if fas_on_load not in bpy.app.handlers.load_post:
-        bpy.app.handlers.load_post.append(fas_on_load)
+    for handler_list, name in _HANDLERS:
+        handlers, fn = getattr(bpy.app.handlers, handler_list), globals()[name]
+        if fn not in handlers:
+            handlers.append(fn)
 
 
 def unregister():
-    if fas_scene_watch in bpy.app.handlers.depsgraph_update_post:
-        bpy.app.handlers.depsgraph_update_post.remove(fas_scene_watch)
-    if fas_on_load in bpy.app.handlers.load_post:
-        bpy.app.handlers.load_post.remove(fas_on_load)
+    for handler_list, name in _HANDLERS:
+        handlers, fn = getattr(bpy.app.handlers, handler_list), globals()[name]
+        if fn in handlers:
+            handlers.remove(fn)

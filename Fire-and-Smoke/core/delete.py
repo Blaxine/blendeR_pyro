@@ -4,6 +4,8 @@
 Ownership is the owner tag, never a name.  Anything the buyer adopted (used in another
 scene, given a fake user, unparented from the effect) loses its tag and stays.
 Anything of the buyer's that was put inside the effect's collection stays in the scene.
+A simulated fire's cache folder goes too, but only when it passes the path check in
+``cache_folder``.
 """
 
 import functools
@@ -11,7 +13,7 @@ import functools
 import bpy
 
 from .. import constants as C
-from . import bounces, copies, errors, naming, registry
+from . import bounces, cache_folder, copies, errors, naming, registry
 
 _DATA = ("meshes", "particles", "node_groups", "materials", "actions", "lights")
 
@@ -134,7 +136,10 @@ def delete_effect(scene, effect_uuid):
     if shared:
         _detach_from_this_scene(scene, entry)
     else:
+        settings = cache_folder.domain_settings(entry.primary) if entry is not None else None
+        current = settings.cache_directory if settings is not None else ""
         _sweep(scene, entry, effect_uuid)
+        cache_folder.remove(effect_uuid, current)
     registry.remove(scene, effect_uuid)
     _prune(scene)
     return bounces.after_delete(scene)
