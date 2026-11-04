@@ -129,6 +129,7 @@ class FAS_PT_main(bpy.types.Panel):
 
 class FAS_PT_create(bpy.types.Panel):
     bl_label = "Add"
+    bl_order = 1
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = C.DISPLAY_NAME
@@ -154,6 +155,9 @@ class FAS_PT_create(bpy.types.Panel):
 
 class FAS_PT_effects(bpy.types.Panel):
     bl_label = "Your Effects"
+    # Above Add, so a new effect's settings show right where the buyer is looking,
+    # not below nine preset buttons.
+    bl_order = 0
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = C.DISPLAY_NAME
@@ -172,4 +176,4 @@ class FAS_PT_effects(bpy.types.Panel):
             _draw_entry(layout, entry)
 
 
-CLASSES = (FAS_PT_main, FAS_PT_create, FAS_PT_effects)
+CLASSES = (FAS_PT_main, FAS_PT_effects, FAS_PT_create)

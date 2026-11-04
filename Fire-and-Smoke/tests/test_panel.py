@@ -78,6 +78,14 @@ def test_empty_state():
     lib.check("no camera is explained", "no camera" in _text(log), _text(log))
 
 
+def test_your_effects_comes_before_add():
+    effects, create = panel.FAS_PT_effects, panel.FAS_PT_create
+    lib.check("Your Effects is ordered above Add", effects.bl_order < create.bl_order,
+              f"{effects.bl_order} / {create.bl_order}")
+    order = list(panel.CLASSES)
+    lib.check("and registered first", order.index(effects) < order.index(create))
+
+
 def test_groups_follow_the_display_order():
     log = _draw(panel.FAS_PT_create)
     for group in (presets.FIRE_GROUP, presets.SMOKE_GROUP, presets.EMBER_GROUP):
