@@ -11,6 +11,9 @@ from . import control_spec
 PREVIEW_NOTE = "Preview only: final renders always face the scene camera"
 EMISSIVE_NOTE = "Emissive lighting is Cycles-focused"
 EMBERS_NOTE = "Embers replay from the start: press play from the first frame to see them"
+SIM_FIRE_NOTE = ("It simulates as you play: press play from the first frame. If the fire looks frozen, "
+                 "go back to the first frame and play again")
+SIM_EEVEE_NOTE = "EEVEE shows a weaker look than Cycles"
 SOLID_NOTE = "Solid view only shows rough shapes: switch to Material Preview or Rendered to see the effect"
 NO_CAMERA_NOTE = "This scene has no camera: add one before rendering"
 
@@ -79,6 +82,9 @@ def _draw_entry(layout, entry):
                 return
         if entry.kind == C.KIND_EMBERS:
             _wrapped_label(box, EMBERS_NOTE, icon="INFO")
+        elif entry.kind == C.KIND_SIM_FIRE:
+            _wrapped_label(box, SIM_FIRE_NOTE, icon="INFO")
+            _wrapped_label(box, SIM_EEVEE_NOTE, icon="INFO")
         for token in control_spec.controls(entry.kind, entry.show_advanced):
             _draw_control(box, entry, token)
     except Exception as exc:

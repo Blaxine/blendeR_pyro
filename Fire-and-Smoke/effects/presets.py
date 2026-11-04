@@ -10,7 +10,7 @@ import bpy
 
 from .. import constants as C
 from ..core import bounces, delete
-from . import creation, embers, flame_material, mesh_fire, smoke, smoke_material
+from . import creation, embers, flame_material, mesh_fire, sim_fire, smoke, smoke_material
 
 FIRE_GROUP = "Fire"
 SMOKE_GROUP = "Smoke"
@@ -29,9 +29,12 @@ PRESETS = (
      "OUTLINER_OB_VOLUME", SMOKE_GROUP),
     ("EMBERS", 7, "Embers", "Rising sparks. They replay from the start when you scrub",
      "PARTICLES", EMBER_GROUP),
+    ("SIMULATED_CAMPFIRE", 8, "Simulated Campfire",
+     "A real fire simulation. It simulates as you play, so press play from the first frame",
+     "MOD_FLUIDSIM", FIRE_GROUP),
 )
 
-DISPLAY_ORDER = ("CANDLE", "TORCH", "CAMPFIRE", "BONFIRE", "BURNING_OBJECT",
+DISPLAY_ORDER = ("CANDLE", "TORCH", "CAMPFIRE", "SIMULATED_CAMPFIRE", "BONFIRE", "BURNING_OBJECT",
                  "THIN_SMOKE", "BLACK_SMOKE_COLUMN", "EMBERS")
 
 _BY_ID = {preset[0]: preset for preset in PRESETS}
@@ -85,6 +88,8 @@ def create(context, preset_id):
         return smoke.create_smoke(context, location, C.KIND_COLUMN, "Smoke Column", smoke.COLUMN, smoke.COLUMN_LOOK)
     if preset_id == "EMBERS":
         return embers.create_embers(context, location)
+    if preset_id == "SIMULATED_CAMPFIRE":
+        return sim_fire.create_sim_fire(context, location)
     raise RuntimeError(f"There's no preset called {preset_id}")
 
 
@@ -126,6 +131,8 @@ class FAS_OT_effect_create(bpy.types.Operator):
             self.report({"WARNING"}, "This scene has no camera: add one before rendering")
         elif self.preset == "EMBERS":
             self.report({"INFO"}, "Press play from the first frame to see the embers")
+        if self.preset == "SIMULATED_CAMPFIRE":
+            self.report({"INFO"}, "Press play from the first frame to see the fire")
         return {"FINISHED"}
 
 

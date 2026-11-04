@@ -72,7 +72,7 @@ def test_empty_state():
     lib.check("an empty panel says what to do", "Nothing here yet." in log["labels"])
     log = _draw(panel.FAS_PT_create)
     count = sum(1 for o in log["operators"] if o == "fas.effect_create")
-    lib.check("all 8 presets are offered", count == 8, str(count))
+    lib.check("all 9 presets are offered", count == 9, str(count))
     lib.check("Burning Object says it needs a mesh", "Select a mesh" in _text(log), _text(log))
     log = _draw(panel.FAS_PT_main)
     lib.check("no camera is explained", "no camera" in _text(log), _text(log))
@@ -113,6 +113,18 @@ def test_embers_box():
     lib.check("embers say they replay", "replay" in _text(log), _text(log))
     lib.check("and how to see them", "press play" in _text(log), _text(log))
     lib.check("embers have no facing switch", "preview_facing" not in log["props"])
+    bpy.ops.fas.effect_delete(uuid=lib.scene().fas_effects[-1].uuid)
+
+
+def test_sim_fire_box():
+    bpy.ops.fas.effect_create(preset="SIMULATED_CAMPFIRE")
+    log = _draw(panel.FAS_PT_effects)
+    lib.check("the box is titled Simulated Campfire", "Simulated Campfire" in log["labels"])
+    lib.check("it says it simulates as you play", "simulates as you play" in _text(log), _text(log))
+    lib.check("and to press play from the first frame", "press play from the first frame" in _text(log), _text(log))
+    lib.check("and how to recover a frozen fire", "looks frozen" in _text(log), _text(log))
+    lib.check("and that EEVEE shows a weaker look", "EEVEE shows a weaker look" in _text(log), _text(log))
+    lib.check("it has no facing switch", "preview_facing" not in log["props"])
     bpy.ops.fas.effect_delete(uuid=lib.scene().fas_effects[-1].uuid)
 
 

@@ -12,6 +12,7 @@ SIMPLE = {
     C.KIND_SMOKE: ("entry:size", "entry:density", "preview"),
     C.KIND_COLUMN: ("entry:size", "entry:density", "preview"),
     C.KIND_EMBERS: ("entry:amount", "entry:ember_size"),
+    C.KIND_SIM_FIRE: (),
 }
 ADVANCED = {
     C.KIND_FIRE: ("entry:size", "entry:brightness", "entry:light_mode", "entry:light_strength", "preview",
@@ -21,6 +22,7 @@ ADVANCED = {
     C.KIND_SMOKE: ("entry:size", "entry:density", "preview", "entry:layers", "entry:seed"),
     C.KIND_COLUMN: ("entry:size", "entry:density", "preview", "entry:layers", "entry:seed"),
     C.KIND_EMBERS: ("entry:amount", "entry:ember_size"),
+    C.KIND_SIM_FIRE: (),
 }
 
 

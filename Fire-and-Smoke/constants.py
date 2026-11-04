@@ -36,15 +36,20 @@ KIND_SMOKE = "SMOKE"
 KIND_COLUMN = "COLUMN"
 KIND_MESH_FIRE = "MESH_FIRE"
 KIND_EMBERS = "EMBERS"
+KIND_SIM_FIRE = "SIM_FIRE"
 KIND_LABELS = {
     KIND_FIRE: "Fire",
     KIND_SMOKE: "Smoke",
     KIND_COLUMN: "Smoke Column",
     KIND_MESH_FIRE: "Mesh Fire",
     KIND_EMBERS: "Embers",
+    KIND_SIM_FIRE: "Simulated Fire",
 }
 
 MAX_EMBERS = 20000
+
+# Simulated fire: each effect's cache folder is <root>/CACHE_FOLDER/<uuid>.
+CACHE_FOLDER = "fas_cache"
 
 # Support address for bug reports. Empty until the public issues repo exists.
 SUPPORT_URL = ""

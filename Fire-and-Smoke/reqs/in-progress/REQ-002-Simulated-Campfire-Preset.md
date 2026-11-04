@@ -5,13 +5,13 @@
 | ID | REQ-002 |
 | Title | Simulated Campfire Preset |
 | SOLVE | — |
-| Status | Todo |
+| Status | InProgress |
 | Phase | New preset, pre-1.0 |
 | Tier | Feature |
 | Area | One new effect kind: Mantaflow emitter and domain, cache folder lifecycle, fire light, panel controls, presets, release gate |
 | Author | Blaxine |
 | Created | 2026-11-03 |
-| Last Updated | 2026-11-03 |
+| Last Updated | 2026-11-04 |
 
 > Grilled in conversation on 2026-11-03, with no PRD. It builds on REQ-001 and changes two of its numbers: 9 presets instead of 8, and 36 eye checks instead of 32. See Dependencies.
 
@@ -124,12 +124,12 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-03, with a 0.35 m disc
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
 |  | S001 | O | Confirm the look gate | REQ-001's AC1 has a recorded pass in `docs/LOOK_TEST.md`. No other step starts without it. | — | `docs/LOOK_TEST.md` |
-|  | S002 | F | Add the kind and the preset | The `SIM_FIRE` kind and its label; `SIMULATED_CAMPFIRE` appended to `PRESETS` as number 8 and placed after Campfire in `DISPLAY_ORDER`; an empty controls entry for the kind. | S001 | `constants.py`, `effects/presets.py`, `ui/control_spec.py` |
-|  | S003 | S | Build the simulation | Owned emitter and domain as in Architectural decisions: domain as primary at full size, emitter as its child and hidden from renders, Replay at 64 divisions, both groups set to the effect's collection, cache range taken from the timeline, a cache folder in the session temp folder under the uuid, and the Principled Volume material. Every ID is tagged. Record the entry with 0 planes. Refuse with a plain message when Blender has no Fluid. | S002 | add-on package |
-|  | S004 | S | Wire it to the preset | The preset's branch in `create()`, the create report and the rollback guard. | S003 | `effects/presets.py` |
-|  | S005 | U | Show the effect's box | The box title and the replay note for the kind. | S004 | `ui/panel.py` |
-|  | S006 | T | Test creation | New `tests/test_sim_fire.py`: creates; the buyer's selected object is unchanged; evaluated grids hold fire after frames 1 to 30; a second Simulated Campfire's emitter inside the domain and a buyer's flow inside it change nothing; a small Cycles render isn't dark; Delete leaves no tagged ID. | S004 | `tests/test_sim_fire.py` |
-|  | S007 | T | Fix the preset counts | Extend: `tests/test_presets.py` expects 9 presets with `SIMULATED_CAMPFIRE` locked at 8; `tests/test_panel.py` expects 9 offered. | S002 | `tests/test_presets.py`, `tests/test_panel.py` |
+| ✅ | S002 | F | Add the kind and the preset | The `SIM_FIRE` kind and its label; `SIMULATED_CAMPFIRE` appended to `PRESETS` as number 8 and placed after Campfire in `DISPLAY_ORDER`; an empty controls entry for the kind. | S001 | `constants.py`, `effects/presets.py`, `ui/control_spec.py` |
+| ✅ | S003 | S | Build the simulation | Owned emitter and domain as in Architectural decisions: domain as primary at full size, emitter as its child and hidden from renders, Replay at 64 divisions, both groups set to the effect's collection, cache range taken from the timeline, a cache folder in the session temp folder under the uuid, and the Principled Volume material. Every ID is tagged. Record the entry with 0 planes. Refuse with a plain message when Blender has no Fluid. | S002 | add-on package |
+| ✅ | S004 | S | Wire it to the preset | The preset's branch in `create()`, the create report and the rollback guard. | S003 | `effects/presets.py` |
+| ✅ | S005 | U | Show the effect's box | The box title and the replay note for the kind. | S004 | `ui/panel.py` |
+| ✅ | S006 | T | Test creation | New `tests/test_sim_fire.py`: creates; the buyer's selected object is unchanged; evaluated grids hold fire after frames 1 to 30; a second Simulated Campfire's emitter inside the domain and a buyer's flow inside it change nothing; a small Cycles render isn't dark; Delete leaves no tagged ID. | S004 | `tests/test_sim_fire.py` |
+| ✅ | S007 | T | Fix the preset counts | Extend: `tests/test_presets.py` expects 9 presets with `SIMULATED_CAMPFIRE` locked at 8; `tests/test_panel.py` expects 9 offered. | S002 | `tests/test_presets.py`, `tests/test_panel.py` |
 
 ### Slice 2 — Cache folder lifecycle
 
@@ -303,3 +303,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | Date | Author | Summary of Change |
 | ---- | ------ | ----------------- |
 | 2026-11-03 | Blaxine | Initial plan. |
+| 2026-11-04 | Blaxine | Moved to in-progress. |
