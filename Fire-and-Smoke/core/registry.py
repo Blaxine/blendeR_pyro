@@ -6,7 +6,8 @@ silently point at another entry afterwards.
 """
 
 import bpy
-from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, PointerProperty, StringProperty
+from bpy.props import (BoolProperty, EnumProperty, FloatProperty, FloatVectorProperty, IntProperty,
+                       PointerProperty, StringProperty)
 
 from .. import constants as C
 from ..effects import light_mode, sim_presets
@@ -165,6 +166,24 @@ def _smoke_amount_update(self, _context):
     _simulation_change(self, change)
 
 
+@errors.guard_update("Fire and Smoke couldn't change the wind")
+def _wind_update(self, _context):
+    from ..effects import wind
+    if self.primary is None:
+        return
+    wind.apply(self)
+    wind.simulations_changed(self.id_data)
+
+
+@errors.guard_update("Fire and Smoke couldn't turn the wind")
+def _wind_direction_update(self, _context):
+    from ..effects import wind
+    if self.primary is None:
+        return
+    wind.place(self)
+    wind.simulations_changed(self.id_data)
+
+
 class FAS_EffectEntry(bpy.types.PropertyGroup):
     uuid: StringProperty(name="ID")
     kind: StringProperty(name="Kind")
@@ -232,6 +251,14 @@ class FAS_EffectEntry(bpy.types.PropertyGroup):
                                     description="A simulation preset to apply to this fire")
     sim_preset_snapshot: StringProperty()
     sim_preset_modified: BoolProperty(default=False)
+    wind_centre: FloatVectorProperty(size=3, subtype="TRANSLATION")
+    wind_power: FloatProperty(name="Power", default=0.4, min=0.0, soft_max=1.0, max=4.0, update=_wind_update,
+                              description="How hard the wind blows. 1 is a strong breeze; above that, "
+                                          "flames lie flat and can leave their box")
+    wind_gusts: FloatProperty(name="Gusts", default=0.3, min=0.0, soft_max=1.0, max=2.0, update=_wind_update,
+                              description="How much the wind comes and goes")
+    wind_direction: FloatProperty(name="Direction", default=0.0, subtype="ANGLE", update=_wind_direction_update,
+                                  description="Which way the wind blows, around the spot it was added")
     smoke_amount: FloatProperty(name="Smoke Amount", default=1.0, min=0.0, soft_max=3.0,
                                 update=_smoke_amount_update,
                                 description="How much smoke the fire makes, and how thick it looks. "

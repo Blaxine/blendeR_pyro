@@ -24,6 +24,14 @@ from . import fire_light, light_mode, sim_presets
 NO_FLUID = "This Blender was built without Fluid, so it can't make a Simulated Fire"
 NO_FLUID_HERE = "This Blender was built without Fluid, so this fire can't simulate"
 
+# The flame's colour by how much is burning: a pale core, then orange, then deep red
+# at the tips, as a real campfire shades.  A preset sets how bright it is; at 0 the
+# flame shows only its blackbody glow.
+FLAME_RAMP = ((0.0, (0.0, 0.0, 0.0)), (0.12, (0.35, 0.03, 0.0)), (0.35, (1.0, 0.18, 0.01)),
+              (0.65, (1.0, 0.42, 0.05)), (1.0, (1.0, 0.72, 0.3)))
+RAMP_NODE = "fas_flame_colour"
+STRENGTH_NODE = "fas_flame_strength"
+
 
 def _fill(mesh, verts, faces):
     """Replace a mesh's geometry in place: its materials and ownership tag stay."""
@@ -42,11 +50,63 @@ def fill_box(mesh, size, centre_z):
     return _fill(mesh, verts, faces)
 
 
+def _disc(verts, faces, x, y, z, radius, sides):
+    base = len(verts)
+    verts.append((x, y, z))
+    verts += [(x + radius * math.cos(2 * math.pi * i / sides), y + radius * math.sin(2 * math.pi * i / sides), z)
+              for i in range(sides)]
+    faces += [(base, base + 1 + i, base + 1 + (i + 1) % sides) for i in range(sides)]
+
+
 def fill_disc(mesh, radius, sides=24):
-    verts = [(0.0, 0.0, 0.0)] + [(radius * math.cos(2 * math.pi * i / sides),
-                                  radius * math.sin(2 * math.pi * i / sides), 0.0) for i in range(sides)]
-    faces = [(0, 1 + i, 1 + (i + 1) % sides) for i in range(sides)]
+    verts, faces = [], []
+    _disc(verts, faces, 0.0, 0.0, 0.0, radius, sides)
     return _fill(mesh, verts, faces)
+
+
+def fill_patches(mesh, patches, sides=12):
+    """Several small discs at different heights, like flames rising from separate logs:
+    each one gives its own tongue of flame, where one disc gives one smooth column."""
+    verts, faces = [], []
+    for x, y, z, radius in patches:
+        _disc(verts, faces, x, y, z, radius, sides)
+    return _fill(mesh, verts, faces)
+
+
+def flame_colour(entry):
+    """The flame colour nodes, (ramp, strength).  A fire from an older file gets them added."""
+    node = volume_node(entry)
+    if node is None:
+        return None, None
+    tree = node.id_data
+    ramp, strength = tree.nodes.get(RAMP_NODE), tree.nodes.get(STRENGTH_NODE)
+    if ramp is None or strength is None:
+        ramp, strength = _add_flame_colour(tree, node)
+    return ramp, strength
+
+
+def _add_flame_colour(tree, volume):
+    info = tree.nodes.new("ShaderNodeVolumeInfo")
+    info.location = (-600.0, 0.0)
+    ramp = tree.nodes.new("ShaderNodeValToRGB")
+    ramp.name = RAMP_NODE
+    ramp.location = (-350.0, 100.0)
+    elements = ramp.color_ramp.elements
+    while len(elements) < len(FLAME_RAMP):
+        elements.new(0.5)
+    for element, (position, colour) in zip(elements, FLAME_RAMP):
+        element.position = position
+        element.color = (*colour, 1.0)
+    strength = tree.nodes.new("ShaderNodeMath")
+    strength.name = STRENGTH_NODE
+    strength.operation = "MULTIPLY"
+    strength.location = (-350.0, -150.0)
+    strength.inputs[1].default_value = 0.0
+    tree.links.new(info.outputs["Flame"], ramp.inputs["Fac"])
+    tree.links.new(info.outputs["Flame"], strength.inputs[0])
+    tree.links.new(ramp.outputs["Color"], volume.inputs["Emission Color"])
+    tree.links.new(strength.outputs["Value"], volume.inputs["Emission Strength"])
+    return ramp, strength
 
 
 def _volume_material(name):
@@ -61,6 +121,7 @@ def _volume_material(name):
     output = tree.nodes.new("ShaderNodeOutputMaterial")
     output.location = (300.0, 0.0)
     tree.links.new(volume.outputs["Volume"], output.inputs["Volume"])
+    _add_flame_colour(tree, volume)
     return material
 
 
@@ -133,8 +194,11 @@ def create_sim_fire(context, location, preset=sim_presets.DEFAULT):
     domain.location = location
     collection.objects.link(domain)
 
-    emitter_mesh = naming.tag(fill_disc(bpy.data.meshes.new(f"{name} Emitter"), shape["emitter_radius"]),
-                              kind, effect_uuid)
+    emitter_mesh = naming.tag(bpy.data.meshes.new(f"{name} Emitter"), kind, effect_uuid)
+    if shape["emitter_patches"]:
+        fill_patches(emitter_mesh, shape["emitter_patches"])
+    else:
+        fill_disc(emitter_mesh, shape["emitter_radius"])
     emitter = naming.tag(bpy.data.objects.new(f"{name} Emitter", emitter_mesh), kind, effect_uuid)
     collection.objects.link(emitter)
     emitter.parent = domain

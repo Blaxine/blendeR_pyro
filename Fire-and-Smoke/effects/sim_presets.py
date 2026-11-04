@@ -14,6 +14,7 @@ gets the next number.
 
 import contextlib
 import json
+import math
 from functools import lru_cache
 
 import bpy
@@ -33,25 +34,36 @@ NO_DOMAIN = "This fire's simulation is gone. Delete it to clean up the rest"
 _applying = set()
 
 
-def _package(number, label, name, description, *, emitter_radius, domain_size, domain_centre_z,
+def _package(number, label, name, description, *, domain_size, domain_centre_z, emitter_radius=None,
              resolution, vorticity, burning_rate, volume_density, smoke_colour, light_energy,
-             light_radius, light_height, emitter_z=0.05, flame_smoke=1.0, heat_buoyancy=1.0,
-             flame_max_temp=3.0, flow_type="BOTH", fuel=1.0, smoke=1.0, temperature=1.0, blackbody=1.0,
-             flicker=0.3, flicker_speed=3.0):
+             light_radius, light_height, emitter_z=0.05, emitter_patches=None, flame_smoke=1.0,
+             heat_buoyancy=1.0, flame_max_temp=3.0, flame_vorticity=0.5, flow_type="BOTH", fuel=1.0,
+             smoke=1.0, temperature=1.0, blackbody=1.0, flame_colour=0.0, flicker=0.3, flicker_speed=3.0):
     # The defaults are Blender's own, so a preset only names what it changes.
+    if emitter_patches:
+        emitter_radius = max(math.hypot(x, y) + r for x, y, _z, r in emitter_patches)
     return {
         "number": number, "label": label, "name": name, "description": description,
         # Sizes in metres, from the domain's origin at the 3D cursor.
+        # emitter_patches, when given, are (x, y, z, radius) discs from the emitter's origin,
+        # and emitter_radius is how far they reach.
         "shape": {"emitter_radius": emitter_radius, "emitter_z": emitter_z, "domain_size": domain_size,
-                  "domain_centre_z": domain_centre_z, "light_height": light_height},
+                  "domain_centre_z": domain_centre_z, "light_height": light_height,
+                  "emitter_patches": tuple(emitter_patches or ())},
         "entry": {"detail": resolution},
         "domain": {"vorticity": vorticity, "burning_rate": burning_rate, "flame_smoke": flame_smoke,
-                   "beta": heat_buoyancy, "flame_max_temp": flame_max_temp},
+                   "beta": heat_buoyancy, "flame_max_temp": flame_max_temp, "flame_vorticity": flame_vorticity},
         "flow": {"flow_type": flow_type, "fuel_amount": fuel, "density": smoke, "temperature": temperature},
-        "material": {"density": volume_density, "colour": smoke_colour, "blackbody": blackbody},
+        "material": {"density": volume_density, "colour": smoke_colour, "blackbody": blackbody,
+                     "flame_colour": flame_colour},
         "light": {"energy": light_energy, "radius": light_radius, "flicker": flicker, "speed": flicker_speed},
     }
 
+
+# (x, y, z, radius) in metres, from the emitter's origin.
+CAMPFIRE_LOGS = ((0.0, 0.0, 0.1, 0.11), (0.24, 0.06, 0.04, 0.09), (-0.22, 0.13, 0.05, 0.1),
+                 (0.07, -0.25, 0.03, 0.09), (-0.15, -0.2, 0.06, 0.08), (0.16, 0.26, 0.02, 0.07),
+                 (-0.3, -0.03, 0.03, 0.07), (0.3, -0.15, 0.02, 0.06))
 
 # Tuned by render in Cycles on 5.2.2 (docs/LOOK_TEST.md), pending the owner's verdict.
 CATALOG = {
@@ -73,11 +85,15 @@ CATALOG = {
         flame_smoke=0.0, flow_type="FIRE", smoke=0.0, volume_density=1.0, smoke_colour=0.05,
         blackbody=25.0, light_energy=0.5, light_radius=0.02, light_height=0.03, flicker=0.12,
         flicker_speed=5.0),
-    # The values REQ-002 tuned by render for the Simulated Campfire (docs/LOOK_TEST.md).
+    # A real campfire burns from several logs, not one disc: eight patches at different
+    # heights, about 0.6 m across, each give their own tongue of flame.  Strong flame
+    # vorticity breaks the tongues up so they change shape from frame to frame, and the
+    # flame colour shades from a pale core to deep red tips instead of a blackbody glow.
     CAMPFIRE: _package(
         3, "Campfire", "Simulated Campfire", "A waist-high fire with dark, thin smoke above it",
-        emitter_radius=0.35, domain_size=(1.4, 1.4, 2.6), domain_centre_z=1.25,
-        resolution=64, vorticity=0.2, burning_rate=1.1, volume_density=3.0, smoke_colour=0.05,
+        emitter_patches=CAMPFIRE_LOGS, domain_size=(1.4, 1.4, 2.6),
+        domain_centre_z=1.25, resolution=64, vorticity=0.5, flame_vorticity=1.5, burning_rate=0.9,
+        volume_density=3.0, smoke_colour=0.05, blackbody=0.0, flame_colour=7.0,
         light_energy=45.0, light_radius=0.3, light_height=0.5),
 }
 
@@ -188,7 +204,10 @@ def _reshape(entry, shape):
     domain, emitter = entry.primary, entry.emitter
     sim_fire.fill_box(domain.data, shape["domain_size"], shape["domain_centre_z"])
     if emitter is not None and emitter.type == "MESH":
-        sim_fire.fill_disc(emitter.data, shape["emitter_radius"])
+        if shape["emitter_patches"]:
+            sim_fire.fill_patches(emitter.data, shape["emitter_patches"])
+        else:
+            sim_fire.fill_disc(emitter.data, shape["emitter_radius"])
         emitter.location = (0.0, 0.0, shape["emitter_z"])
     if entry.light is not None:
         entry.light.location = (0.0, 0.0, shape["light_height"])
@@ -203,6 +222,9 @@ def _set_material(entry, material):
     grey = material["colour"]
     node.inputs["Color"].default_value = (grey, grey, grey, 1.0)
     node.inputs["Blackbody Intensity"].default_value = material["blackbody"]
+    _ramp, strength = sim_fire.flame_colour(entry)
+    if strength is not None:
+        strength.inputs[1].default_value = material["flame_colour"]
 
 
 def _set_light(entry, light):

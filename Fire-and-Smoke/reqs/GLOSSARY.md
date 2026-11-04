@@ -14,7 +14,8 @@ The project's ubiquitous-language reference. Code, docs, panel text and requirem
 | EEVEE | Blender's real-time render engine. | Engine id `BLENDER_EEVEE` on 5.1 and 5.2. |
 | Effect | Everything one Create builds: objects, node tree, material, light and collection, tracked and deleted as one unit. | Recorded in `Scene.fas_effects`. |
 | Extension | Blender's add-on package format, described by `blender_manifest.toml` and built into a zip. | `blender --command extension build`. |
-| Flow | A Mantaflow emitter: the object a simulated fire's flames and smoke come from. | The Simulated Fire's is a disc, the domain's child, hidden from renders. |
+| Flame colour | The Simulated Fire's ramp from its flame to its emission colour: dark red at the edges to a pale yellow core. | The Campfire uses it at strength 7; at 0 a flame shows only its blackbody glow. |
+| Flow | A Mantaflow emitter: the object a simulated fire's flames and smoke come from. | The Simulated Fire's is a disc, or the Campfire's log patches, the domain's child, hidden from renders. |
 | Geometry Nodes | Blender's node system for generating geometry, run here through a modifier. | |
 | Instancer attribute | An Attribute node mode that reads data stored on an instance. | Works in Cycles and EEVEE. |
 | Is Viewport | The Geometry Nodes input that is true during viewport evaluation and false in a final render. | Works in a modifier. |
@@ -29,4 +30,5 @@ The project's ubiquitous-language reference. Code, docs, panel text and requirem
 | Transparent bounces | The Cycles limit on transparent surfaces a ray may cross, `cycles.transparent_max_bounces`. | Default 8; a ray that reaches it draws black. |
 | View sync | The Python timer that feeds the most recently moved viewport's position to the view target. | Preview only. |
 | View target | The add-on-owned empty per scene that planes face in Face Viewport. | Reaches each effect through a modifier input. |
+| Wind | The effect, kind `WIND`, that adds an owned Plane Wind force field with Power, Gusts and Direction. | Power 1 is strength 0.25. Blows the Simulated Fire and embers, not plane fires. |
 | Viewport Transform | The Geometry Nodes input that gives the 3D viewport's view. | Tool context only; errors in a modifier. |

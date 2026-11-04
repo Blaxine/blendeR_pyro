@@ -50,7 +50,8 @@ def _grid(entry):
 
 
 def _emitter_radius(entry):
-    return max(v.co.length for v in entry.emitter.data.vertices)
+    """How far the emitter reaches across, whatever height its patches are at."""
+    return max(v.co.xy.length for v in entry.emitter.data.vertices)
 
 
 def _matches(entry, preset_id):
@@ -63,8 +64,12 @@ def _matches(entry, preset_id):
     size = tuple(entry.primary.dimensions)
     if any(abs(a - b) > 1e-4 for a, b in zip(size, shape["domain_size"])):
         problems.append(f"domain {size}")
-    if abs(_emitter_radius(entry) - shape["emitter_radius"]) > 1e-5:
+    # A 12-sided disc falls a little short of its radius between its corners.
+    if not shape["emitter_radius"] * 0.96 <= _emitter_radius(entry) <= shape["emitter_radius"] + 1e-5:
         problems.append(f"emitter radius {_emitter_radius(entry)}")
+    patches = len(shape["emitter_patches"]) or 1
+    if len(entry.emitter.data.polygons) != patches * (12 if shape["emitter_patches"] else 24):
+        problems.append(f"emitter faces {len(entry.emitter.data.polygons)}")
     if abs(entry.emitter.location.z - shape["emitter_z"]) > 1e-6:
         problems.append("emitter height")
     if abs(entry.light.location.z - shape["light_height"]) > 1e-6:
@@ -84,6 +89,9 @@ def _matches(entry, preset_id):
         problems.append("smoke colour")
     if abs(node.inputs["Blackbody Intensity"].default_value - package["material"]["blackbody"]) > 1e-4:
         problems.append("blackbody")
+    _ramp, strength = sim_fire.flame_colour(entry)
+    if abs(strength.inputs[1].default_value - package["material"]["flame_colour"]) > 1e-4:
+        problems.append("flame colour")
     if abs(fire_light.get_energy(entry.light.data) - light["energy"]) > 1e-4:
         problems.append(f"light {fire_light.get_energy(entry.light.data)}")
     if abs(entry.light.data.shadow_soft_size - light["radius"]) > 1e-5:
@@ -116,6 +124,34 @@ def test_catalogue():
         lib.check(f"{package['label']}'s emitter is inside its domain",
                   bottom < shape["emitter_z"] and shape["emitter_radius"] < shape["domain_size"][0] / 2)
         lib.check(f"{package['label']}'s Detail is in the slider's range", 16 <= package["entry"]["detail"] <= 96)
+
+
+def test_campfire_burns_like_one():
+    package = CATALOG[sim_presets.CAMPFIRE]
+    lib.check("the Campfire burns from several logs", len(package["shape"]["emitter_patches"]) >= 6)
+    heights = {z for _x, _y, z, _r in package["shape"]["emitter_patches"]}
+    lib.check("at different heights", len(heights) >= 4, str(heights))
+    lib.check("its flames break up more than Blender's default",
+              package["domain"]["flame_vorticity"] > 0.5 and package["domain"]["vorticity"] > 0.2)
+    lib.check("and shade from a pale core to red tips", package["material"]["flame_colour"] > 0
+              and sim_fire.FLAME_RAMP[1][1][0] > sim_fire.FLAME_RAMP[1][1][1]
+              and sim_fire.FLAME_RAMP[-1][1][1] > 0.6)
+    for preset_id in (sim_presets.NORMAL_FIRE, sim_presets.CANDLE_FIRE):
+        lib.check(f"{CATALOG[preset_id]['label']} keeps its blackbody look",
+                  CATALOG[preset_id]["material"]["flame_colour"] == 0.0)
+
+
+def test_an_older_fire_gets_the_colour_nodes():
+    lib.clear_scene()
+    entry = _create()
+    tree = sim_fire.volume_node(entry).id_data
+    for name in (sim_fire.RAMP_NODE, sim_fire.STRENGTH_NODE):
+        tree.nodes.remove(tree.nodes[name])
+    bpy.ops.fas.apply_sim_preset(uuid=entry.uuid)
+    entry = _entry()
+    problems = _matches(entry, sim_presets.CAMPFIRE)
+    lib.check("Apply adds them back", not problems, str(problems))
+    bpy.ops.fas.effect_delete(uuid=entry.uuid)
 
 
 def test_create_each():

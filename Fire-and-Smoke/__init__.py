@@ -18,10 +18,10 @@ for _name in [n for n in sys.modules if n.startswith(__name__ + ".")]:
 
 from . import constants as C
 from .core import delete, errors, handlers, registry, view_sync
-from .effects import campfire, embers, mesh_fire, presets, sim_presets, smoke
+from .effects import campfire, embers, mesh_fire, presets, sim_presets, smoke, wind
 from .ui import panel
 
-_MODULES = (registry, errors, delete, campfire, smoke, mesh_fire, embers, presets, sim_presets, panel)
+_MODULES = (registry, errors, delete, campfire, smoke, mesh_fire, embers, presets, sim_presets, wind, panel)
 
 
 def _all_classes():

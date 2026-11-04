@@ -62,10 +62,16 @@ The owner couldn't see the fire. There were two causes, and both are now explain
 - **The default cube hides it.** The fire is made at the 3D cursor, inside the 2 m default cube. Create warns with the mesh's name, and the fire's box shows it as long as the mesh is in the way. This is checked for plane fires too.
 - **Material Preview shows no fluid simulation.** This is Blender's behaviour, Quick Smoke's included. The box says to use Rendered or Solid, and the panel warns in Material Preview.
 
+The owner then asked for a campfire that looks real, and for wind:
+
+- **The Campfire burns from eight log patches**, with more swirl in its flames and a flame colour ramp from red tips to a pale core. Normal Fire and Candle Fire are unchanged. Values and findings are in `docs/LOOK_TEST.md`.
+- **A Wind button** adds an owned Wind force field, with Power, Gusts and Direction in its box. Changing it makes every Simulated Fire simulate again.
+
 ## Open Questions
 
 - **Q1.** Are Normal Fire and Candle Fire the looks the owner wants? They're proposed by render (see `docs/LOOK_TEST.md`). The Candle's flame shows faint banding.
 - **Q2.** Should the Add panel offer the three directly, as buttons or a menu? Today they're in the redo panel and the effect box, as in AquaSuite.
+- **Q3.** Is the new Campfire the look the owner wants, and should Normal Fire get the flame colour ramp too?
 
 ## Revision History
 
@@ -73,3 +79,4 @@ The owner couldn't see the fire. There were two causes, and both are now explain
 | ---- | ------ | ----------------- |
 | 2026-11-04 | Blaxine | Built and recorded. Open: AC7 (the owner's look verdict) and AC8 (5.1). |
 | 2026-11-04 | Blaxine | Warnings for a mesh hiding a fire and for Material Preview, after the owner couldn't see the fire. |
+| 2026-11-04 | Blaxine | A campfire that burns from logs, with a flame colour ramp, and a Wind button. |

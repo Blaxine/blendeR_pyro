@@ -37,6 +37,7 @@ KIND_COLUMN = "COLUMN"
 KIND_MESH_FIRE = "MESH_FIRE"
 KIND_EMBERS = "EMBERS"
 KIND_SIM_FIRE = "SIM_FIRE"
+KIND_WIND = "WIND"
 KIND_LABELS = {
     KIND_FIRE: "Fire",
     KIND_SMOKE: "Smoke",
@@ -44,6 +45,7 @@ KIND_LABELS = {
     KIND_MESH_FIRE: "Mesh Fire",
     KIND_EMBERS: "Embers",
     KIND_SIM_FIRE: "Simulated Fire",
+    KIND_WIND: "Wind",
 }
 
 MAX_EMBERS = 20000

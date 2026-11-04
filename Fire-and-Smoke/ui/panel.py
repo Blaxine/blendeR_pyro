@@ -5,7 +5,7 @@ import bpy
 
 from .. import constants as C
 from ..core import covering, errors, registry
-from ..effects import light_mode, mesh_fire, presets, sim_fire, sim_presets
+from ..effects import light_mode, mesh_fire, presets, sim_fire, sim_presets, wind
 from . import control_spec
 
 PREVIEW_NOTE = "Preview only: final renders always face the scene camera"
@@ -18,6 +18,7 @@ SIM_EEVEE_NOTE = "EEVEE shows a weaker look than Cycles"
 SIM_VIEW_NOTE = "Material Preview doesn't show it: use Rendered or Solid view"
 MATERIAL_PREVIEW_NOTE = ("Material Preview doesn't show the Simulated Fire: switch to Rendered or Solid "
                          "to see it")
+WIND_PLAY_NOTE = "After a change, press play from the first frame to see it"
 DETAIL_NOTE = "Higher Detail is slower and uses more disk space"
 SOLID_NOTE = "Solid view only shows rough shapes: switch to Material Preview or Rendered to see the effect"
 NO_CAMERA_NOTE = "This scene has no camera: add one before rendering"
@@ -117,6 +118,9 @@ def _draw_entry(layout, entry):
             _wrapped_label(box, SIM_FIRE_NOTE, icon="INFO")
             _wrapped_label(box, SIM_VIEW_NOTE, icon="INFO")
             _wrapped_label(box, SIM_EEVEE_NOTE, icon="INFO")
+        elif entry.kind == C.KIND_WIND:
+            _wrapped_label(box, wind.NOTE, icon="INFO")
+            _wrapped_label(box, WIND_PLAY_NOTE, icon="INFO")
         for token in control_spec.controls(entry.kind, entry.show_advanced):
             _draw_control(box, entry, token)
     except Exception as exc:
@@ -178,6 +182,9 @@ class FAS_PT_create(bpy.types.Panel):
                 column = layout.column(align=True)
                 column.label(text=shown)
             column.operator("fas.effect_create", text=text, icon=icon).preset = preset_id
+        column = layout.column(align=True)
+        column.label(text="Wind")
+        column.operator("fas.wind_create", text="Wind", icon="FORCE_WIND")
         problem = mesh_fire.source_problem(context.active_object)
         if problem:
             row = layout.column()

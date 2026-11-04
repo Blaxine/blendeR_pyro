@@ -14,7 +14,8 @@ Add believable fire and smoke to your Blender scene in one click. Pick a preset,
 - **Stays convincing as your camera moves.** Planes keep facing the camera, and fade to a soft glow from steep angles.
 - **Fire that lights your scene,** with a flickering light that looks the same in Cycles and EEVEE.
 - **Set your own mesh on fire.** Your object isn't changed.
-- **A real simulated fire too,** with volumetric flames and smoke, and still no bake step: it simulates as you play. Start it as a **Normal Fire**, a **Candle Fire** or a **Campfire**, and switch between them later.
+- **A real simulated fire too,** with volumetric flames and smoke, and still no bake step: it simulates as you play. Start it as a **Normal Fire**, a **Candle Fire** or a **Campfire**, and switch between them later. The Campfire burns from several logs, with flickering tongues shading from a pale core to red tips.
+- **Wind** that bends the Simulated Fire and carries the embers, with Power, Gusts and Direction.
 - **Cleaning up is safe.** Delete removes only what the add-on made, even in copied scenes.
 - **A simple panel** with plain messages when something can't be done.
 
@@ -29,7 +30,7 @@ We'd rather you know before you buy:
 - **Top-down shots look weak.** From high above, flames fade to a soft glow.
 - **Embers replay from the start when scrubbed.** "No baking" means instant scrubbing for flames and smoke, not embers or the Simulated Fire.
 - **Cycles and EEVEE match with the default light.** Emissive lighting is Cycles-focused.
-- **Flames and smoke appear to rise, but nothing travels through your scene.** They don't react to objects or wind.
+- **Plane flames and smoke appear to rise, but nothing travels through your scene.** They don't react to objects or wind. The Simulated Fire and embers do react to wind.
 
 ## Requirements
 

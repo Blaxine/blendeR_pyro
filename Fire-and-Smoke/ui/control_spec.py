@@ -10,6 +10,8 @@ from .. import constants as C
 SIM_FIRE = ("sim_preset", "entry:detail", "entry:flame_intensity", "entry:smoke_amount", "entry:light_mode",
             "entry:light_strength")
 
+WIND = ("entry:wind_power", "entry:wind_gusts", "entry:wind_direction")
+
 SIMPLE = {
     C.KIND_FIRE: ("entry:size", "entry:brightness", "entry:light_mode", "entry:light_strength", "preview"),
     C.KIND_MESH_FIRE: ("entry:brightness", "entry:light_mode", "entry:light_strength", "preview"),
@@ -17,6 +19,7 @@ SIMPLE = {
     C.KIND_COLUMN: ("entry:size", "entry:density", "preview"),
     C.KIND_EMBERS: ("entry:amount", "entry:ember_size"),
     C.KIND_SIM_FIRE: SIM_FIRE,
+    C.KIND_WIND: WIND,
 }
 ADVANCED = {
     C.KIND_FIRE: ("entry:size", "entry:brightness", "entry:light_mode", "entry:light_strength", "preview",
@@ -27,6 +30,7 @@ ADVANCED = {
     C.KIND_COLUMN: ("entry:size", "entry:density", "preview", "entry:layers", "entry:seed"),
     C.KIND_EMBERS: ("entry:amount", "entry:ember_size"),
     C.KIND_SIM_FIRE: SIM_FIRE,
+    C.KIND_WIND: WIND,
 }
 
 

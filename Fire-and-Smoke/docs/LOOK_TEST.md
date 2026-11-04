@@ -117,7 +117,7 @@ EEVEE renders visible fire with no error on 4.5.4 and 5.2.2 (`tests/test_sim_fir
 
 ## Simulated Fire presets (REQ-003)
 
-The Simulated Fire has three presets, as AquaSuite's liquids do: Normal Fire, Candle Fire and Campfire. The Campfire is the values above, unchanged. The other two were tuned by render in Cycles on 5.2.2 on 2026-11-04, from the Campfire's values, and are proposed for the owner's verdict.
+The Simulated Fire has three presets, as AquaSuite's liquids do: Normal Fire, Candle Fire and Campfire. The Campfire started as the values above, and was then made to burn like a real campfire (see below). The other two were tuned by render in Cycles on 5.2.2 on 2026-11-04, from the Campfire's values, and are proposed for the owner's verdict.
 
 ### Verdict in Cycles
 
@@ -140,17 +140,19 @@ Add `--sim CANDLE_FIRE` to render one of them.
 
 | Setting | Normal Fire | Candle Fire | Campfire |
 | ------- | ----------- | ----------- | -------- |
-| Emitter | 0.2 m disc at 0.03 m, Smoke & Fire | 5 mm disc at 5 mm, Fire only | 0.35 m disc at 0.05 m, Smoke & Fire |
+| Emitter | 0.2 m disc at 0.03 m, Smoke & Fire | 5 mm disc at 5 mm, Fire only | 8 log patches, 6 to 11 cm across, 2 to 10 cm up, reaching 0.39 m, Smoke & Fire |
 | Domain | 0.9 × 0.9 × 1.8 m, centred 0.85 m up | 6 × 6 × 16 cm, centred 7.5 cm up | 1.4 × 1.4 × 2.6 m, centred 1.25 m up |
 | Detail | 64 (grid 32 × 32 × 64) | 96 (grid 36 × 36 × 96) | 64 (grid 34 × 34 × 64) |
-| Vorticity | 0.3 | 0 | 0.2 |
-| Burning rate | 1.3 | 4.0 | 1.1 |
+| Vorticity | 0.3 | 0 | 0.5 |
+| Flame vorticity | 0.5 | 0.5 | 1.5 |
+| Burning rate | 1.3 | 4.0 | 0.9 |
 | Heat buoyancy (beta) | 0.6 | 0.1 | 1.0 |
 | Flame maximum temperature | 3.5 | 6.0 | 3.0 |
 | Smoke from flames | 1.0 | 0 | 1.0 |
 | Volume density | 2 | 1 | 3 |
 | Volume colour (smoke) | 0.15 grey | 0.05 grey | 0.05 grey |
-| Blackbody intensity | 1.5 | 25 | 1 |
+| Blackbody intensity | 1.5 | 25 | 0 |
+| Flame colour | none | none | ramp at strength 7 |
 | Fire light | 20 W, 0.2 m radius, 0.3 m up, flicker 0.25 | 0.5 W, 0.02 m radius, 3 cm up, flicker 0.12 at speed 5 | 45 W, 0.3 m radius, 0.5 m up, flicker 0.3 |
 
 How they were found:
@@ -166,9 +168,10 @@ How they were found:
 | ------- | ------ | ------------------ | -------------- | -------- | ------ |
 | 5.2.2 | Normal Fire | 14.2 fps | 61.9 fps | 1574×888 | met |
 | 5.2.2 | Candle Fire | 6.7 fps | 62.1 fps | 1574×888 | met |
-| 5.2.2 | Campfire | 15.1 fps | 61.0 fps | 1574×888 | met |
+| 5.2.2 | Campfire (logs) | 12.2 fps | 60.3 fps | 1574×888 | met |
 | 4.5.4 | Normal Fire | 14.7 fps | 62.1 fps | 1585×886 | met |
 | 4.5.4 | Candle Fire | 6.9 fps | 61.8 fps | 1585×886 | met |
+| 4.5.4 | Campfire (logs) | 9.8 fps | 61.9 fps | 1585×886 | met |
 | 5.1 | | not measured | | | not installed on this PC |
 
 The Candle Fire is the slowest: its 96 divisions over a small domain make more cells than the Campfire's 64.
@@ -184,6 +187,31 @@ Found on 2026-11-04, after the owner couldn't see the fire. Blender's **Material
 `tests/gui_viewport_visible.py` used to pass the Simulated Campfire in every mode, because the wireframe box alone changed about 4,000 pixels. It now counts only fire-coloured pixels for it, and reports Material Preview as known.
 
 In the owner's own startup scene, the fire was also inside the default cube, which sits at the 3D cursor. Create now names any mesh of the buyer's that hides a fire (`core/covering.py`), and the fire's box says so too.
+
+## A real campfire, and wind (2026-11-04)
+
+The owner asked for the Campfire to look like a real one: erratic, with flames that come and go, and the orange colouring of a real fire. Tuned by render in Cycles on 5.2.2, frames 80, 86 and 92, against the values above.
+
+**Pending the owner's verdict.**
+
+What made the difference:
+
+- **Logs, not a disc.** One disc burned as one smooth, rounded column. Eight small patches at different heights, like the tops of logs, burn as separate tongues that merge, split and lean (`CAMPFIRE_LOGS` in `effects/sim_presets.py`).
+- **More swirl in the flames.** Flame vorticity 1.5 (Blender's default is 0.5) and vorticity 0.5 tear the tongues into licks. A slower burning rate, 0.9, lets them reach a little higher before they go out.
+- **A flame colour ramp.** Blackbody alone shaded the whole flame one orange. The Campfire's volume now takes its emission colour from the flame through a ramp: dark red at the thin edges, deep orange, orange, and a pale yellow core where it burns hottest (`FLAME_RAMP` in `effects/sim_fire.py`). The flame's strength times 7 is the emission strength, and blackbody is off. Normal Fire and Candle Fire keep their blackbody look.
+- **What didn't work.** Mantaflow's noise upscaling gave fine detail, but simulated 2.6 times slower, well under the 5 fps target. A noise texture on the emitter starved the flames into a few faint wisps.
+
+Headless, the Campfire simulates as fast as before: about 4.6 s for 60 frames. In a windowed viewport its first play-through is 12.2 fps on 5.2.2 (15.1 fps from one disc) and 9.8 fps on 4.5.4, above the 5 fps target.
+
+### Wind
+
+The **Wind** button in the Add panel makes an owned Wind force field, a Plane field 3 m upwind of the 3D cursor and 1 m up, facing the way it blows. Its box has **Power**, **Gusts** and **Direction**.
+
+- Blender's wind strength 1 lays a campfire flat and pushes its flames into the side of its box. **Power 1 is strength 0.25**, a strong breeze, so the slider's useful range is 0 to 1. It goes up to 4 for a gale. It starts at 0.4.
+- **Gusts 1 is the field's noise at 2.** It starts at 0.3.
+- After 40 frames at Power 1, the Campfire's plume moved from 0.49 to 0.68 of the way across its domain on 5.2.2, and from 0.44 to 0.58 on 4.5.4 (`tests/test_wind.py`).
+- Wind is not a setting the Replay cache notices, so adding, changing or deleting a wind clears every Simulated Fire's cache. The buyer plays from the first frame again to see it.
+- The plane fires and smoke are animated noise, so wind doesn't move them. The box says so.
 
 ## Blender 4.5
 

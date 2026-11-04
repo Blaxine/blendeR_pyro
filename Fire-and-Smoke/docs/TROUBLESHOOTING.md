@@ -46,6 +46,16 @@ The first play-through simulates every frame. Lower **Detail** for a faster, coa
 
 Your smoke domain has no **Flow** collection, so it takes every emitter in the scene, including the Simulated Fire's. In your domain's **Physics > Fluid > Collections**, set **Flow** to a collection holding only your own emitters.
 
+## The wind doesn't move my fire
+
+- **Press play from the first frame.** The Simulated Fire simulates again after any change to a wind, from the first frame.
+- **Only the Simulated Fire and embers take wind.** The other flames and smoke are animated, not simulated.
+- **Power 0 is still air.** Raise **Power** in the wind's box.
+
+## The wind blows my flames out of their box
+
+Above Power 1, flames lie flat and reach the side of the Simulated Fire's box, where they stop. Lower the wind's **Power**.
+
 ## My Simulated Fire says (modified)
 
 You changed one of its settings since its preset was applied, in its box or in Blender's **Physics** panel. That's fine: the preset is only a starting point. To go back to the preset's values, pick it from the **Preset** menu and click **Apply**.

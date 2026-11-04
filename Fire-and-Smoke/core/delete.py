@@ -140,7 +140,12 @@ def delete_effect(scene, effect_uuid):
         current = settings.cache_directory if settings is not None else ""
         _sweep(scene, entry, effect_uuid)
         cache_folder.remove(effect_uuid, current)
+    was_wind = entry is not None and entry.kind == C.KIND_WIND
     registry.remove(scene, effect_uuid)
+    if was_wind:
+        # The simulated fires it blew must simulate again without it.
+        from ..effects import wind
+        wind.simulations_changed(scene)
     _prune(scene)
     return bounces.after_delete(scene)
 
