@@ -151,10 +151,10 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-03, with a 0.35 m disc
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S013 | S | Keep the flicker through zero | `set_energy` sets the noise strength from the light's own flicker ratio, so any energy, including 0, gives back the built flicker. It covers every fire kind. | — | `effects/fire_light.py` |
-|  | S014 | T | Test the flicker fix | Extend `tests/test_light.py`: Light Strength 0, then 1, restores the original noise strength. It fails before S013. | S013 | `tests/test_light.py` |
-|  | S015 | S | Light the Simulated Campfire | The owned fire light as a child of the domain at flame height, with its light, data and action tagged; `light_mode.apply` on the domain; `base_energy` on the entry. | S003, S013 | add-on package |
-|  | S016 | T | Test the light | Extend `tests/test_sim_fire.py`: Real hides the domain from diffuse and glossy rays; Emissive turns the light off; in Cycles, Emissive lights the ground where Real with the light off doesn't; the light's energy changes over frames. | S015 | `tests/test_sim_fire.py` |
+| ✅ | S013 | S | Keep the flicker through zero | `set_energy` sets the noise strength from the light's own flicker ratio, so any energy, including 0, gives back the built flicker. It covers every fire kind. | — | `effects/fire_light.py` |
+| ✅ | S014 | T | Test the flicker fix | Extend `tests/test_light.py`: Light Strength 0, then 1, restores the original noise strength. It fails before S013. | S013 | `tests/test_light.py` |
+| ✅ | S015 | S | Light the Simulated Campfire | The owned fire light as a child of the domain at flame height, with its light, data and action tagged; `light_mode.apply` on the domain; `base_energy` on the entry. | S003, S013 | add-on package |
+| ✅ | S016 | T | Test the light | Extend `tests/test_sim_fire.py`: Real hides the domain from diffuse and glossy rays; Emissive turns the light off; in Cycles, Emissive lights the ground where Real with the light off doesn't; the light's energy changes over frames. | S015 | `tests/test_sim_fire.py` |
 
 ### Slice 4 — Controls and timeline
 

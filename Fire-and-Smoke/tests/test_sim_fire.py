@@ -198,6 +198,56 @@ def test_its_own_flows_only():
     scene.frame_set(1)
 
 
+def _bottom_red(pixels, width=160, height=90):
+    """Mean red of the bottom quarter, where the ground in front of the fire is."""
+    rows = height // 4
+    values = [pixels[(y * width + x) * 4] for y in range(rows) for x in range(width)]
+    return sum(values) / len(values)
+
+
+def test_the_light():
+    scene = lib.scene()
+    entry = _entry(STATE["uuid"])
+    domain, light = entry.primary, entry.light
+    owner = lib.C.OWNER_PROP
+    lib.check("it has a fire light, the domain's child", light is not None and light.parent == domain)
+    lib.check("with its light, data and action tagged", owner in light.keys() and owner in light.data.keys()
+              and owner in light.data.animation_data.action.keys())
+    lib.check("at flame height", 0.2 < light.location.z < 1.0, str(light.location.z))
+    lib.check("Real is the default", entry.light_mode == "REAL" and not light.hide_render)
+    lib.check("Real hides the domain from diffuse and glossy rays",
+              not domain.visible_diffuse and not domain.visible_glossy)
+    lib.check("its smoke casts no shadows", not domain.visible_shadow)
+    lib.check("the entry knows the light's energy", entry.base_energy > 0.0)
+    energies = []
+    for frame in (5, 9, 13, 17, 21):
+        scene.frame_set(frame)
+        energies.append(round(light.data.energy, 3))
+    lib.check("the light's energy changes over frames, with no Python running", len(set(energies)) > 2, str(energies))
+
+    bpy.ops.mesh.primitive_plane_add(size=20.0)
+    ground = bpy.context.object
+    scene.frame_set(1)
+    _play(30)
+    light.hide_render = True
+    dark = _bottom_red(lib.render("CYCLES"))
+    light.hide_render = False
+    entry = _entry(STATE["uuid"])
+    entry.light_mode = "EMISSIVE"
+    bpy.context.view_layer.update()
+    lib.check("Emissive turns the light off", light.hide_render and light.hide_viewport)
+    lib.check("and lets the flames light the scene", domain.visible_diffuse and domain.visible_glossy)
+    emissive = _bottom_red(lib.render("CYCLES"))
+    _entry(STATE["uuid"]).light_mode = "REAL"
+    real = _bottom_red(lib.render("CYCLES"))
+    lib.info(f"ground red in Cycles: Real with the light off {dark:.4f}, Emissive {emissive:.4f}, Real {real:.4f}")
+    lib.check("in Cycles, Emissive lights the ground where Real with the light off doesn't",
+              emissive > dark * 1.1 + 0.002, f"{emissive:.4f} against {dark:.4f}")
+    lib.check("and Real's light lights it", real > dark * 1.1 + 0.002, f"{real:.4f} against {dark:.4f}")
+    bpy.data.objects.remove(ground)
+    scene.frame_set(1)
+
+
 def test_no_fluid_is_refused_plainly():
     original = sim_fire.bpy
 

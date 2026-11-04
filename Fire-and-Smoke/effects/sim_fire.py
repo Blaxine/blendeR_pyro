@@ -17,6 +17,7 @@ import bpy
 
 from .. import constants as C
 from ..core import bounces, cache_folder, naming, registry
+from . import fire_light, light_mode
 
 NO_FLUID = "This Blender was built without Fluid, so it can't make a Simulated Campfire"
 
@@ -27,6 +28,8 @@ DOMAIN_CENTRE_Z = 1.25
 RESOLUTION = 64
 VOLUME_DENSITY = 5.0
 BLACKBODY = 1.0
+LIGHT = {"energy": 90.0, "radius": 0.3}
+LIGHT_HEIGHT = 0.5
 
 
 def _box_mesh(name, size, centre_z):
@@ -160,8 +163,19 @@ def create_sim_fire(context, location, name="Simulated Campfire"):
     set_range(settings, scene.frame_start, scene.frame_end)
     settings.cache_directory = cache_folder.path_for(effect_uuid)
 
+    light, action = fire_light.build_light(f"{name} Light", **LIGHT)
+    for id_block in (light, light.data, action):
+        naming.tag(id_block, kind, effect_uuid)
+    collection.objects.link(light)
+    light.parent = domain
+    light.location = (0.0, 0.0, LIGHT_HEIGHT)
+
     entry = registry.add(scene, kind, effect_uuid, primary=domain, root_collection=collection)
     entry.emitter = emitter
     entry.planes = 0
+    entry.light = light
+    entry.base_energy = light.data.energy
+    light_mode.apply(domain, light, light_mode.REAL)
+    entry.light_mode = light_mode.REAL
     bounces.after_create(scene)
     return effect_uuid

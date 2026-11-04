@@ -72,6 +72,52 @@ def test_emissive_lights_the_ground_in_cycles():
     _set("REAL")
 
 
+def _noise(light):
+    from fire_and_smoke.effects import fire_light
+    fcurve = fire_light._existing_fcurve(light.data)
+    return next(m for m in fcurve.modifiers if m.type == "NOISE")
+
+
+def test_flicker_survives_zero():
+    """Every fire kind: Light Strength 0 and back gives the built flicker again."""
+    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(4.0, 0.0, 0.5))
+    crate = bpy.context.object
+    for preset_id in ("CANDLE", "CAMPFIRE", "BONFIRE", "BURNING_OBJECT", "SIMULATED_CAMPFIRE"):
+        bpy.context.view_layer.objects.active = crate
+        bpy.ops.fas.effect_create(preset=preset_id)
+        entry = lib.scene().fas_effects[-1]
+        uuid = entry.uuid
+        if not lib.check(f"{preset_id} has a fire light", entry.light is not None):
+            bpy.ops.fas.effect_delete(uuid=uuid)
+            continue
+        built = _noise(entry.light).strength
+        entry.light_strength = 0.0
+        lib.check(f"{preset_id}: no flicker at 0", _noise(entry.light).strength == 0.0)
+        entry.light_strength = 1.0
+        lib.check(f"{preset_id}: Light Strength 0 and back restores the flicker",
+                  abs(_noise(entry.light).strength - built) < 1e-4, f"{_noise(entry.light).strength} against {built}")
+        entry.light_strength = 2.0
+        lib.check(f"{preset_id}: and it still scales with the strength",
+                  abs(_noise(entry.light).strength - built * 2.0) < 1e-4)
+        bpy.ops.fas.effect_delete(uuid=uuid)
+    bpy.data.objects.remove(crate)
+
+
+def test_a_flicker_lost_in_an_old_file_comes_back():
+    """Lights made before the share was stored: the old code left the noise at 0."""
+    from fire_and_smoke.effects import fire_light
+    bpy.ops.fas.effect_create(preset="CAMPFIRE")
+    entry = lib.scene().fas_effects[-1]
+    data = entry.light.data
+    del data[fire_light.FLICKER_PROP]
+    _noise(entry.light).strength = 0.0
+    entry.light_strength = 1.0
+    lib.check("an old light gets the default flicker back",
+              abs(_noise(entry.light).strength - fire_light.get_energy(data) * fire_light.DEFAULT_FLICKER) < 1e-4,
+              str(_noise(entry.light).strength))
+    bpy.ops.fas.effect_delete(uuid=entry.uuid)
+
+
 def test_modes_keep_their_stored_values():
     lib.check("the modes keep their stored values",
               [item[3] for item in light_mode.ITEMS] == [0, 1, 2])

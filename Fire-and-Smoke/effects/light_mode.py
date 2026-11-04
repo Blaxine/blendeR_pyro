@@ -3,7 +3,8 @@
 
 Real is the default and the only mode that matches between engines.  Emissive
 lighting depends on the render engine bouncing emission around the scene, so it is
-Cycles-focused.
+Cycles-focused.  A simulated fire's ``fire`` is its domain: the same ray visibility
+decides whether its flames light the scene, and its smoke casts no shadows.
 """
 
 REAL = "REAL"
