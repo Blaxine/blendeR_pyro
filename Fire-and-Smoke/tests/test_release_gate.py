@@ -62,7 +62,7 @@ def test_the_real_checklist_has_every_check():
     from fire_and_smoke.effects import presets
     for preset_id in presets.DISPLAY_ORDER:
         label = presets.label(preset_id)
-        # Whole labels: "Campfire" is also part of "Simulated Campfire".
+        # Whole labels, so one preset's label inside another's never counts.
         mine = [b for b in eye if b.startswith(f"Eye check: {label}, ")]
         lib.check(f"{label} is in the eye checks", len(mine) == 4, str(len(mine)))
         for version in ("5.1", "5.2"):
@@ -72,8 +72,8 @@ def test_the_real_checklist_has_every_check():
         lib.check(f"{label} has a 4.5 render", sum(b == f"4.5 render: {label}"
                                                     or b.startswith(f"4.5 render: {label}, ")
                                                     for b in renders_45) == 1)
-    sim = [b for b in eye if b.startswith("Eye check: Simulated Campfire, ") and "EEVEE" in b]
-    lib.check("the Simulated Campfire's EEVEE boxes are judged on rendering visible fire",
+    sim = [b for b in eye if b.startswith("Eye check: Simulated Fire, ") and "EEVEE" in b]
+    lib.check("the Simulated Fire's EEVEE boxes are judged on rendering visible fire",
               len(sim) == 2 and all("renders visible fire" in b for b in sim), str(sim))
     for needed in ("walkthrough", "built zip", "speed target", "look test"):
         lib.check(f"the checklist covers the {needed}", any(needed in b.lower() for b in boxes))

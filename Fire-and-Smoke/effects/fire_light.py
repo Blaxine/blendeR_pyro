@@ -76,6 +76,16 @@ def set_energy(light_data, energy, flicker=None):
     light_data.energy = energy
 
 
+def set_speed(light_data, speed):
+    """How fast the light flickers: the noise's scale, in frames."""
+    fcurve = _existing_fcurve(light_data)
+    for modifier in (fcurve.modifiers if fcurve is not None else ()):
+        if modifier.type == "NOISE":
+            modifier.scale = speed
+    if fcurve is not None:
+        fcurve.update()
+
+
 def build_light(name, energy, colour=(1.0, 0.42, 0.13), radius=0.25, flicker=DEFAULT_FLICKER, speed=3.0,
                 seed=0.0):
     """The light object (not linked anywhere yet) and its action."""

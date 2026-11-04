@@ -22,23 +22,27 @@ Embers are particles, so they build up from the first frame. Go to the first fra
 
 They're small sparks made for mid-ground shots, and they show best against something dark. If they're still hard to see, raise **Ember Size** and **Amount** on the effect.
 
-## The Simulated Campfire looks frozen
+## The Simulated Fire looks frozen
 
 It simulates as the timeline plays forward, one frame at a time. If you jump ahead, or skip frames, it holds the last frame it simulated. Go back to the first frame and press play: it carries on from where it got to. Frames it has already simulated show straight away when you scrub back.
 
-After you change **Detail**, **Flame Intensity** or **Smoke Amount**, go back to the first frame and play again to see the change.
+After you change **Detail**, **Flame Intensity** or **Smoke Amount**, or apply a preset, go back to the first frame and play again to see the change.
 
-## A render shows no Simulated Campfire
+## A render shows no Simulated Fire
 
 A render of a frame the simulation hasn't reached shows no fire. Go to the first frame, play to the frame you want, then render it. To render an animation, render from the first frame.
 
-## The Simulated Campfire is slow
+## The Simulated Fire is slow
 
 The first play-through simulates every frame. Lower **Detail** for a faster, coarser fire; playing the same frames again reads them from disk, which is much faster.
 
 ## My own smoke simulation shows flames I didn't add
 
-Your smoke domain has no **Flow** collection, so it takes every emitter in the scene, including the Simulated Campfire's. In your domain's **Physics > Fluid > Collections**, set **Flow** to a collection holding only your own emitters.
+Your smoke domain has no **Flow** collection, so it takes every emitter in the scene, including the Simulated Fire's. In your domain's **Physics > Fluid > Collections**, set **Flow** to a collection holding only your own emitters.
+
+## My Simulated Fire says (modified)
+
+You changed one of its settings since its preset was applied, in its box or in Blender's **Physics** panel. That's fine: the preset is only a starting point. To go back to the preset's values, pick it from the **Preset** menu and click **Apply**.
 
 ## Flames or smoke look like flat shapes
 

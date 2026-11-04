@@ -87,10 +87,27 @@ def follow_ranges():
                 errors.schedule()
 
 
+def _watch_presets(scene, depsgraph):
+    from ..effects import sim_presets
+    try:
+        sim_presets.watch(scene, depsgraph)
+    except Exception as exc:
+        errors.record("Fire and Smoke couldn't check a simulation preset", exc)
+        errors.schedule()
+
+
 @persistent
-def fas_scene_watch(_scene, _depsgraph=None):
+def fas_scene_watch(scene, depsgraph=None):
     check_scenes()
     follow_ranges()
+    if scene is not None:
+        _watch_presets(scene, depsgraph)
+
+
+@persistent
+def fas_after_undo(_dummy=None):
+    from ..effects import sim_presets
+    sim_presets.reset_cache()
 
 
 def _repoint(what, saved=False):
@@ -103,6 +120,8 @@ def _repoint(what, saved=False):
 
 @persistent
 def fas_on_load(_dummy=None):
+    from ..effects import sim_presets
+    sim_presets.reset_cache()
     _scene_count[0] = 0
     check_scenes()
     note_ranges()
@@ -128,6 +147,8 @@ _HANDLERS = (
     ("load_post", "fas_on_load"),
     ("save_pre", "fas_before_save"),
     ("save_post", "fas_after_save"),
+    ("undo_post", "fas_after_undo"),
+    ("redo_post", "fas_after_undo"),
 )
 
 

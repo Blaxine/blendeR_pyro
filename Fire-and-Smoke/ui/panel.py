@@ -5,7 +5,7 @@ import bpy
 
 from .. import constants as C
 from ..core import errors, registry
-from ..effects import light_mode, mesh_fire, presets, sim_fire
+from ..effects import light_mode, mesh_fire, presets, sim_fire, sim_presets
 from . import control_spec
 
 PREVIEW_NOTE = "Preview only: final renders always face the scene camera"
@@ -48,8 +48,24 @@ def entry_problem(entry):
     return None
 
 
+def _draw_sim_preset(layout, entry):
+    """What was applied, and a menu with Apply for another: AquaSuite's preset row."""
+    column = layout.column(align=True)
+    text = entry.sim_preset_label or "Custom"
+    if sim_presets.is_modified(entry):
+        text += " (modified)"
+    column.label(text=text, icon="PRESET")
+    row = column.row(align=True)
+    row.prop(entry, "sim_preset_choice", text="Preset")
+    sub = row.row(align=True)
+    sub.enabled = entry.sim_preset_choice != sim_presets.CUSTOM
+    sub.operator("fas.apply_sim_preset", text="Apply").uuid = entry.uuid
+
+
 def _draw_control(layout, entry, token):
-    if token == "preview":
+    if token == "sim_preset":
+        _draw_sim_preset(layout, entry)
+    elif token == "preview":
         layout.prop(entry, "preview_facing", expand=True)
         _wrapped_label(layout, PREVIEW_NOTE, icon="INFO")
     elif token == "entry:light_mode":

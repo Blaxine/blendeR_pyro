@@ -6,8 +6,8 @@ panel knows how to draw.  Advanced lists the complete view, including Simple con
 """
 from .. import constants as C
 
-# A simulated fire shows its whole list in both views.
-SIM_FIRE = ("entry:detail", "entry:flame_intensity", "entry:smoke_amount", "entry:light_mode",
+# A simulated fire shows its whole list in both views, its preset first.
+SIM_FIRE = ("sim_preset", "entry:detail", "entry:flame_intensity", "entry:smoke_amount", "entry:light_mode",
             "entry:light_strength")
 
 SIMPLE = {

@@ -14,7 +14,9 @@ import fas_testlib as lib  # noqa: E402
 
 import bpy  # noqa: E402
 from fire_and_smoke.core import cache_folder  # noqa: E402
-from fire_and_smoke.effects import presets, sim_fire  # noqa: E402
+from fire_and_smoke.effects import presets, sim_fire, sim_presets  # noqa: E402
+
+CAMPFIRE = sim_presets.CATALOG[sim_presets.CAMPFIRE]
 
 STATE = {}
 
@@ -83,7 +85,7 @@ def test_create():
     lib.check("the domain is the primary, at the cursor", domain is not None
               and tuple(domain.location) == (0.0, 0.0, 0.0))
     lib.check("at full size with a scale of 1", tuple(domain.scale) == (1.0, 1.0, 1.0)
-              and abs(domain.dimensions.z - sim_fire.DOMAIN_SIZE[2]) < 1e-4, str(tuple(domain.dimensions)))
+              and abs(domain.dimensions.z - CAMPFIRE["shape"]["domain_size"][2]) < 1e-4, str(tuple(domain.dimensions)))
     lib.check("the emitter is the domain's child", emitter is not None and emitter.parent == domain)
     lib.check("and hidden from renders", emitter.hide_render)
     for obj in (domain, emitter):
@@ -304,13 +306,13 @@ def test_each_control_shows_on_the_next_play():
     node = sim_fire.volume_node(_entry(STATE["uuid"]))
     lib.check("Smoke Amount reaches the flow's smoke", abs(flow.density - 2.0) < 1e-5, str(flow.density))
     lib.check("and the material's density",
-              abs(node.inputs["Density"].default_value - sim_fire.VOLUME_DENSITY * 2.0) < 1e-4)
+              abs(node.inputs["Density"].default_value - CAMPFIRE["material"]["density"] * 2.0) < 1e-4)
     smokier = _replayed()
     lib.check("and a replayed frame differs", not _close(smokier[0], base[0], 0.02),
               f"{smokier[0]:.1f} against {base[0]:.1f}")
     _entry(STATE["uuid"]).smoke_amount = 1.0
     lib.check("back to 1 puts the preset's values back", abs(flow.density - 1.0) < 1e-5
-              and abs(node.inputs["Density"].default_value - sim_fire.VOLUME_DENSITY) < 1e-4)
+              and abs(node.inputs["Density"].default_value - CAMPFIRE["material"]["density"]) < 1e-4)
 
     _entry(STATE["uuid"]).detail = 40
     settings = sim_fire.domain_settings(_entry(STATE["uuid"]))

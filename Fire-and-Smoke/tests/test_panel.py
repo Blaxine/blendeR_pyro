@@ -127,7 +127,12 @@ def test_embers_box():
 def test_sim_fire_box():
     bpy.ops.fas.effect_create(preset="SIMULATED_CAMPFIRE")
     log = _draw(panel.FAS_PT_effects)
-    lib.check("the box is titled Simulated Campfire", "Simulated Campfire" in log["labels"])
+    lib.check("the box is titled Simulated Fire", "Simulated Fire" in log["labels"], str(log["labels"]))
+    lib.check("it says which simulation preset it started from", "Campfire" in log["labels"], str(log["labels"]))
+    lib.check("with a Preset menu", "sim_preset_choice" in log["props"], str(log["props"]))
+    lib.check("and an Apply button", "fas.apply_sim_preset" in log["operators"], str(log["operators"]))
+    lib.check("the preset comes before the sliders",
+              control_spec.controls(lib.C.KIND_SIM_FIRE)[0] == "sim_preset")
     lib.check("it says it simulates as you play", "simulates as you play" in _text(log), _text(log))
     lib.check("and to press play from the first frame", "press play from the first frame" in _text(log), _text(log))
     lib.check("and how to recover a frozen fire", "looks frozen" in _text(log), _text(log))
@@ -140,6 +145,9 @@ def test_sim_fire_box():
     lib.check("Advanced shows the same list",
               control_spec.controls(entry.kind, True) == control_spec.controls(entry.kind, False))
     lib.check("so there's no switch to more settings", "show_advanced" not in log["props"])
+    entry.flame_intensity = 1.5
+    log = _draw(panel.FAS_PT_effects)
+    lib.check("an edit marks the preset modified", "Campfire (modified)" in log["labels"], str(log["labels"]))
     entry.light_mode = "EMISSIVE"
     log = _draw(panel.FAS_PT_effects)
     lib.check("Emissive says it's Cycles-focused", "Cycles-focused" in _text(log), _text(log))

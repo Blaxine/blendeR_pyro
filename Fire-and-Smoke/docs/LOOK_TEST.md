@@ -50,7 +50,7 @@ Measured on the finished add-on. The Campfire has 28 flame planes and a glow car
 
 The target is unchanged, pending the owner's confirmation.
 
-## Simulated Campfire (REQ-002)
+## Simulated Fire as a Campfire (REQ-002)
 
 A real Mantaflow fire, held to the look bar in Cycles. In EEVEE it only has to render visible fire.
 
@@ -114,6 +114,68 @@ EEVEE renders visible fire with no error on 4.5.4 and 5.2.2 (`tests/test_sim_fir
 ### Undo
 
 `tests/gui_undo.py -- sim` (create, play, delete, undo, play, undo, redo, play) passes in a window on 4.5.4 and 5.2.2, as do the `embers` and `plain` sequences.
+
+## Simulated Fire presets (REQ-003)
+
+The Simulated Fire has three presets, as AquaSuite's liquids do: Normal Fire, Candle Fire and Campfire. The Campfire is the values above, unchanged. The other two were tuned by render in Cycles on 5.2.2 on 2026-11-04, from the Campfire's values, and are proposed for the owner's verdict.
+
+### Verdict in Cycles
+
+**Pending the owner's verdict, for each preset.**
+
+| Date | Preset | Verdict | Who | Notes |
+| ---- | ------ | ------- | --- | ----- |
+|  | Normal Fire |  | Owner |  |
+|  | Candle Fire |  | Owner |  |
+
+To render all three in both engines:
+
+```bash
+blender -b --factory-startup --python tests/render_presets.py -- --only SIMULATED_CAMPFIRE --frame 90
+```
+
+Add `--sim CANDLE_FIRE` to render one of them.
+
+### Values proposed for the verdict
+
+| Setting | Normal Fire | Candle Fire | Campfire |
+| ------- | ----------- | ----------- | -------- |
+| Emitter | 0.2 m disc at 0.03 m, Smoke & Fire | 5 mm disc at 5 mm, Fire only | 0.35 m disc at 0.05 m, Smoke & Fire |
+| Domain | 0.9 × 0.9 × 1.8 m, centred 0.85 m up | 6 × 6 × 16 cm, centred 7.5 cm up | 1.4 × 1.4 × 2.6 m, centred 1.25 m up |
+| Detail | 64 (grid 32 × 32 × 64) | 96 (grid 36 × 36 × 96) | 64 (grid 34 × 34 × 64) |
+| Vorticity | 0.3 | 0 | 0.2 |
+| Burning rate | 1.3 | 4.0 | 1.1 |
+| Heat buoyancy (beta) | 0.6 | 0.1 | 1.0 |
+| Flame maximum temperature | 3.5 | 6.0 | 3.0 |
+| Smoke from flames | 1.0 | 0 | 1.0 |
+| Volume density | 2 | 1 | 3 |
+| Volume colour (smoke) | 0.15 grey | 0.05 grey | 0.05 grey |
+| Blackbody intensity | 1.5 | 25 | 1 |
+| Fire light | 20 W, 0.2 m radius, 0.3 m up, flicker 0.25 | 0.5 W, 0.02 m radius, 3 cm up, flicker 0.12 at speed 5 | 45 W, 0.3 m radius, 0.5 m up, flicker 0.3 |
+
+How they were found:
+
+- **Normal Fire.** With the Campfire's buoyancy, a 0.2 m emitter made a smooth, tall column, glowing orange all the way up. With heat buoyancy at 0.6 and a burning rate of 1.3, the flame burns out at about knee height and grey smoke rises above it.
+- **Candle Fire.** At full heat buoyancy a 1 cm flame burned the whole height of a 25 cm domain, two or three cells wide. With a 16 cm domain, heat buoyancy at 0.1 and a burning rate of 4, the flame is about 4 cm tall. A flame that thin rendered dull orange at blackbody 1: at 25, with a maximum temperature of 6, it's white at the base and orange at the tip. It still shows faint banding up the flame, which the owner should judge.
+
+### Speed
+
+`tests/gui_viewport_speed.py -- SIMULATED_CAMPFIRE <preset>`, frames 1 to 96 in a windowed EEVEE viewport in Rendered camera view. The target (AC3) is 5 fps on the first play-through.
+
+| Blender | Preset | First play-through | From the cache | Viewport | Target |
+| ------- | ------ | ------------------ | -------------- | -------- | ------ |
+| 5.2.2 | Normal Fire | 14.2 fps | 61.9 fps | 1574×888 | met |
+| 5.2.2 | Candle Fire | 6.7 fps | 62.1 fps | 1574×888 | met |
+| 5.2.2 | Campfire | 15.1 fps | 61.0 fps | 1574×888 | met |
+| 4.5.4 | Normal Fire | 14.7 fps | 62.1 fps | 1585×886 | met |
+| 4.5.4 | Candle Fire | 6.9 fps | 61.8 fps | 1585×886 | met |
+| 5.1 | | not measured | | | not installed on this PC |
+
+The Candle Fire is the slowest: its 96 divisions over a small domain make more cells than the Campfire's 64.
+
+### Engines
+
+All three render visible fire in Cycles and EEVEE on 5.2.2 at frame 90 (`tests/render_presets.py`), and burn on 4.5.4 and 5.2.2 (`tests/test_sim_presets.py`).
 
 ## Blender 4.5
 

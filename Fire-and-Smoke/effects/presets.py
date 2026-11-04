@@ -10,7 +10,7 @@ import bpy
 
 from .. import constants as C
 from ..core import bounces, delete
-from . import creation, embers, flame_material, mesh_fire, sim_fire, smoke, smoke_material
+from . import creation, embers, flame_material, mesh_fire, sim_fire, sim_presets, smoke, smoke_material
 
 FIRE_GROUP = "Fire"
 SMOKE_GROUP = "Smoke"
@@ -29,8 +29,11 @@ PRESETS = (
      "OUTLINER_OB_VOLUME", SMOKE_GROUP),
     ("EMBERS", 7, "Embers", "Rising sparks. They replay from the start when you scrub",
      "PARTICLES", EMBER_GROUP),
-    ("SIMULATED_CAMPFIRE", 8, "Simulated Campfire",
-     "A real fire simulation. It simulates as you play, so press play from the first frame",
+    # Labelled Simulated Fire since it offers Normal Fire, Candle Fire and Campfire
+    # (``sim_presets``).  Its id and number stay.
+    ("SIMULATED_CAMPFIRE", 8, "Simulated Fire",
+     "A real fire simulation: a campfire, a candle or a normal fire. It simulates as you play, "
+     "so press play from the first frame",
      "MOD_FLUIDSIM", FIRE_GROUP),
 )
 
@@ -59,8 +62,9 @@ def _fire(context, name, stack, light, location, **look):
         glow=flame_material.build_glow_material("FAS_Glow"), light=light)
 
 
-def create(context, preset_id):
-    """Build a preset at the 3D cursor; returns the effect's uuid."""
+def create(context, preset_id, sim_preset=sim_presets.DEFAULT):
+    """Build a preset at the 3D cursor; returns the effect's uuid.  ``sim_preset`` is the
+    Simulated Fire's own preset."""
     location = context.scene.cursor.location
     if preset_id == "CANDLE":
         return _fire(context, "Candle",
@@ -89,7 +93,7 @@ def create(context, preset_id):
     if preset_id == "EMBERS":
         return embers.create_embers(context, location)
     if preset_id == "SIMULATED_CAMPFIRE":
-        return sim_fire.create_sim_fire(context, location)
+        return sim_fire.create_sim_fire(context, location, preset=sim_preset)
     raise RuntimeError(f"There's no preset called {preset_id}")
 
 
@@ -111,17 +115,27 @@ class FAS_OT_effect_create(bpy.types.Operator):
 
     preset: bpy.props.EnumProperty(name="Preset", items=enum_items(), default="CAMPFIRE",
                                    options={"SKIP_SAVE"})
+    sim_preset: bpy.props.EnumProperty(name="Simulation", items=sim_presets.ITEMS, default=sim_presets.DEFAULT,
+                                       options={"SKIP_SAVE"},
+                                       description="Which simulated fire to start from. "
+                                                   "You can apply another one later")
 
     @classmethod
     def description(cls, _context, properties):
         return _BY_ID[properties.preset][3]
+
+    def draw(self, _context):
+        layout = self.layout
+        layout.prop(self, "preset")
+        if self.preset == "SIMULATED_CAMPFIRE":
+            layout.prop(self, "sim_preset")
 
     @delete.guarded_create
     def execute(self, context):
         scene = context.scene
         cycles = getattr(scene, "cycles", None)
         limit = cycles.transparent_max_bounces if cycles is not None else None
-        effect_uuid = create(context, self.preset)
+        effect_uuid = create(context, self.preset, self.sim_preset)
         entry = next(e for e in scene.fas_effects if e.uuid == effect_uuid)
         entry.preset_id = self.preset
         if cycles is not None and cycles.transparent_max_bounces != limit:

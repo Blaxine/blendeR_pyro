@@ -9,7 +9,7 @@ import bpy
 from bpy.props import BoolProperty, EnumProperty, FloatProperty, IntProperty, PointerProperty, StringProperty
 
 from .. import constants as C
-from ..effects import light_mode
+from ..effects import light_mode, sim_presets
 from . import errors
 
 VIEWPORT = "VIEWPORT"
@@ -86,6 +86,7 @@ def _light_strength_update(self, _context):
     from ..effects import fire_light
     if self.light is not None:
         fire_light.set_energy(self.light.data, self.base_energy * self.light_strength)
+    sim_presets.note_edit(self)
 
 
 @errors.guard_update("Fire and Smoke couldn't change the variation")
@@ -131,6 +132,7 @@ def _simulation_change(entry, change):
         return
     change(sim_fire)
     sim_fire.clear_cache(entry)
+    sim_presets.note_edit(entry)
 
 
 @errors.guard_update("Fire and Smoke couldn't change the detail")
@@ -222,6 +224,14 @@ class FAS_EffectEntry(bpy.types.PropertyGroup):
                                    update=_flame_intensity_update,
                                    description="How much fire the emitter makes. "
                                                "Play from the first frame to see a change")
+    # The Simulated Fire's preset, as AquaSuite keeps its liquid presets: what was
+    # applied, what it wrote, and the menu for applying another.
+    sim_preset: StringProperty(name="Simulation Preset")
+    sim_preset_label: StringProperty()
+    sim_preset_choice: EnumProperty(name="Preset", items=sim_presets.CHOICES, default=sim_presets.DEFAULT,
+                                    description="A simulation preset to apply to this fire")
+    sim_preset_snapshot: StringProperty()
+    sim_preset_modified: BoolProperty(default=False)
     smoke_amount: FloatProperty(name="Smoke Amount", default=1.0, min=0.0, soft_max=3.0,
                                 update=_smoke_amount_update,
                                 description="How much smoke the fire makes, and how thick it looks. "

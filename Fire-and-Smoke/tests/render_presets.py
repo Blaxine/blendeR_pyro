@@ -2,10 +2,11 @@
 """One render per preset, per engine, for the eye checks and the release gate.
 
     blender -b --factory-startup --python tests/render_presets.py -- --out DIR [--size WxH]
-        [--only SIMULATED_CAMPFIRE,EMBERS] [--frame 40]
+        [--only SIMULATED_CAMPFIRE,EMBERS] [--sim CANDLE_FIRE] [--frame 40]
 
 Writes one PNG per preset and engine, and a contact sheet per engine.  Each preset gets
-a camera fitted to its size, on dusk ground for fire and overcast ground for smoke.
+a camera fitted to its size, on dusk ground for fire and overcast ground for smoke.  The
+Simulated Fire renders once per simulation preset, or only the ``--sim`` ones.
 """
 
 import math
@@ -17,12 +18,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import fas_testlib as lib  # noqa: E402
 
 import bpy  # noqa: E402
-from fire_and_smoke.effects import presets  # noqa: E402
+from fire_and_smoke.effects import presets, sim_presets  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
 OUT = lib._arg("--out", os.path.join(lib.REPO, "look_test_output", "presets"))
 WIDTH, HEIGHT = (int(v) for v in lib._arg("--size", "640x360").split("x"))
 ONLY = [p for p in lib._arg("--only", "").split(",") if p]
+SIM = [p for p in lib._arg("--sim", "").split(",") if p] or list(sim_presets.CATALOG)
 FRAME = int(lib._arg("--frame", "40"))
 VERSION = "%d.%d" % bpy.app.version[:2]
 DUSK = (0.006, 0.009, 0.018, 1.0)
@@ -38,12 +40,17 @@ SHOTS = {
     "THIN_SMOKE": (13.0, 2.2, OVERCAST),
     "BLACK_SMOKE_COLUMN": (32.0, 6.0, OVERCAST),
     "EMBERS": (5.0, 1.6, DUSK),
-    "SIMULATED_CAMPFIRE": (8.0, 0.9, DUSK),
+}
+# The Simulated Fire's presets, by their own ids.
+SIM_SHOTS = {
+    "NORMAL_FIRE": (5.0, 0.6, DUSK),
+    "CANDLE_FIRE": (0.6, 0.07, DUSK),
+    "CAMPFIRE": (8.0, 0.9, DUSK),
 }
 
 
-def _scene_for(preset_id):
-    distance, height, sky = SHOTS[preset_id]
+def _scene_for(preset_id, sim=None):
+    distance, height, sky = SIM_SHOTS[sim] if sim else SHOTS[preset_id]
     scene = bpy.context.scene
     for obj in list(scene.objects):
         bpy.data.objects.remove(obj, do_unlink=True)
@@ -80,7 +87,10 @@ def _scene_for(preset_id):
         crate.name = "Crate"
         crate.data.materials.append(material)
         bpy.context.view_layer.objects.active = crate
-    bpy.ops.fas.effect_create(preset=preset_id)
+    if sim:
+        bpy.ops.fas.effect_create(preset=preset_id, sim_preset=sim)
+    else:
+        bpy.ops.fas.effect_create(preset=preset_id)
     # Particles and the simulated fire need stepping from the start; flames don't mind.
     # Replay only simulates forward, so never jump: one frame at a time from frame 1.
     scene.frame_set(1)
@@ -111,15 +121,19 @@ def _contact_sheet(paths, target):
 def main():
     os.makedirs(OUT, exist_ok=True)
     made = {"CYCLES": [], "EEVEE": []}
+    shots = []
     for preset_id in [p for p in presets.DISPLAY_ORDER if not ONLY or p in ONLY]:
-        scene = _scene_for(preset_id)
+        shots += [(preset_id, s) for s in SIM] if preset_id == "SIMULATED_CAMPFIRE" else [(preset_id, None)]
+    for preset_id, sim in shots:
+        scene = _scene_for(preset_id, sim)
+        tag = f"{preset_id}_{sim}" if sim else preset_id
         for name, engine in (("CYCLES", "CYCLES"), ("EEVEE", lib.eevee_id())):
             scene.render.engine = engine
-            path = os.path.join(OUT, f"{VERSION}_{preset_id}_{name}.png")
+            path = os.path.join(OUT, f"{VERSION}_{tag}_{name}.png")
             scene.render.filepath = path
             bpy.ops.render.render(write_still=True)
             made[name].append(path)
-            print(f"PRESET {preset_id} {name} done", flush=True)
+            print(f"PRESET {tag} {name} done", flush=True)
     for name, paths in made.items():
         _contact_sheet(paths, os.path.join(OUT, f"{VERSION}_sheet_{name}.png"))
     print("PRESET all done", flush=True)
