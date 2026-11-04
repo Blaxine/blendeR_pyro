@@ -189,11 +189,11 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-03, with a 0.35 m disc
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S026 | D | Extend the checklist | Eye checks for Simulated Campfire in Cycles and EEVEE on 5.1 and 5.2, with the EEVEE boxes judged on "renders visible fire", plus a 4.5 render box. | S024 | `docs/RELEASE_CHECKLIST.md` |
-|  | S027 | T | Fix the gate counts | Extend `tests/test_release_gate.py`: 36 eye checks and nine 4.5 renders. | S026 | `tests/test_release_gate.py` |
-|  | S028 | D | Write the buyer docs | README Good to know: plays from the first frame, Cycles-first look, cache size and location, removal on delete, and that the buyer's own domains without a Flow collection also take its emitter. TROUBLESHOOTING: frozen fire. STORE_PAGE: the same limits. | S024 | `README.md`, `docs/TROUBLESHOOTING.md`, `docs/STORE_PAGE.md` |
-|  | S029 | D | Add the glossary terms | Simulated Campfire, Domain, Flow, Replay cache, Cache folder and Detail in `reqs/GLOSSARY.md`. | S002 | `reqs/GLOSSARY.md` |
-|  | S030 | X | Update REQ-001's numbers | Change REQ-001's AC16 and AC19 to 9 presets and 36 eye checks, with a revision row. | S026 | `reqs/in-progress/REQ-001-Fire-And-Smoke-Addon.md` |
+| ✅ | S026 | D | Extend the checklist | Eye checks for Simulated Campfire in Cycles and EEVEE on 5.1 and 5.2, with the EEVEE boxes judged on "renders visible fire", plus a 4.5 render box. | S024 | `docs/RELEASE_CHECKLIST.md` |
+| ✅ | S027 | T | Fix the gate counts | Extend `tests/test_release_gate.py`: 36 eye checks and nine 4.5 renders. | S026 | `tests/test_release_gate.py` |
+| ✅ | S028 | D | Write the buyer docs | README Good to know: plays from the first frame, Cycles-first look, cache size and location, removal on delete, and that the buyer's own domains without a Flow collection also take its emitter. TROUBLESHOOTING: frozen fire. STORE_PAGE: the same limits. | S024 | `README.md`, `docs/TROUBLESHOOTING.md`, `docs/STORE_PAGE.md` |
+| ✅ | S029 | D | Add the glossary terms | Simulated Campfire, Domain, Flow, Replay cache, Cache folder and Detail in `reqs/GLOSSARY.md`. | S002 | `reqs/GLOSSARY.md` |
+| ✅ | S030 | X | Update REQ-001's numbers | Change REQ-001's AC16 and AC19 to 9 presets and 36 eye checks, with a revision row. | S026 | `reqs/in-progress/REQ-001-Fire-And-Smoke-Addon.md` |
 
 ### Dependency graph
 
@@ -305,3 +305,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | ---- | ------ | ----------------- |
 | 2026-11-03 | Blaxine | Initial plan. |
 | 2026-11-04 | Blaxine | Moved to in-progress. |
+| 2026-11-04 | Blaxine | Slices 1 to 6 built. Open: S001 (the Campfire's look verdict), S024 (the owner's Cycles verdict on the proposed values), and S022 and S025 on 5.1, which isn't installed here. Q14 has a finding; Q15 resolved at 96. |

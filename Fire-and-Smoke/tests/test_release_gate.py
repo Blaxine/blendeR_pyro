@@ -56,13 +56,25 @@ def test_the_real_checklist_has_every_check():
     boxes = release_gate.open_boxes(text) + [
         line.strip()[6:] for line in text.splitlines() if line.strip().startswith("- [x] ")]
     eye = [b for b in boxes if b.startswith("Eye check:")]
-    lib.check("32 eye checks", len(eye) == 32, str(len(eye)))
+    lib.check("36 eye checks", len(eye) == 36, str(len(eye)))
     renders_45 = [b for b in boxes if b.startswith("4.5 render:")]
-    lib.check("one 4.5 render per preset", len(renders_45) == 8, str(len(renders_45)))
+    lib.check("one 4.5 render per preset", len(renders_45) == 9, str(len(renders_45)))
     from fire_and_smoke.effects import presets
     for preset_id in presets.DISPLAY_ORDER:
         label = presets.label(preset_id)
-        lib.check(f"{label} is in the eye checks", sum(label in b for b in eye) == 4)
+        # Whole labels: "Campfire" is also part of "Simulated Campfire".
+        mine = [b for b in eye if b.startswith(f"Eye check: {label}, ")]
+        lib.check(f"{label} is in the eye checks", len(mine) == 4, str(len(mine)))
+        for version in ("5.1", "5.2"):
+            for engine in ("Cycles", "EEVEE"):
+                lib.check(f"{label}: {version} {engine}",
+                          any(b.startswith(f"Eye check: {label}, {version}, {engine}") for b in mine))
+        lib.check(f"{label} has a 4.5 render", sum(b == f"4.5 render: {label}"
+                                                    or b.startswith(f"4.5 render: {label}, ")
+                                                    for b in renders_45) == 1)
+    sim = [b for b in eye if b.startswith("Eye check: Simulated Campfire, ") and "EEVEE" in b]
+    lib.check("the Simulated Campfire's EEVEE boxes are judged on rendering visible fire",
+              len(sim) == 2 and all("renders visible fire" in b for b in sim), str(sim))
     for needed in ("walkthrough", "built zip", "speed target", "look test"):
         lib.check(f"the checklist covers the {needed}", any(needed in b.lower() for b in boxes))
 

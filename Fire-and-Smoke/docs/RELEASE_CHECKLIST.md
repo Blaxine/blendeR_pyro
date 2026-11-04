@@ -11,10 +11,12 @@ Version under test:
 - [ ] The look test has a recorded pass from the owner in `docs/LOOK_TEST.md`
 - [ ] The default Campfire meets the confirmed speed target in the EEVEE viewport, by hand on this PC
 - [ ] The default Campfire meets the confirmed speed target in Cycles: `tests/look_test.py --speed`
+- [ ] The Simulated Campfire has the owner's Cycles verdict recorded in `docs/LOOK_TEST.md`
+- [ ] The default Simulated Campfire's first play-through runs at 5 fps or more in a windowed EEVEE viewport, on this PC: `tests/gui_viewport_speed.py -- SIMULATED_CAMPFIRE`
 
 ## Blender 5.1 and 5.2 eye checks
 
-Render every preset with `tests/render_presets.py`, and view each one in the viewport too. Each box means it looks right in that Blender and engine.
+Render every preset with `tests/render_presets.py`, and view each one in the viewport too. Each box means it looks right in that Blender and engine. The Simulated Campfire is held to the look bar in Cycles only: its EEVEE boxes mean it renders visible fire without errors. Play it from the first frame before viewing or rendering it.
 
 ### Blender 5.1
 
@@ -26,6 +28,7 @@ Render every preset with `tests/render_presets.py`, and view each one in the vie
 - [ ] Eye check: Thin Smoke, 5.1, Cycles
 - [ ] Eye check: Black Smoke Column, 5.1, Cycles
 - [ ] Eye check: Embers, 5.1, Cycles
+- [ ] Eye check: Simulated Campfire, 5.1, Cycles
 - [ ] Eye check: Candle, 5.1, EEVEE
 - [ ] Eye check: Torch, 5.1, EEVEE
 - [ ] Eye check: Campfire, 5.1, EEVEE
@@ -34,6 +37,7 @@ Render every preset with `tests/render_presets.py`, and view each one in the vie
 - [ ] Eye check: Thin Smoke, 5.1, EEVEE
 - [ ] Eye check: Black Smoke Column, 5.1, EEVEE
 - [ ] Eye check: Embers, 5.1, EEVEE
+- [ ] Eye check: Simulated Campfire, 5.1, EEVEE, renders visible fire
 
 ### Blender 5.2
 
@@ -45,6 +49,7 @@ Render every preset with `tests/render_presets.py`, and view each one in the vie
 - [ ] Eye check: Thin Smoke, 5.2, Cycles
 - [ ] Eye check: Black Smoke Column, 5.2, Cycles
 - [ ] Eye check: Embers, 5.2, Cycles
+- [ ] Eye check: Simulated Campfire, 5.2, Cycles
 - [ ] Eye check: Candle, 5.2, EEVEE
 - [ ] Eye check: Torch, 5.2, EEVEE
 - [ ] Eye check: Campfire, 5.2, EEVEE
@@ -53,6 +58,7 @@ Render every preset with `tests/render_presets.py`, and view each one in the vie
 - [ ] Eye check: Thin Smoke, 5.2, EEVEE
 - [ ] Eye check: Black Smoke Column, 5.2, EEVEE
 - [ ] Eye check: Embers, 5.2, EEVEE
+- [ ] Eye check: Simulated Campfire, 5.2, EEVEE, renders visible fire
 
 ## Blender 4.5
 
@@ -66,6 +72,7 @@ Eye checks on 4.5 are limited to these renders and the walkthrough.
 - [ ] 4.5 render: Thin Smoke
 - [ ] 4.5 render: Black Smoke Column
 - [ ] 4.5 render: Embers
+- [ ] 4.5 render: Simulated Campfire, in EEVEE, renders visible fire
 
 Follow this scripted beginner walkthrough on 4.5 from a clean profile:
 
