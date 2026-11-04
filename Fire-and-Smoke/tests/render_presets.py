@@ -2,6 +2,7 @@
 """One render per preset, per engine, for the eye checks and the release gate.
 
     blender -b --factory-startup --python tests/render_presets.py -- --out DIR [--size WxH]
+        [--only SIMULATED_CAMPFIRE,EMBERS] [--frame 40]
 
 Writes one PNG per preset and engine, and a contact sheet per engine.  Each preset gets
 a camera fitted to its size, on dusk ground for fire and overcast ground for smoke.
@@ -21,6 +22,8 @@ from mathutils import Vector  # noqa: E402
 
 OUT = lib._arg("--out", os.path.join(lib.REPO, "look_test_output", "presets"))
 WIDTH, HEIGHT = (int(v) for v in lib._arg("--size", "640x360").split("x"))
+ONLY = [p for p in lib._arg("--only", "").split(",") if p]
+FRAME = int(lib._arg("--frame", "40"))
 VERSION = "%d.%d" % bpy.app.version[:2]
 DUSK = (0.006, 0.009, 0.018, 1.0)
 OVERCAST = (0.42, 0.5, 0.62, 1.0)
@@ -35,6 +38,7 @@ SHOTS = {
     "THIN_SMOKE": (13.0, 2.2, OVERCAST),
     "BLACK_SMOKE_COLUMN": (32.0, 6.0, OVERCAST),
     "EMBERS": (5.0, 1.6, DUSK),
+    "SIMULATED_CAMPFIRE": (8.0, 0.9, DUSK),
 }
 
 
@@ -68,7 +72,7 @@ def _scene_for(preset_id):
     camera.location = (distance * math.sin(angle), -distance * math.cos(angle), height + distance * 0.08)
     camera.rotation_euler = (Vector((0.0, 0.0, height)) - camera.location).to_track_quat("-Z", "Y").to_euler()
 
-    scene.frame_start, scene.frame_end = 1, 60
+    scene.frame_start, scene.frame_end = 1, max(60, FRAME)
     scene.frame_set(1)
     if preset_id == "BURNING_OBJECT":
         bpy.ops.mesh.primitive_cube_add(size=2.0, location=(0.0, 0.0, 1.0))
@@ -77,8 +81,10 @@ def _scene_for(preset_id):
         crate.data.materials.append(material)
         bpy.context.view_layer.objects.active = crate
     bpy.ops.fas.effect_create(preset=preset_id)
-    # Particles need stepping from the start; flames don't mind.
-    for frame in range(1, 41):
+    # Particles and the simulated fire need stepping from the start; flames don't mind.
+    # Replay only simulates forward, so never jump: one frame at a time from frame 1.
+    scene.frame_set(1)
+    for frame in range(1, FRAME + 1):
         scene.frame_set(frame)
     return scene
 
@@ -105,7 +111,7 @@ def _contact_sheet(paths, target):
 def main():
     os.makedirs(OUT, exist_ok=True)
     made = {"CYCLES": [], "EEVEE": []}
-    for preset_id in presets.DISPLAY_ORDER:
+    for preset_id in [p for p in presets.DISPLAY_ORDER if not ONLY or p in ONLY]:
         scene = _scene_for(preset_id)
         for name, engine in (("CYCLES", "CYCLES"), ("EEVEE", lib.eevee_id())):
             scene.render.engine = engine

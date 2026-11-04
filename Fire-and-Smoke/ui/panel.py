@@ -5,7 +5,7 @@ import bpy
 
 from .. import constants as C
 from ..core import errors, registry
-from ..effects import light_mode, mesh_fire, presets
+from ..effects import light_mode, mesh_fire, presets, sim_fire
 from . import control_spec
 
 PREVIEW_NOTE = "Preview only: final renders always face the scene camera"
@@ -39,6 +39,8 @@ def entry_problem(entry):
     """What's wrong with this effect, as a sentence for the buyer, or None."""
     if entry.primary is None:
         return "This effect's object is gone. Delete it to clean up the rest"
+    if entry.kind == C.KIND_SIM_FIRE and not bpy.app.build_options.fluid:
+        return sim_fire.NO_FLUID_HERE
     if mesh_fire.is_missing_source(entry):
         return "The mesh this fire was on is gone. Delete the fire, then set a new mesh on fire"
     if entry.source is not None and len(entry.source.data.polygons) > mesh_fire.MAX_FACES:

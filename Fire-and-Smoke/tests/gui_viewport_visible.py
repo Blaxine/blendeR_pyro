@@ -26,7 +26,7 @@ from mathutils import Quaternion  # noqa: E402
 
 # preset -> viewing distance.  The view sits off to one side, clear of the first-run splash.
 DISTANCES = {"CANDLE": 1.0, "TORCH": 2.5, "CAMPFIRE": 9.0, "BONFIRE": 18.0, "BURNING_OBJECT": 11.0,
-             "THIN_SMOKE": 14.0, "BLACK_SMOKE_COLUMN": 34.0, "EMBERS": 9.0}
+             "THIN_SMOKE": 14.0, "BLACK_SMOKE_COLUMN": 34.0, "EMBERS": 9.0, "SIMULATED_CAMPFIRE": 9.0}
 MIN_CHANGED = {"SOLID": 150, "RENDERED": 150}
 SETTLE = 8.0 if SHADING == "RENDERED" else 1.5
 OUT = tempfile.mkdtemp(prefix="fas_viewport_")
@@ -110,6 +110,8 @@ def run():
         scene.frame_set(1)
         with bpy.context.temp_override(window=window):
             bpy.ops.fas.effect_create(preset=QUEUE[0])
+        # Embers and the simulated fire only build up when stepped from frame 1.
+        scene.frame_set(1)
         for frame in range(1, 61):
             scene.frame_set(frame)
         area.tag_redraw()

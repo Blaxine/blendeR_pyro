@@ -136,6 +136,29 @@ def test_a_small_cycles_render_isnt_dark():
     STATE["cycles_bright"] = bright
 
 
+def test_eevee_renders_it():
+    errors = lib.addon.errors
+    before = errors.last_error()
+    pixels = lib.render(lib.eevee_id())
+    bright = sum(1 for i in range(0, len(pixels), 4) if pixels[i] > 0.3)
+    lib.info(f"EEVEE at frame 30: {bright} bright pixels at 160x90 (Cycles {STATE['cycles_bright']})")
+    lib.check("EEVEE renders visible fire", bright >= 20, str(bright))
+    lib.check("with no error", errors.last_error() is before)
+
+
+def test_a_render_past_the_simulated_frames():
+    """What F12 shows on a frame the simulation hasn't reached (Q14)."""
+    scene = lib.scene()
+    scene.frame_set(50)
+    pixels = lib.render("CYCLES")
+    bright = sum(1 for i in range(0, len(pixels), 4) if pixels[i] > 0.3)
+    density, _flame = _grids(_entry(STATE["uuid"]))
+    lib.info(f"jumped from 30 to 50: domain density sum {density:.1f}, Cycles {bright} bright pixels")
+    lib.check("a jump past the simulated frames holds the last state", _close(density, STATE["density"]),
+              f"{density:.1f} against {STATE['density']:.1f}")
+    scene.frame_set(30)
+
+
 def test_clearing_the_cache_simulates_again():
     entry = _entry(STATE["uuid"])
     data = os.path.join(sim_fire.domain_settings(entry).cache_directory, "data")
@@ -199,9 +222,11 @@ def test_its_own_flows_only():
 
 
 def _bottom_red(pixels, width=160, height=90):
-    """Mean red of the bottom quarter, where the ground in front of the fire is."""
+    """Mean red of the ground beside the fire: the bottom quarter, without the middle
+    third the fire itself covers, which looks the same in every light mode."""
     rows = height // 4
-    values = [pixels[(y * width + x) * 4] for y in range(rows) for x in range(width)]
+    columns = [x for x in range(width) if not width / 3 <= x < width * 2 / 3]
+    values = [pixels[(y * width + x) * 4] for y in range(rows) for x in columns]
     return sum(values) / len(values)
 
 
@@ -242,7 +267,7 @@ def test_the_light():
     real = _bottom_red(lib.render("CYCLES"))
     lib.info(f"ground red in Cycles: Real with the light off {dark:.4f}, Emissive {emissive:.4f}, Real {real:.4f}")
     lib.check("in Cycles, Emissive lights the ground where Real with the light off doesn't",
-              emissive > dark * 1.1 + 0.002, f"{emissive:.4f} against {dark:.4f}")
+              emissive > dark + 0.004, f"{emissive:.4f} against {dark:.4f}")
     lib.check("and Real's light lights it", real > dark * 1.1 + 0.002, f"{real:.4f} against {dark:.4f}")
     bpy.data.objects.remove(ground)
     scene.frame_set(1)
@@ -278,13 +303,14 @@ def test_each_control_shows_on_the_next_play():
     _entry(STATE["uuid"]).smoke_amount = 2.0
     node = sim_fire.volume_node(_entry(STATE["uuid"]))
     lib.check("Smoke Amount reaches the flow's smoke", abs(flow.density - 2.0) < 1e-5, str(flow.density))
-    lib.check("and the material's density", abs(node.inputs["Density"].default_value - 10.0) < 1e-4)
+    lib.check("and the material's density",
+              abs(node.inputs["Density"].default_value - sim_fire.VOLUME_DENSITY * 2.0) < 1e-4)
     smokier = _replayed()
     lib.check("and a replayed frame differs", not _close(smokier[0], base[0], 0.02),
               f"{smokier[0]:.1f} against {base[0]:.1f}")
     _entry(STATE["uuid"]).smoke_amount = 1.0
     lib.check("back to 1 puts the preset's values back", abs(flow.density - 1.0) < 1e-5
-              and abs(node.inputs["Density"].default_value - 5.0) < 1e-4)
+              and abs(node.inputs["Density"].default_value - sim_fire.VOLUME_DENSITY) < 1e-4)
 
     _entry(STATE["uuid"]).detail = 40
     settings = sim_fire.domain_settings(_entry(STATE["uuid"]))

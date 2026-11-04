@@ -32,6 +32,7 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-03, with a 0.35 m disc
 - **Blender's Quick Smoke never turns noise on.** `if self.style == {'FIRE', 'BOTH'}` compares a string with a set, on 4.5 and 5.2. Its flow objects get `display_type = 'WIRE'` but still render. 4.5 adds modifiers through `object.modifier_add` with a context override; `Object.modifiers.new` worked on both versions in every probe.
 - **Delete keeps any owned object that isn't parented to the primary.** `delete._adopted` treats it as the buyer's.
 - **One 4.5.4 probe crashed with `EXCEPTION_ACCESS_VIOLATION`.** It read grids from the original (non-evaluated) domain. Every rerun that read `density_grid` and `flame_grid` from the evaluated object passed. Replays matched between 4.5 and 5.2 to within 0.5%, but on 4.5 a replay after `fluid.free_all` differed by 6%.
+- **Measured again while building, 2026-11-04, on 4.5.4 and 5.2.2:** reassigning `cache_frame_end` to its own value didn't clear the Replay cache; reassigning `cache_type` to its own value did, so the add-on clears with that. Python changes to `fuel_amount`, `density` and `resolution_max` did re-simulate in these runs, but the add-on still clears after every change. A replay started from a later frame after a clear differed by about 7% from the first one, on both versions.
 - **Light Strength 0 and back removes the flicker for good, on every fire today.** `fire_light.set_energy` scales the Noise modifier by `energy / old`, so on 5.2 the strength went from 27 to 0 and stayed there.
 
 ## Architectural decisions
@@ -175,9 +176,9 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-03, with a 0.35 m disc
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S021 | T | Test EEVEE | Extend `tests/test_sim_fire.py`: after frames 1 to 30, an EEVEE render isn't dark and reports no error. The engine id comes from `lib.eevee_id()`. | S006 | `tests/test_sim_fire.py` |
+| ✅ | S021 | T | Test EEVEE | Extend `tests/test_sim_fire.py`: after frames 1 to 30, an EEVEE render isn't dark and reports no error. The engine id comes from `lib.eevee_id()`. | S006 | `tests/test_sim_fire.py` |
 |  | S022 | T | Measure windowed speed | Extend `tests/gui_viewport_speed.py` to time the default's first play-through in an EEVEE viewport. Record the results for 4.5, 5.1 and 5.2 in `docs/LOOK_TEST.md`. | S018 | `tests/gui_viewport_speed.py`, `docs/LOOK_TEST.md` |
-|  | S023 | T | Make the preset scripts play it | Add a `SHOTS` entry for `SIMULATED_CAMPFIRE` in `tests/render_presets.py`, and have it and `tests/gui_viewport_visible.py` step from frame 1 before capturing this preset. | S004 | `tests/render_presets.py`, `tests/gui_viewport_visible.py` |
+| ✅ | S023 | T | Make the preset scripts play it | Add a `SHOTS` entry for `SIMULATED_CAMPFIRE` in `tests/render_presets.py`, and have it and `tests/gui_viewport_visible.py` step from frame 1 before capturing this preset. | S004 | `tests/render_presets.py`, `tests/gui_viewport_visible.py` |
 |  | S024 | O | Tune and judge in Cycles | Render it, tune the emitter, domain and material values until it looks right, and record the verdict and final values in `docs/LOOK_TEST.md`. | S020, S023 | `docs/LOOK_TEST.md`, add-on package |
 |  | S025 | T | Run the windowed undo check | Run `tests/gui_undo.py` sequences with the new preset in a window on 4.5, 5.1 and 5.2, and add a sequence if create, undo and redo isn't covered. | S012 | `tests/gui_undo.py` |
 
@@ -246,9 +247,9 @@ S024 → S028
 - [x] **Q11 — Resolved.** The simulation range follows the timeline under the embers rule. *(Blaxine)*
 - [x] **Q12 — Resolved.** Flows and effectors come only from the effect's own collection. *(Blaxine)*
 - [x] **Q13 — Resolved.** The flicker fix is a step in this plan. *(Blaxine)*
-- [ ] **Q14 — Single-frame renders past the cache.** What does F12 on a frame past the simulated range show, and should the add-on warn before it renders? Deferred until S021's render check shows what it renders.
-- [ ] **Q15 — Detail range.** The slider's soft maximum. Deferred until S022's windowed measurement.
-- [ ] **Q16 — Final emitter and domain values.** Deferred until the owner's Cycles verdict in S024.
+- [ ] **Q14 — Single-frame renders past the cache.** What does F12 on a frame past the simulated range show, and should the add-on warn before it renders? *Found by S021's check on 4.5.4 and 5.2.2:* after simulating frames 1 to 30 and jumping to 50, the viewport holds frame 30's fire, but a Cycles render of frame 50 shows no fire at all. README, troubleshooting and the store text say so. Whether to warn before rendering is still the owner's call.
+- [x] **Q15 — Resolved.** Soft maximum 96, hard maximum 256. Windowed EEVEE on 5.2.2, first play-through of frames 1 to 96: 64 divisions ≈ 14 fps, 96 ≈ 4.6 fps, 128 ≈ 2.4 fps, so the slider's range ends where it drops below 5 fps. *(Measured 2026-11-04)*
+- [ ] **Q16 — Final emitter and domain values.** Deferred until the owner's Cycles verdict in S024. Proposed values, tuned by render on 5.2.2, are in `docs/LOOK_TEST.md`.
 - [ ] **Q17 — Blender 5.1.** Nothing has been measured on 5.1 on this PC. Deferred until 5.1 is installed here: rerun the probes behind Constraints and S006.
 
 ## Smoke Test

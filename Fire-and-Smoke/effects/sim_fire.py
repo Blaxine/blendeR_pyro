@@ -7,8 +7,11 @@ own collection, and its Replay cache simulates forward as the timeline plays: th
 no bake step.  Replay only adds frames in order, so a jump past the last simulated
 frame holds the last state until the buyer plays from the first frame again.
 
-The starting values follow Blender's Quick Smoke, which the add-on never calls: it
-changes the buyer's selection and makes untagged objects.
+The starting values followed Blender's Quick Smoke, which the add-on never calls: it
+changes the buyer's selection and makes untagged objects.  The look values below were
+tuned in Cycles from there (``docs/LOOK_TEST.md``): some vorticity breaks the smooth
+column up, the flame burns out lower, and dark, thinner smoke rises above it instead
+of the whole plume glowing in the fire light.
 """
 
 import math
@@ -20,15 +23,19 @@ from ..core import bounces, cache_folder, naming, registry
 from . import fire_light, light_mode
 
 NO_FLUID = "This Blender was built without Fluid, so it can't make a Simulated Campfire"
+NO_FLUID_HERE = "This Blender was built without Fluid, so this fire can't simulate"
 
 EMITTER_RADIUS = 0.35
 EMITTER_Z = 0.05
 DOMAIN_SIZE = (1.4, 1.4, 2.6)
 DOMAIN_CENTRE_Z = 1.25
 RESOLUTION = 64
-VOLUME_DENSITY = 5.0
+VORTICITY = 0.2
+BURNING_RATE = 1.1
+VOLUME_DENSITY = 3.0
+SMOKE_COLOUR = 0.05
 BLACKBODY = 1.0
-LIGHT = {"energy": 90.0, "radius": 0.3}
+LIGHT = {"energy": 45.0, "radius": 0.3}
 LIGHT_HEIGHT = 0.5
 
 
@@ -63,6 +70,7 @@ def _volume_material(name):
     volume = tree.nodes.new("ShaderNodeVolumePrincipled")
     volume.name = "fas_volume"
     volume.inputs["Density"].default_value = VOLUME_DENSITY
+    volume.inputs["Color"].default_value = (SMOKE_COLOUR, SMOKE_COLOUR, SMOKE_COLOUR, 1.0)
     volume.inputs["Blackbody Intensity"].default_value = BLACKBODY
     output = tree.nodes.new("ShaderNodeOutputMaterial")
     output.location = (300.0, 0.0)
@@ -143,16 +151,18 @@ def create_sim_fire(context, location, name="Simulated Campfire"):
 
     flow = emitter.modifiers.new("Fluid", "FLUID")
     flow.fluid_type = "FLOW"
-    flow_settings_ = flow.flow_settings
-    flow_settings_.flow_type = "BOTH"
-    flow_settings_.flow_behavior = "INFLOW"
-    flow_settings_.surface_distance = 1.0
+    emission = flow.flow_settings
+    emission.flow_type = "BOTH"
+    emission.flow_behavior = "INFLOW"
+    emission.surface_distance = 1.0
 
     fluid = domain.modifiers.new("Fluid", "FLUID")
     fluid.fluid_type = "DOMAIN"
     settings = fluid.domain_settings
     settings.domain_type = "GAS"
     settings.cfl_condition = 4.0
+    settings.vorticity = VORTICITY
+    settings.burning_rate = BURNING_RATE
     settings.use_noise = False
     if bpy.app.build_options.openvdb:
         settings.cache_data_format = "OPENVDB"
@@ -177,8 +187,8 @@ def create_sim_fire(context, location, name="Simulated Campfire"):
     entry.base_energy = light.data.energy
     light_mode.apply(domain, light, light_mode.REAL)
     entry.light_mode = light_mode.REAL
-    entry.base_fuel = flow_settings_.fuel_amount
-    entry.base_smoke = flow_settings_.density
+    entry.base_fuel = emission.fuel_amount
+    entry.base_smoke = emission.density
     entry.base_density = VOLUME_DENSITY
     entry.detail = RESOLUTION
     bounces.after_create(scene)

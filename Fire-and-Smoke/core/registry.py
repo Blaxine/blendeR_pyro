@@ -215,7 +215,7 @@ class FAS_EffectEntry(bpy.types.PropertyGroup):
                         description="Planes in each stack. More is thicker and slower")
     seed: IntProperty(name="Variation", default=0, min=0, update=_seed_update,
                       description="A different random arrangement of the same look")
-    detail: IntProperty(name="Detail", default=64, min=16, soft_max=128, max=256, update=_detail_update,
+    detail: IntProperty(name="Detail", default=64, min=16, soft_max=96, max=256, update=_detail_update,
                         description="How fine the simulation is. Higher is slower to play and uses more "
                                     "disk space. Play from the first frame to see a change")
     flame_intensity: FloatProperty(name="Flame Intensity", default=1.0, min=0.0, soft_max=3.0,

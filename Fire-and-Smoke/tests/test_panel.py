@@ -135,6 +135,14 @@ def test_sim_fire_box():
     entry.light_mode = "EMISSIVE"
     log = _draw(panel.FAS_PT_effects)
     lib.check("Emissive says it's Cycles-focused", "Cycles-focused" in _text(log), _text(log))
+    original = panel.bpy
+    fake = SimpleNamespace(app=SimpleNamespace(build_options=SimpleNamespace(fluid=False)), types=bpy.types)
+    panel.bpy = fake
+    try:
+        log = _draw(panel.FAS_PT_effects)
+    finally:
+        panel.bpy = original
+    lib.check("a Blender without Fluid is explained plainly", "built without Fluid" in _text(log), _text(log))
     bpy.ops.fas.effect_delete(uuid=lib.scene().fas_effects[-1].uuid)
 
 

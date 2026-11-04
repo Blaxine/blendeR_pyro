@@ -4,7 +4,7 @@ so it isn't part of the suite; it opens Blender, runs one sequence, reports and 
 
     blender --factory-startup --python tests/gui_undo.py -- plain
 
-Sequences: plain, two, copy, linked, mesh, embers, and control (no add-on operators).
+Sequences: plain, two, copy, linked, mesh, embers, sim, and control (no add-on operators).
 Never keep a Python reference to a Scene across an undo: it's stale afterwards, and
 assigning it back to a window crashes Blender.
 """
@@ -20,7 +20,7 @@ import fas_testlib as lib  # noqa: E402,F401
 
 import bpy  # noqa: E402
 
-EXPECTED = {"plain": 1, "two": 1, "control": 0, "copy": 0, "linked": 1, "mesh": 1, "embers": 1}
+EXPECTED = {"plain": 1, "two": 1, "control": 0, "copy": 0, "linked": 1, "mesh": 1, "embers": 1, "sim": 1}
 
 
 def say(*a):
@@ -55,6 +55,13 @@ def first_uuid():
     return win().scene.fas_effects[0].uuid
 
 
+def play():
+    """The simulated fire only fills its cache when stepped from frame 1."""
+    scene = win().scene
+    for frame in range(1, 13):
+        scene.frame_set(frame)
+
+
 SEQ = {
     "plain": [lambda: click(bpy.ops.fas.effect_create, preset="CAMPFIRE"),
               lambda: click(bpy.ops.fas.effect_delete, uuid=first_uuid()),
@@ -86,6 +93,10 @@ SEQ = {
     "embers": [lambda: click(bpy.ops.fas.effect_create, preset="EMBERS"),
                lambda: click(bpy.ops.fas.effect_delete, uuid=first_uuid()),
                undo, undo, redo],
+    "sim": [lambda: click(bpy.ops.fas.effect_create, preset="SIMULATED_CAMPFIRE"),
+            play,
+            lambda: click(bpy.ops.fas.effect_delete, uuid=first_uuid()),
+            undo, play, undo, redo, play],
 }[VARIANT]
 STEP = [0]
 
