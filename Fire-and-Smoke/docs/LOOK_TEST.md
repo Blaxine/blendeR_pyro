@@ -177,6 +177,14 @@ The Candle Fire is the slowest: its 96 divisions over a small domain make more c
 
 All three render visible fire in Cycles and EEVEE on 5.2.2 at frame 90 (`tests/render_presets.py`), and burn on 4.5.4 and 5.2.2 (`tests/test_sim_presets.py`).
 
+### Viewport shading
+
+Found on 2026-11-04, after the owner couldn't see the fire. Blender's **Material Preview** draws no fluid simulation, on 4.5.4 and 5.2.2. It showed only the domain's wireframe and the emitter, even after 30 seconds, and a Quick Smoke fire beside it didn't show either. **Solid** and **Rendered** both show the fire. The panel says so in the fire's box, and warns in Material Preview.
+
+`tests/gui_viewport_visible.py` used to pass the Simulated Campfire in every mode, because the wireframe box alone changed about 4,000 pixels. It now counts only fire-coloured pixels for it, and reports Material Preview as known.
+
+In the owner's own startup scene, the fire was also inside the default cube, which sits at the 3D cursor. Create now names any mesh of the buyer's that hides a fire (`core/covering.py`), and the fire's box says so too.
+
 ## Blender 4.5
 
 4.5.4 is installed now. The suite and every Simulated Campfire check above pass on it. The Campfire's own speed scripts haven't been rerun on it yet.

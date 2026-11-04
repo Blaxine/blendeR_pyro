@@ -9,7 +9,7 @@ panel shows, separately.
 import bpy
 
 from .. import constants as C
-from ..core import bounces, delete
+from ..core import bounces, covering, delete
 from . import creation, embers, flame_material, mesh_fire, sim_fire, sim_presets, smoke, smoke_material
 
 FIRE_GROUP = "Fire"
@@ -146,7 +146,12 @@ class FAS_OT_effect_create(bpy.types.Operator):
         elif self.preset == "EMBERS":
             self.report({"INFO"}, "Press play from the first frame to see the embers")
         if self.preset == "SIMULATED_CAMPFIRE":
-            self.report({"INFO"}, "Press play from the first frame to see the fire")
+            self.report({"INFO"}, "Press play from the first frame to see the fire, in Rendered or Solid view")
+        # New objects get their final positions on the next update.
+        context.view_layer.update()
+        hidden_by = covering.covering(scene, entry)
+        if hidden_by:
+            self.report({"WARNING"}, covering.sentence(hidden_by))
         return {"FINISHED"}
 
 

@@ -22,6 +22,12 @@ Embers are particles, so they build up from the first frame. Go to the first fra
 
 They're small sparks made for mid-ground shots, and they show best against something dark. If they're still hard to see, raise **Ember Size** and **Amount** on the effect.
 
+## I can't see the Simulated Fire
+
+- **Is a mesh in the way?** The fire appears at the 3D cursor. If a mesh of yours is there, such as the default cube, the flames are inside it. The fire's box in the panel names the mesh: hide it (**H**) or move it, or move the 3D cursor somewhere clear before adding the fire.
+- **Are you in Material Preview?** Blender's Material Preview doesn't show fluid simulations, including its own Quick Smoke. Switch the viewport to **Rendered** or **Solid**.
+- **Did you play from the first frame?** It only simulates as the timeline plays forward. Go to the first frame and press play.
+
 ## The Simulated Fire looks frozen
 
 It simulates as the timeline plays forward, one frame at a time. If you jump ahead, or skip frames, it holds the last frame it simulated. Go back to the first frame and press play: it carries on from where it got to. Frames it has already simulated show straight away when you scrub back.
@@ -46,7 +52,7 @@ You changed one of its settings since its preset was applied, in its box or in B
 
 ## Flames or smoke look like flat shapes
 
-The default Solid view can't show them properly. Switch the viewport to **Material Preview** or **Rendered**.
+The default Solid view can't show them properly. Switch the viewport to **Material Preview** or **Rendered**. For the Simulated Fire, use **Rendered**: Material Preview doesn't show it.
 
 ## Embers look wrong after jumping along the timeline
 

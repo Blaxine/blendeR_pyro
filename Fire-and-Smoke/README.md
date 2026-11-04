@@ -6,8 +6,8 @@ Add fire, smoke, smoke columns and embers to a Blender scene from presets. Flame
 
 1. In Blender, go to **Edit > Preferences > Get Extensions**, open the small arrow at the top right, choose **Install from Disk**, and pick the zip.
 2. In the 3D Viewport, press **N** and open the **Fire and Smoke** tab.
-3. Click a preset, such as **Campfire**. It appears at the 3D cursor.
-4. Switch the viewport to **Material Preview** or **Rendered**: Solid view only shows rough shapes.
+3. Click a preset, such as **Campfire**. It appears at the 3D cursor. If one of your meshes is there, such as the default cube, it hides the fire: the add-on tells you which one, so you can hide or move it.
+4. Switch the viewport to **Material Preview** or **Rendered**: Solid view only shows rough shapes. The Simulated Fire is the exception: it shows in **Rendered** and **Solid**, but not in Material Preview.
 5. Press play or scrub the timeline. For embers and the Simulated Fire, press play from the first frame.
 
 To burn one of your own objects, select the mesh and click **Burning Object**. Your object isn't changed.

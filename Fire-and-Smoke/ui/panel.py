@@ -4,7 +4,7 @@
 import bpy
 
 from .. import constants as C
-from ..core import errors, registry
+from ..core import covering, errors, registry
 from ..effects import light_mode, mesh_fire, presets, sim_fire, sim_presets
 from . import control_spec
 
@@ -14,6 +14,10 @@ EMBERS_NOTE = "Embers replay from the start: press play from the first frame to 
 SIM_FIRE_NOTE = ("It simulates as you play: press play from the first frame. If the fire looks frozen, "
                  "go back to the first frame and play again")
 SIM_EEVEE_NOTE = "EEVEE shows a weaker look than Cycles"
+# Blender's Material Preview draws no fluid simulation, Quick Smoke's included.
+SIM_VIEW_NOTE = "Material Preview doesn't show it: use Rendered or Solid view"
+MATERIAL_PREVIEW_NOTE = ("Material Preview doesn't show the Simulated Fire: switch to Rendered or Solid "
+                         "to see it")
 DETAIL_NOTE = "Higher Detail is slower and uses more disk space"
 SOLID_NOTE = "Solid view only shows rough shapes: switch to Material Preview or Rendered to see the effect"
 NO_CAMERA_NOTE = "This scene has no camera: add one before rendering"
@@ -102,10 +106,16 @@ def _draw_entry(layout, entry):
             _wrapped_label(row, problem, icon="ERROR")
             if entry.primary is None:
                 return
+        hidden_by = covering.covering(entry.id_data, entry, limit=covering.MAX_CHECKED)
+        if hidden_by:
+            row = box.column()
+            row.alert = True
+            _wrapped_label(row, covering.sentence(hidden_by), icon="HIDE_ON")
         if entry.kind == C.KIND_EMBERS:
             _wrapped_label(box, EMBERS_NOTE, icon="INFO")
         elif entry.kind == C.KIND_SIM_FIRE:
             _wrapped_label(box, SIM_FIRE_NOTE, icon="INFO")
+            _wrapped_label(box, SIM_VIEW_NOTE, icon="INFO")
             _wrapped_label(box, SIM_EEVEE_NOTE, icon="INFO")
         for token in control_spec.controls(entry.kind, entry.show_advanced):
             _draw_control(box, entry, token)
@@ -137,8 +147,14 @@ class FAS_PT_main(bpy.types.Panel):
             self.layout.label(text="Pick a preset below to start", icon="INFO")
         space = getattr(context, "space_data", None)
         shading = getattr(space, "shading", None)
-        if len(context.scene.fas_effects) and shading is not None and shading.type in {"SOLID", "WIREFRAME"}:
+        kinds = {entry.kind for entry in context.scene.fas_effects}
+        # A simulated fire draws in Solid view, so the note is for the planes and embers.
+        if kinds - {C.KIND_SIM_FIRE} and shading is not None and shading.type in {"SOLID", "WIREFRAME"}:
             _wrapped_label(self.layout, SOLID_NOTE, icon="SHADING_RENDERED")
+        if C.KIND_SIM_FIRE in kinds and shading is not None and shading.type == "MATERIAL":
+            row = self.layout.column()
+            row.alert = True
+            _wrapped_label(row, MATERIAL_PREVIEW_NOTE, icon="SHADING_RENDERED")
         if C.SUPPORT_URL:
             self.layout.operator("wm.url_open", text="Get Help", icon="HELP").url = C.SUPPORT_URL
 

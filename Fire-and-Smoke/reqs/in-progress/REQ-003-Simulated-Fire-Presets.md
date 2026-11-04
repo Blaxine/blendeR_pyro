@@ -55,6 +55,13 @@ The add-on's `effects/sim_presets.py` mirrors each of these. The differences:
 - [ ] **AC7.** The owner's Cycles verdict on Normal Fire and Candle Fire is recorded in `docs/LOOK_TEST.md`.
 - [ ] **AC8.** Everything above is checked on 5.1, which isn't installed on this PC.
 
+## Found after building
+
+The owner couldn't see the fire. There were two causes, and both are now explained in the panel. Neither changes the buyer's scene.
+
+- **The default cube hides it.** The fire is made at the 3D cursor, inside the 2 m default cube. Create warns with the mesh's name, and the fire's box shows it as long as the mesh is in the way. This is checked for plane fires too.
+- **Material Preview shows no fluid simulation.** This is Blender's behaviour, Quick Smoke's included. The box says to use Rendered or Solid, and the panel warns in Material Preview.
+
 ## Open Questions
 
 - **Q1.** Are Normal Fire and Candle Fire the looks the owner wants? They're proposed by render (see `docs/LOOK_TEST.md`). The Candle's flame shows faint banding.
@@ -65,3 +72,4 @@ The add-on's `effects/sim_presets.py` mirrors each of these. The differences:
 | Date | Author | Summary of Change |
 | ---- | ------ | ----------------- |
 | 2026-11-04 | Blaxine | Built and recorded. Open: AC7 (the owner's look verdict) and AC8 (5.1). |
+| 2026-11-04 | Blaxine | Warnings for a mesh hiding a fire and for Material Preview, after the owner couldn't see the fire. |

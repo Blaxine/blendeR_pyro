@@ -137,6 +137,22 @@ def test_sim_fire_box():
     lib.check("and to press play from the first frame", "press play from the first frame" in _text(log), _text(log))
     lib.check("and how to recover a frozen fire", "looks frozen" in _text(log), _text(log))
     lib.check("and that EEVEE shows a weaker look", "EEVEE shows a weaker look" in _text(log), _text(log))
+    lib.check("and that Material Preview doesn't show it",
+              "Material Preview doesn't show it: use Rendered or Solid view" in _text(log), _text(log))
+    main = _draw(panel.FAS_PT_main, shading="MATERIAL")
+    lib.check("in Material Preview the panel says to switch", "switch to Rendered or Solid" in _text(main),
+              _text(main))
+    main = _draw(panel.FAS_PT_main, shading="SOLID")
+    lib.check("Solid view shows a simulated fire, so there's no Solid note for it alone",
+              "Solid view only shows" not in _text(main) and "Material Preview doesn't" not in _text(main),
+              _text(main))
+    bpy.ops.mesh.primitive_cube_add(size=2.0, location=tuple(lib.scene().fas_effects[-1].primary.location))
+    cube = bpy.context.object
+    bpy.context.view_layer.update()
+    log = _draw(panel.FAS_PT_effects)
+    lib.check("a mesh hiding the fire is named in its box", f"{cube.name} is in the way" in _text(log), _text(log))
+    bpy.data.objects.remove(cube)
+    log = _draw(panel.FAS_PT_effects)
     lib.check("it has no facing switch", "preview_facing" not in log["props"])
     for name in ("detail", "flame_intensity", "smoke_amount", "light_mode", "light_strength"):
         lib.check(f"Simple view shows {name}", name in log["props"], str(log["props"]))
