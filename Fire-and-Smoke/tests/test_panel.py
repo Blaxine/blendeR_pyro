@@ -125,6 +125,16 @@ def test_sim_fire_box():
     lib.check("and how to recover a frozen fire", "looks frozen" in _text(log), _text(log))
     lib.check("and that EEVEE shows a weaker look", "EEVEE shows a weaker look" in _text(log), _text(log))
     lib.check("it has no facing switch", "preview_facing" not in log["props"])
+    for name in ("detail", "flame_intensity", "smoke_amount", "light_mode", "light_strength"):
+        lib.check(f"Simple view shows {name}", name in log["props"], str(log["props"]))
+    lib.check("Detail says it gets slower", "Higher Detail is slower" in _text(log), _text(log))
+    entry = lib.scene().fas_effects[-1]
+    lib.check("Advanced shows the same list",
+              control_spec.controls(entry.kind, True) == control_spec.controls(entry.kind, False))
+    lib.check("so there's no switch to more settings", "show_advanced" not in log["props"])
+    entry.light_mode = "EMISSIVE"
+    log = _draw(panel.FAS_PT_effects)
+    lib.check("Emissive says it's Cycles-focused", "Cycles-focused" in _text(log), _text(log))
     bpy.ops.fas.effect_delete(uuid=lib.scene().fas_effects[-1].uuid)
 
 

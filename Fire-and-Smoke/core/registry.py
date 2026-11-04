@@ -123,6 +123,46 @@ def _ember_size_update(self, _context):
         settings.particle_size = self.base_ember_size * self.ember_size
 
 
+def _simulation_change(entry, change):
+    """Change a simulation setting, then clear the cache so the next play from the
+    first frame shows it."""
+    from ..effects import sim_fire
+    if entry.primary is None:
+        return
+    change(sim_fire)
+    sim_fire.clear_cache(entry)
+
+
+@errors.guard_update("Fire and Smoke couldn't change the detail")
+def _detail_update(self, _context):
+    def change(sim_fire):
+        settings = sim_fire.domain_settings(self)
+        if settings is not None:
+            settings.resolution_max = self.detail
+    _simulation_change(self, change)
+
+
+@errors.guard_update("Fire and Smoke couldn't change the flames")
+def _flame_intensity_update(self, _context):
+    def change(sim_fire):
+        flow = sim_fire.flow_settings(self)
+        if flow is not None:
+            flow.fuel_amount = self.base_fuel * self.flame_intensity
+    _simulation_change(self, change)
+
+
+@errors.guard_update("Fire and Smoke couldn't change the smoke")
+def _smoke_amount_update(self, _context):
+    def change(sim_fire):
+        flow = sim_fire.flow_settings(self)
+        if flow is not None:
+            flow.density = self.base_smoke * self.smoke_amount
+        node = sim_fire.volume_node(self)
+        if node is not None:
+            node.inputs["Density"].default_value = self.base_density * self.smoke_amount
+    _simulation_change(self, change)
+
+
 class FAS_EffectEntry(bpy.types.PropertyGroup):
     uuid: StringProperty(name="ID")
     kind: StringProperty(name="Kind")
@@ -151,6 +191,8 @@ class FAS_EffectEntry(bpy.types.PropertyGroup):
     base_energy: FloatProperty(default=1.0)
     base_count: IntProperty(default=1)
     base_ember_size: FloatProperty(default=0.01)
+    base_fuel: FloatProperty(default=1.0)
+    base_smoke: FloatProperty(default=1.0)
 
     preview_facing: EnumProperty(name="Viewport Preview", items=PREVIEW_ITEMS, default=VIEWPORT,
                                  update=_preview_update)
@@ -173,6 +215,17 @@ class FAS_EffectEntry(bpy.types.PropertyGroup):
                         description="Planes in each stack. More is thicker and slower")
     seed: IntProperty(name="Variation", default=0, min=0, update=_seed_update,
                       description="A different random arrangement of the same look")
+    detail: IntProperty(name="Detail", default=64, min=16, soft_max=128, max=256, update=_detail_update,
+                        description="How fine the simulation is. Higher is slower to play and uses more "
+                                    "disk space. Play from the first frame to see a change")
+    flame_intensity: FloatProperty(name="Flame Intensity", default=1.0, min=0.0, soft_max=3.0,
+                                   update=_flame_intensity_update,
+                                   description="How much fire the emitter makes. "
+                                               "Play from the first frame to see a change")
+    smoke_amount: FloatProperty(name="Smoke Amount", default=1.0, min=0.0, soft_max=3.0,
+                                update=_smoke_amount_update,
+                                description="How much smoke the fire makes, and how thick it looks. "
+                                            "Play from the first frame to see a change")
 
 
 CLASSES = (FAS_EffectEntry,)

@@ -248,6 +248,99 @@ def test_the_light():
     scene.frame_set(1)
 
 
+def _evaluated(entry):
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    return sim_fire.find_modifier(entry.primary.evaluated_get(depsgraph), "DOMAIN").domain_settings
+
+
+def _replayed(frame=20):
+    scene = lib.scene()
+    scene.frame_set(1)
+    _play(frame)
+    settings = _evaluated(_entry(STATE["uuid"]))
+    density, flame = list(settings.density_grid), list(settings.flame_grid)
+    return sum(density), sum(flame), len(density)
+
+
+def test_each_control_shows_on_the_next_play():
+    entry = _entry(STATE["uuid"])
+    base = _replayed()
+    lib.check("Detail starts at 64", entry.detail == 64)
+
+    entry.flame_intensity = 2.5
+    flow = sim_fire.flow_settings(_entry(STATE["uuid"]))
+    lib.check("Flame Intensity reaches the fuel", abs(flow.fuel_amount - 2.5) < 1e-5, str(flow.fuel_amount))
+    hotter = _replayed()
+    lib.check("and a replayed frame differs", not _close(hotter[1], base[1], 0.02),
+              f"{hotter[1]:.1f} against {base[1]:.1f}")
+    _entry(STATE["uuid"]).flame_intensity = 1.0
+
+    _entry(STATE["uuid"]).smoke_amount = 2.0
+    node = sim_fire.volume_node(_entry(STATE["uuid"]))
+    lib.check("Smoke Amount reaches the flow's smoke", abs(flow.density - 2.0) < 1e-5, str(flow.density))
+    lib.check("and the material's density", abs(node.inputs["Density"].default_value - 10.0) < 1e-4)
+    smokier = _replayed()
+    lib.check("and a replayed frame differs", not _close(smokier[0], base[0], 0.02),
+              f"{smokier[0]:.1f} against {base[0]:.1f}")
+    _entry(STATE["uuid"]).smoke_amount = 1.0
+    lib.check("back to 1 puts the preset's values back", abs(flow.density - 1.0) < 1e-5
+              and abs(node.inputs["Density"].default_value - 5.0) < 1e-4)
+
+    _entry(STATE["uuid"]).detail = 40
+    settings = sim_fire.domain_settings(_entry(STATE["uuid"]))
+    lib.check("Detail reaches the resolution", settings.resolution_max == 40)
+    coarse = _replayed()
+    lib.check("and a replayed frame has fewer cells", coarse[2] < base[2], f"{coarse[2]} against {base[2]}")
+    _entry(STATE["uuid"]).detail = 64
+    again = _replayed()
+    lib.check("back to 64 gives the default's grid again", again[2] == base[2], f"{again[2]} against {base[2]}")
+    lib.check("and the default's fire", _close(again[0], base[0]), f"{again[0]:.1f} against {base[0]:.1f}")
+
+    original = sim_fire.clear_cache
+    cleared = []
+    sim_fire.clear_cache = lambda entry: cleared.append(entry.uuid)
+    try:
+        for name, value in (("detail", 48), ("flame_intensity", 1.5), ("smoke_amount", 1.5)):
+            setattr(_entry(STATE["uuid"]), name, value)
+    finally:
+        sim_fire.clear_cache = original
+    lib.check("every control clears the cache", len(cleared) == 3, str(cleared))
+    entry = _entry(STATE["uuid"])
+    entry.detail, entry.flame_intensity, entry.smoke_amount = 64, 1.0, 1.0
+    lib.scene().frame_set(1)
+
+
+def test_the_range_follows_the_timeline():
+    from fire_and_smoke.core import handlers
+    scene = lib.scene()
+    settings = sim_fire.domain_settings(_entry(STATE["uuid"]))
+    handlers.note_ranges()
+    scene.frame_end = 120
+    handlers.follow_ranges()
+    lib.check("a longer timeline lengthens the simulation",
+              (settings.cache_frame_start, settings.cache_frame_end) == (1, 120),
+              f"{settings.cache_frame_start} {settings.cache_frame_end}")
+    scene.frame_start, scene.frame_end = 150, 300
+    handlers.follow_ranges()
+    lib.check("also when the new range starts after the old one ends",
+              (settings.cache_frame_start, settings.cache_frame_end) == (150, 300),
+              f"{settings.cache_frame_start} {settings.cache_frame_end}")
+    scene.frame_start, scene.frame_end = 1, 60
+    handlers.follow_ranges()
+    lib.check("and back", (settings.cache_frame_start, settings.cache_frame_end) == (1, 60))
+    settings.cache_frame_start, settings.cache_frame_end = 5, 40
+    scene.frame_end = 200
+    handlers.follow_ranges()
+    lib.check("a range I set on the domain stays mine",
+              (settings.cache_frame_start, settings.cache_frame_end) == (5, 40),
+              f"{settings.cache_frame_start} {settings.cache_frame_end}")
+    scene.frame_end = 60
+    handlers.follow_ranges()
+    sim_fire.set_range(settings, 1, 60)
+    handlers.note_ranges()
+    scene.frame_set(1)
+
+
 def test_no_fluid_is_refused_plainly():
     original = sim_fire.bpy
 

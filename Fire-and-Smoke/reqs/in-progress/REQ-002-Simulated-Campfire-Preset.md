@@ -163,10 +163,10 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-03, with a 0.35 m disc
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S017 | S | Add the settings | Entry properties for Detail (resolution), Flame Intensity (scales the flow's fuel) and Smoke Amount (scales the flow's smoke and the material's density), each with a guarded update that clears the cache. | S003 | `core/registry.py` |
-|  | S018 | U | Show the controls | Simple and Advanced lists for the kind: Detail, Flame Intensity, Smoke Amount, Light, Light Strength. The Detail note. | S017, S015 | `ui/control_spec.py`, `ui/panel.py` |
-|  | S019 | S | Follow the timeline | Extend `_follow_range` to Simulated Campfire domains: the cache range moves with the timeline while it still equals the old range. | S003 | `core/handlers.py` |
-|  | S020 | T | Test controls and timeline | Extend `tests/test_sim_fire.py`: each slider reaches its setting and a replayed frame differs; timeline changes move the range; a range the buyer set stays. Extend `tests/test_panel.py`: the kind's controls draw on the stand-in layout. | S017, S018, S019 | `tests/test_sim_fire.py`, `tests/test_panel.py` |
+| ✅ | S017 | S | Add the settings | Entry properties for Detail (resolution), Flame Intensity (scales the flow's fuel) and Smoke Amount (scales the flow's smoke and the material's density), each with a guarded update that clears the cache. | S003 | `core/registry.py` |
+| ✅ | S018 | U | Show the controls | Simple and Advanced lists for the kind: Detail, Flame Intensity, Smoke Amount, Light, Light Strength. The Detail note. | S017, S015 | `ui/control_spec.py`, `ui/panel.py` |
+| ✅ | S019 | S | Follow the timeline | Extend `_follow_range` to Simulated Campfire domains: the cache range moves with the timeline while it still equals the old range. | S003 | `core/handlers.py` |
+| ✅ | S020 | T | Test controls and timeline | Extend `tests/test_sim_fire.py`: each slider reaches its setting and a replayed frame differs; timeline changes move the range; a range the buyer set stays. Extend `tests/test_panel.py`: the kind's controls draw on the stand-in layout. | S017, S018, S019 | `tests/test_sim_fire.py`, `tests/test_panel.py` |
 
 ### Slice 5 — Engines, speed and look
 

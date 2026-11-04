@@ -32,9 +32,26 @@ def note_ranges():
         _ranges[scene.name] = (float(scene.frame_start), float(scene.frame_end))
 
 
+def _follow_simulations(scene, old):
+    """A simulated fire's cache range follows the timeline while it still equals the old
+    range.  A range the buyer set on the domain is theirs."""
+    start, end = scene.frame_start, scene.frame_end
+    for _entry, settings in list(cache_folder.simulated(scene)):
+        if (float(settings.cache_frame_start), float(settings.cache_frame_end)) != old:
+            continue
+        # Each bound is clamped by the other, so widen before narrowing.
+        if start > settings.cache_frame_end:
+            settings.cache_frame_end = end
+            settings.cache_frame_start = start
+        else:
+            settings.cache_frame_start = start
+            settings.cache_frame_end = end
+
+
 def _follow_range(scene, old):
     """Embers that ran for the whole old range run for the new one, at the same rate.
     A range the buyer set on the emitter is theirs."""
+    _follow_simulations(scene, old)
     start, end = scene.frame_start, scene.frame_end
     ratio = (end - start + 1) / max(old[1] - old[0] + 1, 1)
     for entry in scene.fas_effects:

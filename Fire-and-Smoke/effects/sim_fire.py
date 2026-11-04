@@ -177,5 +177,9 @@ def create_sim_fire(context, location, name="Simulated Campfire"):
     entry.base_energy = light.data.energy
     light_mode.apply(domain, light, light_mode.REAL)
     entry.light_mode = light_mode.REAL
+    entry.base_fuel = flow_settings_.fuel_amount
+    entry.base_smoke = flow_settings_.density
+    entry.base_density = VOLUME_DENSITY
+    entry.detail = RESOLUTION
     bounces.after_create(scene)
     return effect_uuid

@@ -14,6 +14,7 @@ EMBERS_NOTE = "Embers replay from the start: press play from the first frame to 
 SIM_FIRE_NOTE = ("It simulates as you play: press play from the first frame. If the fire looks frozen, "
                  "go back to the first frame and play again")
 SIM_EEVEE_NOTE = "EEVEE shows a weaker look than Cycles"
+DETAIL_NOTE = "Higher Detail is slower and uses more disk space"
 SOLID_NOTE = "Solid view only shows rough shapes: switch to Material Preview or Rendered to see the effect"
 NO_CAMERA_NOTE = "This scene has no camera: add one before rendering"
 
@@ -53,6 +54,9 @@ def _draw_control(layout, entry, token):
         layout.prop(entry, "light_mode")
         if entry.light_mode != light_mode.REAL:
             _wrapped_label(layout, EMISSIVE_NOTE, icon="INFO")
+    elif token == "entry:detail":
+        layout.prop(entry, "detail")
+        _wrapped_label(layout, DETAIL_NOTE, icon="INFO")
     elif token == "entry:light_strength":
         row = layout.row()
         row.enabled = entry.light_mode != light_mode.EMISSIVE
