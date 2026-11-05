@@ -111,7 +111,7 @@ def domain_settings(obj):
 def simulated(scene):
     """Every Simulated Fire entry in the scene whose domain is still there, with its settings."""
     for entry in scene.fas_effects:
-        if entry.kind != C.KIND_SIM_FIRE:
+        if entry.kind not in C.SIM_KINDS:
             continue
         settings = domain_settings(entry.primary)
         if settings is not None:

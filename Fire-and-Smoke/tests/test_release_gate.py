@@ -56,9 +56,9 @@ def test_the_real_checklist_has_every_check():
     boxes = release_gate.open_boxes(text) + [
         line.strip()[6:] for line in text.splitlines() if line.strip().startswith("- [x] ")]
     eye = [b for b in boxes if b.startswith("Eye check:")]
-    lib.check("36 eye checks", len(eye) == 36, str(len(eye)))
+    lib.check("40 eye checks", len(eye) == 40, str(len(eye)))
     renders_45 = [b for b in boxes if b.startswith("4.5 render:")]
-    lib.check("one 4.5 render per preset", len(renders_45) == 9, str(len(renders_45)))
+    lib.check("one 4.5 render per preset", len(renders_45) == 10, str(len(renders_45)))
     from fire_and_smoke.effects import presets
     for preset_id in presets.DISPLAY_ORDER:
         label = presets.label(preset_id)
@@ -72,9 +72,10 @@ def test_the_real_checklist_has_every_check():
         lib.check(f"{label} has a 4.5 render", sum(b == f"4.5 render: {label}"
                                                     or b.startswith(f"4.5 render: {label}, ")
                                                     for b in renders_45) == 1)
-    sim = [b for b in eye if b.startswith("Eye check: Simulated Fire, ") and "EEVEE" in b]
-    lib.check("the Simulated Fire's EEVEE boxes are judged on rendering visible fire",
-              len(sim) == 2 and all("renders visible fire" in b for b in sim), str(sim))
+    for label in ("Simulated Fire", "Fire and Smoke from Mesh"):
+        sim = [b for b in eye if b.startswith(f"Eye check: {label}, ") and "EEVEE" in b]
+        lib.check(f"{label}'s EEVEE boxes are judged on rendering visible fire",
+                  len(sim) == 2 and all("renders visible fire" in b for b in sim), str(sim))
     for needed in ("walkthrough", "built zip", "speed target", "look test"):
         lib.check(f"the checklist covers the {needed}", any(needed in b.lower() for b in boxes))
 

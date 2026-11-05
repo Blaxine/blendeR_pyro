@@ -5,7 +5,7 @@
 | ID | REQ-004 |
 | Title | Fire and Smoke from Mesh |
 | SOLVE | — |
-| Status | Todo |
+| Status | InProgress |
 | Phase | Feature on REQ-003's Simulated Fire, pre-1.0 |
 | Tier | Feature |
 | Area | One new effect kind: a Mantaflow fire that burns from the buyer's mesh, its Burn From setting, the shared simulated-fire code paths, panel, presets, release gate, docs |
@@ -119,12 +119,12 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-05, headless, with a G
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S001 | F | Add the kind and the preset | The `SIM_MESH_FIRE` kind, its label and the simulated-kinds group; `SIMULATED_MESH_FIRE` appended to `PRESETS` as number 9 and placed after `BURNING_OBJECT` in `DISPLAY_ORDER`; the Simulated Fire's control list for the kind in both `SIMPLE` and `ADVANCED`. | — | `constants.py`, `effects/presets.py`, `ui/control_spec.py` |
-|  | S002 | S | Build the fire on a mesh | Refuse with `mesh_fire.source_problem`. Build the domain around the source's world bounds with Copy Location (offset) on the source; the emitter as an empty mesh with the live-copy modifier and the Fluid flow, as in Architectural decisions; the light above the mesh's top. Emitter and light are the domain's children; every ID is tagged; the entry records the source, the emitter and 0 planes. Then apply the Campfire. | S001 | add-on package |
-|  | S003 | S | Treat it as a simulation everywhere | Every check listed in Constraints uses the simulated-kinds group: cache folder, wind, preset tracking, panel notes and problems, covering. Covering takes the domain and light as its points for this kind. | S001 | `core/cache_folder.py`, `effects/wind.py`, `effects/sim_presets.py`, `ui/panel.py`, `core/covering.py` |
-|  | S004 | S | Wire it to Create | Its branch in `create()` with the active object, the redo panel's simulation preset for it, the play report, and the Add panel's note when no usable mesh is selected. | S002 | `effects/presets.py`, `ui/panel.py` |
-|  | S005 | T | Test creation | New `tests/test_sim_mesh_fire.py`: creates on a cube; the cube's object, mesh, modifiers, constraints, groups and visibility are unchanged; the evaluated grids hold fire after frames 1 to 30 on both sides of the cube; a small Cycles render isn't dark; Delete leaves the cube and no tagged ID; a failed create leaves nothing. | S004 | `tests/test_sim_mesh_fire.py` |
-|  | S006 | T | Fix the preset counts | Extend: `tests/test_presets.py` expects 10 presets with `SIMULATED_MESH_FIRE` locked at 9; `tests/test_panel.py` expects 10 offered. | S001 | `tests/test_presets.py`, `tests/test_panel.py` |
+| ✅ | S001 | F | Add the kind and the preset | The `SIM_MESH_FIRE` kind, its label and the simulated-kinds group; `SIMULATED_MESH_FIRE` appended to `PRESETS` as number 9 and placed after `BURNING_OBJECT` in `DISPLAY_ORDER`; the Simulated Fire's control list for the kind in both `SIMPLE` and `ADVANCED`. | — | `constants.py`, `effects/presets.py`, `ui/control_spec.py` |
+| ✅ | S002 | S | Build the fire on a mesh | Refuse with `mesh_fire.source_problem`. Build the domain around the source's world bounds with Copy Location (offset) on the source; the emitter as an empty mesh with the live-copy modifier and the Fluid flow, as in Architectural decisions; the light above the mesh's top. Emitter and light are the domain's children; every ID is tagged; the entry records the source, the emitter and 0 planes. Then apply the Campfire. | S001 | add-on package |
+| ✅ | S003 | S | Treat it as a simulation everywhere | Every check listed in Constraints uses the simulated-kinds group: cache folder, wind, preset tracking, panel notes and problems, covering. Covering takes the domain and light as its points for this kind. | S001 | `core/cache_folder.py`, `effects/wind.py`, `effects/sim_presets.py`, `ui/panel.py`, `core/covering.py` |
+| ✅ | S004 | S | Wire it to Create | Its branch in `create()` with the active object, the redo panel's simulation preset for it, the play report, and the Add panel's note when no usable mesh is selected. | S002 | `effects/presets.py`, `ui/panel.py` |
+| ✅ | S005 | T | Test creation | New `tests/test_sim_mesh_fire.py`: creates on a cube; the cube's object, mesh, modifiers, constraints, groups and visibility are unchanged; the evaluated grids hold fire after frames 1 to 30 on both sides of the cube; a small Cycles render isn't dark; Delete leaves the cube and no tagged ID; a failed create leaves nothing. | S004 | `tests/test_sim_mesh_fire.py` |
+| ✅ | S006 | T | Fix the preset counts | Extend: `tests/test_presets.py` expects 10 presets with `SIMULATED_MESH_FIRE` locked at 9; `tests/test_panel.py` expects 10 offered. | S001 | `tests/test_presets.py`, `tests/test_panel.py` |
 
 ### Slice 2 — Every Simulated Fire control on a mesh
 
@@ -194,11 +194,11 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-05, headless, with a G
 |  | S025 | S | Give a copy its own mesh | Make the copy's emitter, Copy Location and entry source point at the copy's mesh, in `_split`, wherever S024 finds the copy still on the original. | S024 | `core/copies.py` |
 |  | S026 | T | Make the preset scripts play it | A `SHOTS` entry and a mesh for `SIMULATED_MESH_FIRE` in `tests/render_presets.py`; `tests/gui_viewport_visible.py` selects a mesh and steps from frame 1 before capturing it. | S004 | `tests/render_presets.py`, `tests/gui_viewport_visible.py` |
 |  | S027 | T | Run the windowed undo check | A create, undo and redo sequence with the new preset in `tests/gui_undo.py`, run in a window on 4.5 and 5.2. | S014 | `tests/gui_undo.py` |
-|  | S028 | D | Extend the checklist | Eye checks for Fire and Smoke from Mesh in Cycles and EEVEE on 5.1 and 5.2, the EEVEE boxes judged on "renders visible fire", and a 4.5 render box. | S021 | `docs/RELEASE_CHECKLIST.md` |
-|  | S029 | T | Fix the gate counts | Extend `tests/test_release_gate.py`: 40 eye checks, ten 4.5 renders, and four "renders visible fire" boxes. | S028 | `tests/test_release_gate.py` |
+| ✅ | S028 | D | Extend the checklist | Eye checks for Fire and Smoke from Mesh in Cycles and EEVEE on 5.1 and 5.2, the EEVEE boxes judged on "renders visible fire", and a 4.5 render box. | S021 | `docs/RELEASE_CHECKLIST.md` |
+| ✅ | S029 | T | Fix the gate counts | Extend `tests/test_release_gate.py`: 40 eye checks, ten 4.5 renders, and four "renders visible fire" boxes. | S028 | `tests/test_release_gate.py` |
 |  | S030 | D | Write the buyer docs | README Good to know: select a mesh first, the mesh stays visible, Burn From and painting at weight 1, the fire follows moves in place. TROUBLESHOOTING: the fire stopped (the group was renamed or deleted), weak fire (low weights), a character walking out of its fire's box, a rotated mesh leaving its box. STORE_PAGE: the feature and its limits. | S021 | `README.md`, `docs/TROUBLESHOOTING.md`, `docs/STORE_PAGE.md` |
 |  | S031 | D | Add the glossary terms | Fire and Smoke from Mesh, Burn From, Source mesh and Live copy in `reqs/GLOSSARY.md`. | S001 | `reqs/GLOSSARY.md` |
-|  | S032 | X | Update REQ-001's numbers | Change REQ-001's AC16 and AC19 to 10 presets and 40 eye checks, with a revision row. | S028 | `reqs/in-progress/REQ-001-Fire-And-Smoke-Addon.md` |
+| ✅ | S032 | X | Update REQ-001's numbers | Change REQ-001's AC16 and AC19 to 10 presets and 40 eye checks, with a revision row. | S028 | `reqs/in-progress/REQ-001-Fire-And-Smoke-Addon.md` |
 
 ### Dependency graph
 
@@ -302,3 +302,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | Date | Author | Summary of Change |
 | ---- | ------ | ----------------- |
 | 2026-11-05 | Blaxine | Initial plan. |
+| 2026-11-05 | Blaxine | Moved to in-progress. Slice 1 built: the button burns the selected mesh all over, the mesh is unchanged, Delete is clean. S028, S029 and S032 done early, since the release gate checks every preset. |

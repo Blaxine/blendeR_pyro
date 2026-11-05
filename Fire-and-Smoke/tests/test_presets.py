@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The 9 presets: each creates and deletes, and what a saved choice means never changes."""
+"""The 10 presets: each creates and deletes, and what a saved choice means never changes."""
 
 import os
 import sys
@@ -14,7 +14,7 @@ from fire_and_smoke.effects import fire_light, presets  # noqa: E402
 # Saved scenes depend on these numbers: new presets go on the end, none ever change.
 LOCKED = {"CANDLE": 0, "TORCH": 1, "CAMPFIRE": 2, "BONFIRE": 3, "BURNING_OBJECT": 4,
           "THIN_SMOKE": 5, "BLACK_SMOKE_COLUMN": 6, "EMBERS": 7,
-          "SIMULATED_CAMPFIRE": 8}
+          "SIMULATED_CAMPFIRE": 8, "SIMULATED_MESH_FIRE": 9}
 
 
 def _tagged():
@@ -24,7 +24,7 @@ def _tagged():
 
 def test_the_catalogue():
     numbers = {p[0]: p[1] for p in presets.PRESETS}
-    lib.check("9 presets", len(numbers) == 9, str(len(numbers)))
+    lib.check("10 presets", len(numbers) == 10, str(len(numbers)))
     for preset_id, number in LOCKED.items():
         lib.check(f"{preset_id} keeps its number", numbers.get(preset_id) == number, str(numbers.get(preset_id)))
     lib.check("numbers are unique", len(set(numbers.values())) == len(numbers))
@@ -55,7 +55,7 @@ def test_every_preset_creates_and_deletes():
         entry = scene.fas_effects[-1]
         lib.check(f"{preset_id} records its preset", entry.preset_id == preset_id)
         bpy.context.view_layer.update()
-        if entry.kind not in (lib.C.KIND_EMBERS, lib.C.KIND_SIM_FIRE):
+        if entry.kind != lib.C.KIND_EMBERS and entry.kind not in lib.C.SIM_KINDS:
             modifier = entry.primary.modifiers[0]
             lib.check(f"{preset_id}: no node warnings", not list(modifier.node_warnings),
                       str([w.message for w in modifier.node_warnings]))

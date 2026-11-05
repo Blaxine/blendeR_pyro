@@ -295,13 +295,26 @@ def create_sim_fire(context, location, preset=sim_presets.DEFAULT):
     emitter.display_type = "WIRE"
     emitter.hide_render = True
 
+    add_flow(emitter)
+    add_domain(scene, domain, collection, effect_uuid, package["entry"]["detail"])
+    light = add_light(collection, domain, kind, effect_uuid, f"{name} Light", package["light"],
+                      (0.0, 0.0, shape["light_height"]))
+    return record(context, kind, effect_uuid, domain, emitter, light, collection, preset)
+
+
+def add_flow(emitter):
+    """Smoke and fire, flowing in from the emitter's surface."""
     flow = emitter.modifiers.new("Fluid", "FLUID")
     flow.fluid_type = "FLOW"
     emission = flow.flow_settings
     emission.flow_type = "BOTH"
     emission.flow_behavior = "INFLOW"
     emission.surface_distance = 1.0
+    return emission
 
+
+def add_domain(scene, domain, collection, effect_uuid, resolution):
+    """A Replay-cached gas domain that takes flows and effectors only from the effect."""
     fluid = domain.modifiers.new("Fluid", "FLUID")
     fluid.fluid_type = "DOMAIN"
     settings = fluid.domain_settings
@@ -311,23 +324,32 @@ def create_sim_fire(context, location, preset=sim_presets.DEFAULT):
     if bpy.app.build_options.openvdb:
         settings.cache_data_format = "OPENVDB"
     settings.cache_type = "REPLAY"
-    settings.resolution_max = package["entry"]["detail"]
+    settings.resolution_max = resolution
     settings.fluid_group = collection
     settings.effector_group = collection
     set_range(settings, scene.frame_start, scene.frame_end)
     settings.cache_directory = cache_folder.path_for(effect_uuid)
+    return settings
 
-    values = package["light"]
-    light, action = fire_light.build_light(f"{name} Light", values["energy"], radius=values["radius"],
+
+def add_light(collection, domain, kind, effect_uuid, name, values, location):
+    """The owned flickering fire light, as the domain's child."""
+    light, action = fire_light.build_light(name, values["energy"], radius=values["radius"],
                                            flicker=values["flicker"], speed=values["speed"])
     for id_block in (light, light.data, action):
         naming.tag(id_block, kind, effect_uuid)
     collection.objects.link(light)
     light.parent = domain
-    light.location = (0.0, 0.0, shape["light_height"])
+    light.location = location
+    return light
 
+
+def record(context, kind, effect_uuid, domain, emitter, light, collection, preset, source=None):
+    """The entry and the Real light mode, then the preset, as Apply writes it."""
+    scene = context.scene
     entry = registry.add(scene, kind, effect_uuid, primary=domain, root_collection=collection)
     entry.emitter = emitter
+    entry.source = source
     entry.planes = 0
     entry.light = light
     light_mode.apply(domain, light, light_mode.REAL)

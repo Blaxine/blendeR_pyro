@@ -12,12 +12,19 @@ from mathutils import Vector
 
 from .. import constants as C
 
-FIRE_KINDS = (C.KIND_FIRE, C.KIND_SIM_FIRE)
+FIRE_KINDS = (C.KIND_FIRE, C.KIND_SIM_FIRE, C.KIND_SIM_MESH_FIRE)
 MAX_CHECKED = 500      # objects checked while drawing the panel; Create checks them all
 MARGIN = 1e-4
 
 
 def _points(entry):
+    if entry.kind == C.KIND_SIM_MESH_FIRE:
+        # Its fire is on the burning mesh: the light above it, and the mesh's middle.
+        points = [entry.light.matrix_world.translation.copy()] if entry.light is not None else []
+        if entry.source is not None:
+            corners = [entry.source.matrix_world @ Vector(c) for c in entry.source.bound_box]
+            points.append(sum(corners, Vector()) / 8.0)
+        return points
     points = []
     for obj in (entry.light, entry.primary, entry.emitter if entry.kind == C.KIND_SIM_FIRE else None):
         if obj is not None:

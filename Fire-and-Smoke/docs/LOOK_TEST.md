@@ -238,6 +238,18 @@ The owner asked to change the Simulated Fire's colour, density, emission strengt
 
 Found by render on 5.2.2 on 2026-11-04: a Flame Colour that multiplied the ramp couldn't make blue, because the ramp has almost no blue in it. A blue came out yellow-green. The Color blend keeps the ramp's bright core and dark tips with the chosen hue, so blue and green flames render as blue and green. Blackbody can only be tinted, so a blue Normal Fire or Candle Fire is dim.
 
+## Fire and Smoke from Mesh (REQ-004)
+
+### Slice 1: the first render
+
+Rendered on 5.2.2 on 2026-11-05: a 1 m cube on a dark ground under a dark sky, Cycles, 32 samples, 320 × 400, the Campfire preset, frames 30, 50 and 70 side by side. The box is the cube's size plus 0.6 of it on each side, from just below its foot to 3 cube-heights above its top, at 64 divisions.
+
+- **It burns all over.** Flames rise from the cube's top and lick up its sides, and the front face shows the fire on its surface. They reach about one cube-height above the top, and change shape from frame to frame. The ground takes an orange glow.
+- **The cube stays visible.**
+- **To look at in Slice 5:** by frame 50 the thin dark smoke above the flames shows the box's straight top edge. Slice 5 tunes the box's room and the size correction.
+
+Headless, frames 1 to 30 on the same cube in `tests/test_sim_mesh_fire.py`: flame 3502 left and 4242 right of the cube's middle on 5.2, 7057 and 7077 on 4.5. The owner's verdict is pending.
+
 ## Blender 4.5
 
 4.5.4 is installed now. The suite and every Simulated Campfire check above pass on it. The Campfire's own speed scripts haven't been rerun on it yet.

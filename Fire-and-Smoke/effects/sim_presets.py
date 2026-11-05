@@ -175,7 +175,7 @@ def is_modified(entry):
 
 def note_edit(entry):
     """Mark the preset modified once the effect no longer matches what it wrote."""
-    if (entry.kind == C.KIND_SIM_FIRE and entry.sim_preset and not entry.sim_preset_modified
+    if (entry.kind in C.SIM_KINDS and entry.sim_preset and not entry.sim_preset_modified
             and not busy(entry) and is_modified(entry)):
         entry["sim_preset_modified"] = True
 
@@ -186,7 +186,7 @@ def watch(scene, depsgraph=None):
     changed = ({u.id.original.as_pointer() for u in depsgraph.updates}
                if depsgraph is not None else None)
     for entry in getattr(scene, "fas_effects", ()):
-        if entry.kind != C.KIND_SIM_FIRE or not entry.sim_preset or entry.sim_preset_modified:
+        if entry.kind not in C.SIM_KINDS or not entry.sim_preset or entry.sim_preset_modified:
             continue
         owned = [obj.as_pointer() for obj in (entry.primary, entry.emitter) if obj is not None]
         if changed is not None and not any(pointer in changed for pointer in owned):
@@ -240,7 +240,7 @@ def apply(context, entry, preset_id):
     """Write a package onto a Simulated Fire, once.  The sliders go back to 1, Detail
     to the preset's, and the cache is cleared so the next play shows the new fire."""
     from . import sim_fire
-    if entry.kind != C.KIND_SIM_FIRE:
+    if entry.kind not in C.SIM_KINDS:
         raise RuntimeError(NOT_SIMULATED)
     package = CATALOG.get(preset_id)
     if package is None:
@@ -251,7 +251,8 @@ def apply(context, entry, preset_id):
     if domain is None or flow is None or entry.primary.type != "MESH":
         raise RuntimeError(NO_DOMAIN)
     with applying(entry):
-        _reshape(entry, package["shape"])
+        if entry.kind == C.KIND_SIM_FIRE:
+            _reshape(entry, package["shape"])
         for field, value in package["domain"].items():
             setattr(domain, field, value)
         for field, value in package["flow"].items():

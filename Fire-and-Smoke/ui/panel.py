@@ -45,7 +45,7 @@ def entry_problem(entry):
     """What's wrong with this effect, as a sentence for the buyer, or None."""
     if entry.primary is None:
         return "This effect's object is gone. Delete it to clean up the rest"
-    if entry.kind == C.KIND_SIM_FIRE and not bpy.app.build_options.fluid:
+    if entry.kind in C.SIM_KINDS and not bpy.app.build_options.fluid:
         return sim_fire.NO_FLUID_HERE
     if mesh_fire.is_missing_source(entry):
         return "The mesh this fire was on is gone. Delete the fire, then set a new mesh on fire"
@@ -118,7 +118,7 @@ def _draw_entry(layout, entry):
             _wrapped_label(row, covering.sentence(hidden_by), icon="HIDE_ON")
         if entry.kind == C.KIND_EMBERS:
             _wrapped_label(box, EMBERS_NOTE, icon="INFO")
-        elif entry.kind == C.KIND_SIM_FIRE:
+        elif entry.kind in C.SIM_KINDS:
             _wrapped_label(box, SIM_FIRE_NOTE, icon="INFO")
             _wrapped_label(box, SIM_VIEW_NOTE, icon="INFO")
             _wrapped_label(box, SIM_EEVEE_NOTE, icon="INFO")
@@ -157,9 +157,9 @@ class FAS_PT_main(bpy.types.Panel):
         shading = getattr(space, "shading", None)
         kinds = {entry.kind for entry in context.scene.fas_effects}
         # A simulated fire draws in Solid view, so the note is for the planes and embers.
-        if kinds - {C.KIND_SIM_FIRE} and shading is not None and shading.type in {"SOLID", "WIREFRAME"}:
+        if kinds - set(C.SIM_KINDS) and shading is not None and shading.type in {"SOLID", "WIREFRAME"}:
             _wrapped_label(self.layout, SOLID_NOTE, icon="SHADING_RENDERED")
-        if C.KIND_SIM_FIRE in kinds and shading is not None and shading.type == "MATERIAL":
+        if kinds & set(C.SIM_KINDS) and shading is not None and shading.type == "MATERIAL":
             row = self.layout.column()
             row.alert = True
             _wrapped_label(row, MATERIAL_PREVIEW_NOTE, icon="SHADING_RENDERED")
@@ -193,7 +193,7 @@ class FAS_PT_create(bpy.types.Panel):
         if problem:
             row = layout.column()
             row.enabled = False
-            _wrapped_label(row, f"Burning Object: {problem}", icon="INFO")
+            _wrapped_label(row, f"Burning Object and Fire and Smoke from Mesh: {problem}", icon="INFO")
 
 
 class FAS_PT_effects(bpy.types.Panel):

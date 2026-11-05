@@ -72,7 +72,7 @@ def test_empty_state():
     lib.check("an empty panel says what to do", "Nothing here yet." in log["labels"])
     log = _draw(panel.FAS_PT_create)
     count = sum(1 for o in log["operators"] if o == "fas.effect_create")
-    lib.check("all 9 presets are offered", count == 9, str(count))
+    lib.check("all 10 presets are offered", count == 10, str(count))
     lib.check("Burning Object says it needs a mesh", "Select a mesh" in _text(log), _text(log))
     log = _draw(panel.FAS_PT_main)
     lib.check("no camera is explained", "no camera" in _text(log), _text(log))

@@ -10,7 +10,7 @@ import bpy
 
 from .. import constants as C
 from ..core import bounces, covering, delete
-from . import creation, embers, flame_material, mesh_fire, sim_fire, sim_presets, smoke, smoke_material
+from . import creation, embers, flame_material, mesh_fire, sim_fire, sim_mesh_fire, sim_presets, smoke, smoke_material
 
 FIRE_GROUP = "Fire"
 SMOKE_GROUP = "Smoke"
@@ -35,10 +35,16 @@ PRESETS = (
      "A real fire simulation: a campfire, a candle or a normal fire. It simulates as you play, "
      "so press play from the first frame",
      "MOD_FLUIDSIM", FIRE_GROUP),
+    ("SIMULATED_MESH_FIRE", 9, "Fire and Smoke from Mesh",
+     "Set the selected mesh on fire with a real fire simulation, without changing it. "
+     "It simulates as you play, so press play from the first frame",
+     "FORCE_FLUIDFLOW", FIRE_GROUP),
 )
+# The presets that build a simulation, and take a simulation preset at Create.
+SIMULATED = ("SIMULATED_CAMPFIRE", "SIMULATED_MESH_FIRE")
 
 DISPLAY_ORDER = ("CANDLE", "TORCH", "CAMPFIRE", "SIMULATED_CAMPFIRE", "BONFIRE", "BURNING_OBJECT",
-                 "THIN_SMOKE", "BLACK_SMOKE_COLUMN", "EMBERS")
+                 "SIMULATED_MESH_FIRE", "THIN_SMOKE", "BLACK_SMOKE_COLUMN", "EMBERS")
 
 _BY_ID = {preset[0]: preset for preset in PRESETS}
 
@@ -94,6 +100,8 @@ def create(context, preset_id, sim_preset=sim_presets.DEFAULT):
         return embers.create_embers(context, location)
     if preset_id == "SIMULATED_CAMPFIRE":
         return sim_fire.create_sim_fire(context, location, preset=sim_preset)
+    if preset_id == "SIMULATED_MESH_FIRE":
+        return sim_mesh_fire.create_sim_mesh_fire(context, context.active_object, preset=sim_preset)
     raise RuntimeError(f"There's no preset called {preset_id}")
 
 
@@ -127,7 +135,7 @@ class FAS_OT_effect_create(bpy.types.Operator):
     def draw(self, _context):
         layout = self.layout
         layout.prop(self, "preset")
-        if self.preset == "SIMULATED_CAMPFIRE":
+        if self.preset in SIMULATED:
             layout.prop(self, "sim_preset")
 
     @delete.guarded_create
@@ -145,7 +153,7 @@ class FAS_OT_effect_create(bpy.types.Operator):
             self.report({"WARNING"}, "This scene has no camera: add one before rendering")
         elif self.preset == "EMBERS":
             self.report({"INFO"}, "Press play from the first frame to see the embers")
-        if self.preset == "SIMULATED_CAMPFIRE":
+        if self.preset in SIMULATED:
             self.report({"INFO"}, "Press play from the first frame to see the fire, in Rendered or Solid view")
         # New objects get their final positions on the next update.
         context.view_layer.update()

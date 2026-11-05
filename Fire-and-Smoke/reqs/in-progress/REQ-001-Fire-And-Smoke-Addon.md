@@ -89,10 +89,10 @@ Measured on Blender 5.1.2 and 5.2.3 on this PC on 2026-11-01. Blender 4.5 isn't 
 - [ ] **AC13 — Fire on a mesh.** Fire follows a chosen mesh, including when it moves, and the source object's modifiers, mesh and custom properties are unchanged. Deleted and over-dense sources give a clear message.
 - [ ] **AC14 — Embers.** Embers render in both engines, replay from the start when scrubbed, and follow timeline changes unless the buyer set their own range.
 - [ ] **AC15 — Panel.** A beginner can create and delete every effect kind from the panel in Simple view, every failure gives a plain message, and the fixed wording appears.
-- [ ] **AC16 — 9 presets.** The final 9 presets each create without error and pass the eye check. Adding a preset to the end of the list doesn't change what a saved choice means.
+- [ ] **AC16 — 10 presets.** The final 10 presets each create without error and pass the eye check. Adding a preset to the end of the list doesn't change what a saved choice means.
 - [ ] **AC17 — Name and links.** The add-on is named, its id and prefix are final, and every support link in the zip points at a public issues repo that already exists.
 - [ ] **AC18 — Store page.** The store text states every limit in the plan: mid-ground use, no extreme close-ups, weak top-down shots, embers replaying, "no baking" limited to flames and smoke, the engine match limited to the default light, and the three supported versions.
-- [ ] **AC19 — Release gate.** A version ships only when, for that version: the owner has viewed and rendered all 9 presets in both engines on 5.1 and 5.2 (36 checks); 4.5 has passed automated tests, one render per preset and the owner's scripted beginner walkthrough; automated tests pass on all versions; the built zip has been installed and tested; and the default Campfire meets the confirmed speed target.
+- [ ] **AC19 — Release gate.** A version ships only when, for that version: the owner has viewed and rendered all 10 presets in both engines on 5.1 and 5.2 (40 checks); 4.5 has passed automated tests, one render per preset and the owner's scripted beginner walkthrough; automated tests pass on all versions; the built zip has been installed and tested; and the default Campfire meets the confirmed speed target.
 
 ## Technical Notes
 
@@ -439,3 +439,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-01 | Blaxine | Fixed embers drawing nothing in the viewport, reported by the owner. Embers now emit at a rate, and sparks are larger. Added display colours for Solid view and a windowed visibility check. |
 | 2026-11-03 | Blaxine | Paths updated for the reqs/ rename. |
 | 2026-11-04 | Blaxine | AC16 and AC19 count 9 presets and 36 eye checks, for REQ-002's Simulated Campfire. |
+| 2026-11-05 | Blaxine | AC16 and AC19 count 10 presets and 40 eye checks, for REQ-004's Fire and Smoke from Mesh. |

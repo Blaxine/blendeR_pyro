@@ -20,6 +20,7 @@ SIMPLE = {
     C.KIND_COLUMN: ("entry:size", "entry:density", "preview"),
     C.KIND_EMBERS: ("entry:amount", "entry:ember_size"),
     C.KIND_SIM_FIRE: SIM_FIRE,
+    C.KIND_SIM_MESH_FIRE: SIM_FIRE,
     C.KIND_WIND: WIND,
 }
 ADVANCED = {
@@ -31,6 +32,7 @@ ADVANCED = {
     C.KIND_COLUMN: ("entry:size", "entry:density", "preview", "entry:layers", "entry:seed"),
     C.KIND_EMBERS: ("entry:amount", "entry:ember_size"),
     C.KIND_SIM_FIRE: SIM_FIRE,
+    C.KIND_SIM_MESH_FIRE: SIM_FIRE,
     C.KIND_WIND: WIND,
 }
 

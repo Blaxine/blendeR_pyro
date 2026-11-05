@@ -16,7 +16,7 @@ Version under test:
 
 ## Blender 5.1 and 5.2 eye checks
 
-Render every preset with `tests/render_presets.py`, and view each one in the viewport too. Each box means it looks right in that Blender and engine. The Simulated Fire's boxes cover all three of its presets: `render_presets.py` renders each. It's held to the look bar in Cycles only: its EEVEE boxes mean it renders visible fire without errors. Play it from the first frame before viewing or rendering it.
+Render every preset with `tests/render_presets.py`, and view each one in the viewport too. Each box means it looks right in that Blender and engine. The Simulated Fire's boxes cover all three of its presets: `render_presets.py` renders each. It's held to the look bar in Cycles only: its EEVEE boxes mean it renders visible fire without errors. Play it from the first frame before viewing or rendering it. Fire and Smoke from Mesh is held to the same bar, with the same EEVEE meaning: check it on the default cube.
 
 ### Blender 5.1
 
@@ -25,6 +25,7 @@ Render every preset with `tests/render_presets.py`, and view each one in the vie
 - [ ] Eye check: Campfire, 5.1, Cycles
 - [ ] Eye check: Bonfire, 5.1, Cycles
 - [ ] Eye check: Burning Object, 5.1, Cycles
+- [ ] Eye check: Fire and Smoke from Mesh, 5.1, Cycles
 - [ ] Eye check: Thin Smoke, 5.1, Cycles
 - [ ] Eye check: Black Smoke Column, 5.1, Cycles
 - [ ] Eye check: Embers, 5.1, Cycles
@@ -34,6 +35,7 @@ Render every preset with `tests/render_presets.py`, and view each one in the vie
 - [ ] Eye check: Campfire, 5.1, EEVEE
 - [ ] Eye check: Bonfire, 5.1, EEVEE
 - [ ] Eye check: Burning Object, 5.1, EEVEE
+- [ ] Eye check: Fire and Smoke from Mesh, 5.1, EEVEE, renders visible fire
 - [ ] Eye check: Thin Smoke, 5.1, EEVEE
 - [ ] Eye check: Black Smoke Column, 5.1, EEVEE
 - [ ] Eye check: Embers, 5.1, EEVEE
@@ -46,6 +48,7 @@ Render every preset with `tests/render_presets.py`, and view each one in the vie
 - [ ] Eye check: Campfire, 5.2, Cycles
 - [ ] Eye check: Bonfire, 5.2, Cycles
 - [ ] Eye check: Burning Object, 5.2, Cycles
+- [ ] Eye check: Fire and Smoke from Mesh, 5.2, Cycles
 - [ ] Eye check: Thin Smoke, 5.2, Cycles
 - [ ] Eye check: Black Smoke Column, 5.2, Cycles
 - [ ] Eye check: Embers, 5.2, Cycles
@@ -55,6 +58,7 @@ Render every preset with `tests/render_presets.py`, and view each one in the vie
 - [ ] Eye check: Campfire, 5.2, EEVEE
 - [ ] Eye check: Bonfire, 5.2, EEVEE
 - [ ] Eye check: Burning Object, 5.2, EEVEE
+- [ ] Eye check: Fire and Smoke from Mesh, 5.2, EEVEE, renders visible fire
 - [ ] Eye check: Thin Smoke, 5.2, EEVEE
 - [ ] Eye check: Black Smoke Column, 5.2, EEVEE
 - [ ] Eye check: Embers, 5.2, EEVEE
@@ -69,6 +73,7 @@ Eye checks on 4.5 are limited to these renders and the walkthrough.
 - [ ] 4.5 render: Campfire
 - [ ] 4.5 render: Bonfire
 - [ ] 4.5 render: Burning Object
+- [ ] 4.5 render: Fire and Smoke from Mesh, in EEVEE, renders visible fire
 - [ ] 4.5 render: Thin Smoke
 - [ ] 4.5 render: Black Smoke Column
 - [ ] 4.5 render: Embers

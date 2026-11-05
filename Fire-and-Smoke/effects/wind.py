@@ -58,7 +58,7 @@ def simulations_changed(scene):
     next play from the first frame shows it."""
     from . import sim_fire
     for entry in scene.fas_effects:
-        if entry.kind == C.KIND_SIM_FIRE and entry.primary is not None:
+        if entry.kind in C.SIM_KINDS and entry.primary is not None:
             sim_fire.clear_cache(entry)
 
 

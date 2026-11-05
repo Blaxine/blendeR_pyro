@@ -15,6 +15,7 @@ Add believable fire and smoke to your Blender scene in one click. Pick a preset,
 - **Fire that lights your scene,** with a flickering light that looks the same in Cycles and EEVEE.
 - **Set your own mesh on fire.** Your object isn't changed.
 - **A real simulated fire too,** with volumetric flames and smoke, and still no bake step: it simulates as you play. Start it as a **Normal Fire**, a **Candle Fire** or a **Campfire**, and switch between them later. The Campfire burns from several logs, with flickering tongues shading from a pale core to red tips.
+- **Set your own mesh on fire with the real simulation too,** with all the same settings. Your object isn't changed.
 - **Flame Noise,** from calm, smooth flames to wild, flickering ones.
 - **Change the simulated fire's look as it plays:** flame colour, glow, temperature, density and smoke colour, with no new simulation.
 - **Wind** that bends the Simulated Fire and carries the embers, with Power, Gusts and Direction.
