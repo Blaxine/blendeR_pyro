@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import fas_testlib as lib  # noqa: E402
 
 import bpy  # noqa: E402
-from fire_and_smoke.effects import plane_stack, presets, sim_fire, sim_mesh_fire, sim_presets  # noqa: E402
+from fire_and_smoke.effects import fire_light, plane_stack, presets, sim_fire, sim_mesh_fire, sim_presets  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
 PRESET = "SIMULATED_MESH_FIRE"
@@ -178,6 +178,231 @@ def test_a_small_cycles_render_isnt_dark():
 
 def test_the_mesh_is_unchanged_after_playing():
     lib.check("the mesh is unchanged", _snapshot(bpy.data.objects[STATE["crate"]]) == STATE["before"])
+
+
+def _replayed(frame=20):
+    """Density and flame sums, and the grid's size, after playing from the first frame."""
+    scene = lib.scene()
+    scene.frame_set(1)
+    _play(frame)
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    settings = sim_fire.find_modifier(_entry().primary.evaluated_get(depsgraph), "DOMAIN").domain_settings
+    density, flame = list(settings.density_grid), list(settings.flame_grid)
+    return sum(density), sum(flame), len(density)
+
+
+def _close(a, b, tolerance=0.15):
+    return abs(a - b) <= tolerance * max(abs(a), abs(b), 1e-6)
+
+
+def _counting_clears(change):
+    """How many times ``change`` clears this fire's cache."""
+    original = sim_fire.clear_cache
+    cleared = []
+    sim_fire.clear_cache = lambda entry: (cleared.append(entry.uuid), original(entry))
+    try:
+        change()
+    finally:
+        sim_fire.clear_cache = original
+    return cleared.count(STATE["uuid"])
+
+
+def _box(entry):
+    bpy.context.view_layer.update()
+    low, high = sim_mesh_fire.world_bounds(entry.primary)
+    return tuple(round(v, 4) for v in (*low, *high))
+
+
+def test_every_simulation_setting_reaches_it():
+    entry = _entry()
+    base = _replayed()
+    flow = sim_fire.flow_settings(entry)
+    settings = sim_fire.domain_settings(entry)
+
+    cleared = _counting_clears(lambda: setattr(_entry(), "flame_intensity", 2.5))
+    lib.check("Flame Intensity reaches the fuel", abs(flow.fuel_amount - _entry().base_fuel * 2.5) < 1e-4,
+              str(flow.fuel_amount))
+    lib.check("and clears the cache", cleared == 1, str(cleared))
+    hotter = _replayed()
+    lib.check("and a replayed frame differs", not _close(hotter[1], base[1], 0.02),
+              f"{hotter[1]:.1f} against {base[1]:.1f}")
+    _entry().flame_intensity = 1.0
+
+    cleared = _counting_clears(lambda: setattr(_entry(), "flame_noise", 2.0))
+    entry = _entry()
+    lib.check("Flame Noise reaches the swirl", abs(settings.vorticity - min(entry.base_vorticity * 2.0, 4.0)) < 1e-4
+              and abs(settings.flame_vorticity - min(entry.base_flame_vorticity * 2.0, 2.0)) < 1e-4,
+              f"{settings.vorticity:.3f} {settings.flame_vorticity:.3f}")
+    lib.check("and clears the cache", cleared == 1, str(cleared))
+    wilder = _replayed()
+    lib.check("and a replayed frame differs", not _close(wilder[1], base[1], 0.02),
+              f"{wilder[1]:.1f} against {base[1]:.1f}")
+    _entry().flame_noise = 1.0
+
+    cleared = _counting_clears(lambda: setattr(_entry(), "smoke_amount", 2.0))
+    node = sim_fire.volume_node(_entry())
+    lib.check("Smoke Amount reaches the flow's smoke", abs(flow.density - _entry().base_smoke * 2.0) < 1e-4)
+    lib.check("and the material's density",
+              abs(node.inputs["Density"].default_value - _entry().base_density * 2.0) < 1e-4)
+    lib.check("and clears the cache", cleared == 1, str(cleared))
+    smokier = _replayed()
+    lib.check("and a replayed frame differs", not _close(smokier[0], base[0], 0.02),
+              f"{smokier[0]:.1f} against {base[0]:.1f}")
+    _entry().smoke_amount = 1.0
+
+    cleared = _counting_clears(lambda: setattr(_entry(), "detail", 40))
+    lib.check("Detail reaches the resolution", settings.resolution_max == 40)
+    lib.check("and clears the cache", cleared == 1, str(cleared))
+    coarse = _replayed()
+    lib.check("and a replayed frame has fewer cells", coarse[2] < base[2], f"{coarse[2]} against {base[2]}")
+    _entry().detail = 64
+    again = _replayed()
+    lib.check("back to the defaults gives the default's fire", again[2] == base[2] and _close(again[0], base[0]),
+              f"{again[0]:.1f} against {base[0]:.1f}")
+
+
+def test_the_look_shows_straight_away():
+    entry = _entry()
+    node = sim_fire.volume_node(entry)
+    colour = tuple(entry.light.data.color)
+
+    def change():
+        entry = _entry()
+        entry.flame_tint = (0.2, 0.5, 1.0)
+        entry.emission_strength = 2.0
+        entry.fire_temperature = 1.5
+        entry.volume_density = 2.0
+        entry.smoke_colour = (0.3, 0.1, 0.1)
+
+    cleared = _counting_clears(change)
+    entry = _entry()
+    lib.check("the look sliders keep the cache", cleared == 0, str(cleared))
+    lib.check("Density reaches the material",
+              abs(node.inputs["Density"].default_value - entry.base_density * 2.0) < 1e-4)
+    lib.check("Smoke Colour reaches the material",
+              all(abs(a - b) < 1e-4 for a, b in zip(node.inputs["Color"].default_value, (0.3, 0.1, 0.1))))
+    lib.check("Emission Strength reaches the blackbody",
+              abs(node.inputs["Blackbody Intensity"].default_value - entry.base_blackbody * 2.0) < 1e-4)
+    lib.check("Temperature reaches the material", abs(node.inputs["Temperature"].default_value - 1500.0) < 1e-2)
+    _ramp, strength, tint, _heat = sim_fire.flame_nodes(entry)
+    lib.check("Flame Colour reaches the flames",
+              all(abs(a - b) < 1e-4 for a, b in zip(sim_fire._socket(tint.inputs, "B_Color").default_value,
+                                                    (0.2, 0.5, 1.0))))
+    lib.check("and the fire light", tuple(entry.light.data.color) != colour)
+    lib.check("and the preset says (modified)", sim_presets.is_modified(entry))
+    entry.flame_tint, entry.smoke_colour = (1.0, 1.0, 1.0), (0.05, 0.05, 0.05)
+    entry.emission_strength = entry.fire_temperature = entry.volume_density = 1.0
+
+
+def test_the_light():
+    entry = _entry()
+    domain, light = entry.primary, entry.light
+    lib.check("Real is the default", entry.light_mode == "REAL" and not light.hide_render)
+    lib.check("Real hides the domain from diffuse and glossy rays",
+              not domain.visible_diffuse and not domain.visible_glossy)
+    entry.light_mode = "EMISSIVE"
+    lib.check("Emissive turns the light off", light.hide_render)
+    lib.check("and lets the flames light the scene", domain.visible_diffuse and domain.visible_glossy)
+    _entry().light_mode = "REAL"
+    energy = fire_light.get_energy(light.data)
+    _entry().light_strength = 2.0
+    lib.check("Light Strength reaches the light", abs(fire_light.get_energy(light.data) - energy * 2.0) < 1e-3)
+    _entry().light_strength = 1.0
+
+
+def test_presets_keep_the_box():
+    entry = _entry()
+    box, light_at = _box(entry), tuple(entry.light.location)
+    entry.sim_preset_choice = sim_presets.CANDLE_FIRE
+    result = bpy.ops.fas.apply_sim_preset(uuid=STATE["uuid"])
+    entry = _entry()
+    candle = sim_presets.CATALOG[sim_presets.CANDLE_FIRE]
+    lib.check("Candle Fire applies", result == {"FINISHED"} and entry.sim_preset == sim_presets.CANDLE_FIRE
+              and entry.sim_preset_label == "Candle Fire")
+    lib.check("its behaviour reaches the fire", abs(sim_fire.domain_settings(entry).burning_rate
+                                                    - candle["domain"]["burning_rate"]) < 1e-4
+              and sim_fire.flow_settings(entry).flow_type == candle["flow"]["flow_type"])
+    lib.check("and its detail", sim_fire.domain_settings(entry).resolution_max == candle["entry"]["detail"])
+    lib.check("the box stays fitted to the mesh", _box(entry) == box, f"{_box(entry)} / {box}")
+    lib.check("the emitter still copies the mesh", len(entry.emitter.data.vertices) == 0
+              and [m.type for m in entry.emitter.modifiers] == ["NODES", "FLUID"])
+    lib.check("the light stays above the mesh", tuple(entry.light.location) == light_at)
+    lib.check("it isn't (modified)", not sim_presets.is_modified(entry))
+    entry.flame_intensity = 1.5
+    lib.check("an edit marks it (modified)", sim_presets.is_modified(_entry()))
+    entry = _entry()
+    entry.sim_preset_choice = sim_presets.CAMPFIRE
+    bpy.ops.fas.apply_sim_preset(uuid=STATE["uuid"])
+    entry = _entry()
+    lib.check("Campfire applies back, with the sliders reset", entry.sim_preset == sim_presets.CAMPFIRE
+              and entry.flame_intensity == 1.0 and not sim_presets.is_modified(entry))
+    lib.check("and the box is still the same", _box(entry) == box)
+    lib.check("the mesh is unchanged by Apply", _snapshot(bpy.data.objects[STATE["crate"]]) == STATE["before"])
+
+
+def test_timeline_and_wind():
+    from fire_and_smoke.core import handlers
+    scene = lib.scene()
+    settings = sim_fire.domain_settings(_entry())
+    handlers.note_ranges()
+    scene.frame_end = 120
+    handlers.follow_ranges()
+    lib.check("a longer timeline lengthens the simulation",
+              (settings.cache_frame_start, settings.cache_frame_end) == (1, 120))
+    scene.frame_end = 60
+    handlers.follow_ranges()
+    lib.check("and back", (settings.cache_frame_start, settings.cache_frame_end) == (1, 60))
+    cleared = _counting_clears(lambda: bpy.ops.fas.wind_create())
+    lib.check("adding wind makes it simulate again", cleared >= 1, str(cleared))
+    wind = scene.fas_effects[-1]
+    cleared = _counting_clears(lambda: setattr(wind, "wind_power", 0.8))
+    lib.check("and so does changing it", cleared >= 1, str(cleared))
+    bpy.ops.fas.effect_delete(uuid=scene.fas_effects[-1].uuid)
+    scene.frame_set(1)
+
+
+def _corner_smoke(frame=20):
+    """Smoke in the box's low front-left corner, away from the burning mesh."""
+    scene = lib.scene()
+    scene.frame_set(1)
+    _play(frame)
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    settings = sim_fire.find_modifier(_entry().primary.evaluated_get(depsgraph), "DOMAIN").domain_settings
+    rx, ry, rz = settings.domain_resolution
+    total = 0.0
+    for index, value in enumerate(settings.density_grid):
+        x, y, z = index % rx, (index // rx) % ry, index // (rx * ry)
+        if x < rx * 0.3 and y < ry * 0.3 and z < rz * 0.25:
+            total += value
+    return total
+
+
+def test_its_own_flows_only():
+    scene = lib.scene()
+    base = _corner_smoke()
+    # A buyer's own flow in a corner of the box, beside the burning mesh.
+    bpy.ops.mesh.primitive_cube_add(size=0.25, location=(1.15, -0.85, 0.15))
+    theirs = bpy.context.object
+    fluid = theirs.modifiers.new("Fluid", "FLUID")
+    fluid.fluid_type = "FLOW"
+    fluid.flow_settings.flow_type = "BOTH"
+    fluid.flow_settings.flow_behavior = "INFLOW"
+    sim_fire.clear_cache(_entry())
+    scoped = _corner_smoke()
+    settings = sim_fire.domain_settings(_entry())
+    settings.fluid_group = None
+    sim_fire.clear_cache(_entry())
+    unscoped = _corner_smoke()
+    lib.info(f"smoke in the corner: alone {base:.1f}, with a buyer's flow there {scoped:.1f}, unscoped {unscoped:.1f}")
+    lib.check("a buyer's flow inside its box changes nothing", _close(scoped, base, 0.05),
+              f"{scoped:.1f} against {base:.1f}")
+    lib.check("the control: unscoped, it would take it", unscoped > base * 1.5 + 1.0,
+              f"{unscoped:.1f} against {base:.1f}")
+    settings.fluid_group = _entry().root_collection
+    sim_fire.clear_cache(_entry())
+    bpy.data.objects.remove(theirs)
+    bpy.context.view_layer.objects.active = bpy.data.objects[STATE["crate"]]
+    scene.frame_set(1)
 
 
 def test_it_refuses_plainly():

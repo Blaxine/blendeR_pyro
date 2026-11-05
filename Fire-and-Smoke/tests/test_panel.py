@@ -178,6 +178,32 @@ def test_sim_fire_box():
     bpy.ops.fas.effect_delete(uuid=lib.scene().fas_effects[-1].uuid)
 
 
+def test_sim_mesh_fire_box():
+    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0.0, 0.0, 0.5))
+    crate = bpy.context.object
+    bpy.ops.fas.effect_create(preset="SIMULATED_MESH_FIRE")
+    entry = lib.scene().fas_effects[-1]
+    bpy.context.view_layer.update()
+    log = _draw(panel.FAS_PT_effects)
+    lib.check("the box is titled Fire and Smoke from Mesh", "Fire and Smoke from Mesh" in log["labels"],
+              str(log["labels"]))
+    lib.check("with the simulation preset, its menu and Apply", "Campfire" in log["labels"]
+              and "sim_preset_choice" in log["props"] and "fas.apply_sim_preset" in log["operators"])
+    lib.check("it has the Simulated Fire's notes", "simulates as you play" in _text(log)
+              and "Material Preview doesn't show it" in _text(log) and "EEVEE shows a weaker look" in _text(log),
+              _text(log))
+    for token in control_spec.controls(lib.C.KIND_SIM_FIRE):
+        if token.startswith("entry:"):
+            name = token.split(":")[1]
+            lib.check(f"it shows {name}", name in log["props"], str(log["props"]))
+    lib.check("the mesh it burns isn't called in the way", "in the way" not in _text(log), _text(log))
+    main = _draw(panel.FAS_PT_main, shading="MATERIAL")
+    lib.check("in Material Preview the panel says to switch", "switch to Rendered or Solid" in _text(main),
+              _text(main))
+    bpy.ops.fas.effect_delete(uuid=entry.uuid)
+    bpy.data.objects.remove(crate)
+
+
 def test_solid_view_is_explained():
     log = _draw(panel.FAS_PT_main, shading="SOLID")
     lib.check("no note with no effects", "Solid view" not in _text(log), _text(log))

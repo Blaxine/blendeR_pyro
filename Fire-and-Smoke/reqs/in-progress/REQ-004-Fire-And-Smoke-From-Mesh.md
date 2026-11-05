@@ -133,9 +133,9 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-05, headless, with a G
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S007 | S | Presets keep the fitted box | On this kind, `apply` writes the domain, flow, material and light values and skips the package's shape; the snapshot doesn't track the shape. | S002 | `effects/sim_presets.py` |
-|  | S008 | S | Check the sliders reach it | Detail, Flame Intensity, Flame Noise, Smoke Amount, the look sliders, light mode and Light Strength each reach this kind's domain, flow, material and light, and simulation changes clear its cache. | S002 | `core/registry.py`, `effects/sim_fire.py` |
-|  | S009 | T | Test controls and presets | Extend `tests/test_sim_mesh_fire.py`: each simulation slider clears the cache and a replayed frame differs; each look slider changes the material with the cache kept; Apply of each preset keeps the domain mesh and emitter, resets the sliders and clears "(modified)"; an edit sets it. Timeline changes move its range; Wind clears its cache; a flow of the buyer's inside its box changes nothing. | S007, S008, S003 | `tests/test_sim_mesh_fire.py` |
+| ✅ | S007 | S | Presets keep the fitted box | On this kind, `apply` writes the domain, flow, material and light values and skips the package's shape; the snapshot doesn't track the shape. | S002 | `effects/sim_presets.py` |
+| ✅ | S008 | S | Check the sliders reach it | Detail, Flame Intensity, Flame Noise, Smoke Amount, the look sliders, light mode and Light Strength each reach this kind's domain, flow, material and light, and simulation changes clear its cache. | S002 | `core/registry.py`, `effects/sim_fire.py` |
+| ✅ | S009 | T | Test controls and presets | Extend `tests/test_sim_mesh_fire.py`: each simulation slider clears the cache and a replayed frame differs; each look slider changes the material with the cache kept; Apply of each preset keeps the domain mesh and emitter, resets the sliders and clears "(modified)"; an edit sets it. Timeline changes move its range; Wind clears its cache; a flow of the buyer's inside its box changes nothing. | S007, S008, S003 | `tests/test_sim_mesh_fire.py` |
 
 ### Slice 3 — Burn From
 
@@ -303,3 +303,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | ---- | ------ | ----------------- |
 | 2026-11-05 | Blaxine | Initial plan. |
 | 2026-11-05 | Blaxine | Moved to in-progress. Slice 1 built: the button burns the selected mesh all over, the mesh is unchanged, Delete is clean. S028, S029 and S032 done early, since the release gate checks every preset. |
+| 2026-11-05 | Blaxine | Slice 2 built: every Simulated Fire control and preset works on a mesh fire, and Apply keeps the box fitted to the mesh. The own-flows check measures the box's corner: on 4.5 the fire's own smoke fills the cells beside the mesh, so a buyer's flow there showed no difference even unscoped. |
