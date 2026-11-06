@@ -8,14 +8,14 @@ Draft for the owner. `NAME` and `PRICE` are placeholders until they're decided (
 
 Add believable fire and smoke to your Blender scene in one click. Pick a preset, press play, and scrub your timeline straight away, with no bake to wait for.
 
-**9 presets:** Candle, Torch, Campfire, Simulated Fire, Bonfire, Burning Object, Thin Smoke, Black Smoke Column and Embers.
+**10 presets:** Candle, Torch, Campfire, Simulated Fire, Bonfire, Burning Object, Fire and Smoke from Mesh, Thin Smoke, Black Smoke Column and Embers.
 
 - **No baking for flames and smoke.** They play and scrub instantly.
 - **Stays convincing as your camera moves.** Planes keep facing the camera, and fade to a soft glow from steep angles.
 - **Fire that lights your scene,** with a flickering light that looks the same in Cycles and EEVEE.
 - **Set your own mesh on fire.** Your object isn't changed.
 - **A real simulated fire too,** with volumetric flames and smoke, and still no bake step: it simulates as you play. Start it as a **Normal Fire**, a **Candle Fire** or a **Campfire**, and switch between them later. The Campfire burns from several logs, with flickering tongues shading from a pale core to red tips.
-- **Set your own mesh on fire with the real simulation too,** with all the same settings. Your object isn't changed.
+- **Set your own mesh on fire with the real simulation too,** with all the same settings. Your object isn't changed. Burn all of it, or only a vertex group you painted, as strongly as you painted it.
 - **Flame Noise,** from calm, smooth flames to wild, flickering ones.
 - **Change the simulated fire's look as it plays:** flame colour, glow, temperature, density and smoke colour, with no new simulation.
 - **Wind** that bends the Simulated Fire and carries the embers, with Power, Gusts and Direction.

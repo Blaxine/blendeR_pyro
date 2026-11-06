@@ -7,6 +7,7 @@ The project's ubiquitous-language reference. Code, docs, panel text and requirem
 | Active Camera | The Geometry Nodes input that gives the scene's current camera. | Works in a modifier. |
 | AquaSuite | The owner's separate paid water add-on for Blender, sold to the same beginners. | Source of code copied once; no runtime dependency. |
 | Bounce limit | The scene's transparent bounces value as the add-on manages it: raised above the scene's plane total, restored only while still the value the add-on set. | |
+| Burn From | Fire and Smoke from Mesh's choice of where it burns: Whole Mesh, or one of the mesh's vertex groups. Painted weights set how strongly each part burns. | Stored as the group's name in `burn_from`, empty for Whole Mesh; the menu `burn_from_choice` is a view of it. The emitter's own group list mirrors the mesh's names in order, since the flow reads its group by position in the mesh's weights. |
 | Cache folder | The folder a Simulated Fire's Replay cache is written to: `fas_cache/<uuid>` in Blender's session temp folder while the .blend is unsaved, and beside the .blend once it's saved. | Delete removes it only after the path check. |
 | Cycles | Blender's path-tracing render engine. | Limited by `cycles.transparent_max_bounces`. |
 | Detail | The Simulated Fire's control for its domain's resolution, in divisions along the domain's longest side. | 64 by default; higher is slower and uses more disk space. |

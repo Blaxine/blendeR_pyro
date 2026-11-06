@@ -79,6 +79,12 @@ Jump back to the first frame and play forward.
 - **No faces:** the mesh has nothing to burn.
 - **Over the face limit:** meshes over 2,000,000 faces are refused, since the fire rebuilds on every frame. Use a simpler copy of the mesh and hide it from the camera.
 
+## Fire and Smoke from Mesh burns weakly, or not at all
+
+- **Check the painted weights.** With a vertex group picked in **Burn From**, each part burns as strongly as its weight: 1 is full flames, 0 is none. In Weight Paint mode, paint the part at 1.
+- **Is the part in the group?** Only vertices in the picked group burn. Pick **Whole Mesh** to burn all of it.
+- **Did you play from the first frame?** After changing **Burn From**, go to the first frame and play again.
+
 ## A fire says its mesh is gone
 
 The mesh it was burning was deleted. Delete the fire, then set a new mesh on fire.

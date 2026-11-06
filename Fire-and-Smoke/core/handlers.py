@@ -96,11 +96,21 @@ def _watch_presets(scene, depsgraph):
         errors.schedule()
 
 
+def _watch_groups(scene):
+    from ..effects import sim_mesh_fire
+    try:
+        sim_mesh_fire.watch(scene)
+    except Exception as exc:
+        errors.record("Fire and Smoke couldn't follow a mesh's vertex groups", exc)
+        errors.schedule()
+
+
 @persistent
 def fas_scene_watch(scene, depsgraph=None):
     check_scenes()
     follow_ranges()
     if scene is not None:
+        _watch_groups(scene)
         _watch_presets(scene, depsgraph)
 
 

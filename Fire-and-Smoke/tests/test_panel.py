@@ -192,10 +192,16 @@ def test_sim_mesh_fire_box():
     lib.check("it has the Simulated Fire's notes", "simulates as you play" in _text(log)
               and "Material Preview doesn't show it" in _text(log) and "EEVEE shows a weaker look" in _text(log),
               _text(log))
-    for token in control_spec.controls(lib.C.KIND_SIM_FIRE):
+    for token in control_spec.controls(lib.C.KIND_SIM_MESH_FIRE):
         if token.startswith("entry:"):
             name = token.split(":")[1]
             lib.check(f"it shows {name}", name in log["props"], str(log["props"]))
+    props = log["props"]
+    lib.check("Burn From comes straight after the preset row",
+              props.index("sim_preset_choice") + 1 == props.index("burn_from_choice"), str(props))
+    lib.check("with the note on painted weights", "paint at 1 for full flames" in _text(log), _text(log))
+    lib.check("the Simulated Fire has no Burn From",
+              "entry:burn_from_choice" not in control_spec.controls(lib.C.KIND_SIM_FIRE))
     lib.check("the mesh it burns isn't called in the way", "in the way" not in _text(log), _text(log))
     main = _draw(panel.FAS_PT_main, shading="MATERIAL")
     lib.check("in Material Preview the panel says to switch", "switch to Rendered or Solid" in _text(main),

@@ -21,6 +21,7 @@ MATERIAL_PREVIEW_NOTE = ("Material Preview doesn't show the Simulated Fire: swit
 LOOK_NOTE = "The look below shows straight away, with no new simulation"
 WIND_PLAY_NOTE = "After a change, press play from the first frame to see it"
 DETAIL_NOTE = "Higher Detail is slower and uses more disk space"
+BURN_FROM_NOTE = "Painted weights set how strongly each part burns: paint at 1 for full flames"
 SOLID_NOTE = "Solid view only shows rough shapes: switch to Material Preview or Rendered to see the effect"
 NO_CAMERA_NOTE = "This scene has no camera: add one before rendering"
 
@@ -78,6 +79,9 @@ def _draw_control(layout, entry, token):
         layout.prop(entry, "light_mode")
         if entry.light_mode != light_mode.REAL:
             _wrapped_label(layout, EMISSIVE_NOTE, icon="INFO")
+    elif token == "entry:burn_from_choice":
+        layout.prop(entry, "burn_from_choice")
+        _wrapped_label(layout, BURN_FROM_NOTE, icon="INFO")
     elif token == "entry:detail":
         layout.prop(entry, "detail")
         _wrapped_label(layout, DETAIL_NOTE, icon="INFO")

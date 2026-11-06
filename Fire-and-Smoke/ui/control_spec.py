@@ -11,6 +11,9 @@ SIM_FIRE = ("sim_preset", "entry:detail", "entry:flame_intensity", "entry:flame_
             "entry:flame_tint", "entry:emission_strength", "entry:fire_temperature", "entry:volume_density",
             "entry:smoke_colour", "entry:light_mode", "entry:light_strength")
 
+# From a mesh: where it burns from, straight after the preset row.
+SIM_MESH_FIRE = SIM_FIRE[:1] + ("entry:burn_from_choice",) + SIM_FIRE[1:]
+
 WIND = ("entry:wind_power", "entry:wind_gusts", "entry:wind_direction")
 
 SIMPLE = {
@@ -20,7 +23,7 @@ SIMPLE = {
     C.KIND_COLUMN: ("entry:size", "entry:density", "preview"),
     C.KIND_EMBERS: ("entry:amount", "entry:ember_size"),
     C.KIND_SIM_FIRE: SIM_FIRE,
-    C.KIND_SIM_MESH_FIRE: SIM_FIRE,
+    C.KIND_SIM_MESH_FIRE: SIM_MESH_FIRE,
     C.KIND_WIND: WIND,
 }
 ADVANCED = {
@@ -32,7 +35,7 @@ ADVANCED = {
     C.KIND_COLUMN: ("entry:size", "entry:density", "preview", "entry:layers", "entry:seed"),
     C.KIND_EMBERS: ("entry:amount", "entry:ember_size"),
     C.KIND_SIM_FIRE: SIM_FIRE,
-    C.KIND_SIM_MESH_FIRE: SIM_FIRE,
+    C.KIND_SIM_MESH_FIRE: SIM_MESH_FIRE,
     C.KIND_WIND: WIND,
 }
 

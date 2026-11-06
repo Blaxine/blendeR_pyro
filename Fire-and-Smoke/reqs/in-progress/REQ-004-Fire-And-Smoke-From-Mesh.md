@@ -144,10 +144,10 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-05, headless, with a G
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S010 | S | Store Burn From | A group name on the entry, empty for Whole Mesh, with a guarded update that sets the flow's vertex group and clears the cache. Saved fires load with Whole Mesh. | S002 | `core/registry.py` |
-|  | S011 | S | Mirror the vertex groups | Keep the emitter's list equal to the source's names in order: at Create, on a Burn From change, and from the depsgraph watch when the source's list differs. After a sync, the flow's vertex group is set again by name. | S010 | add-on package, `core/handlers.py` |
-|  | S012 | U | Show Burn From | A dropdown after the preset row listing Whole Mesh, then the source's groups, and the weights note. | S010 | `ui/control_spec.py`, `ui/panel.py` |
-|  | S013 | T | Test Burn From and weights | Extend `tests/test_sim_mesh_fire.py` with the probe grid: "Left" burns the left half only (left at least 20 times right); adding a group before it, deleting another and reordering keep the left burning; Whole Mesh burns both; a half at weight 0.5 burns less than a half at 1, and weight 0 burns nothing; the buyer's groups are unchanged throughout. | S011, S012 | `tests/test_sim_mesh_fire.py` |
+| ✅ | S010 | S | Store Burn From | A group name on the entry, empty for Whole Mesh, with a guarded update that sets the flow's vertex group and clears the cache. Saved fires load with Whole Mesh. | S002 | `core/registry.py` |
+| ✅ | S011 | S | Mirror the vertex groups | Keep the emitter's list equal to the source's names in order: at Create, on a Burn From change, and from the depsgraph watch when the source's list differs. After a sync, the flow's vertex group is set again by name. | S010 | add-on package, `core/handlers.py` |
+| ✅ | S012 | U | Show Burn From | A dropdown after the preset row listing Whole Mesh, then the source's groups, and the weights note. | S010 | `ui/control_spec.py`, `ui/panel.py` |
+| ✅ | S013 | T | Test Burn From and weights | In `tests/test_sim_mesh_groups.py`, its own file, with the probe grid: "Left" burns the left half only (left at least 20 times right); adding a group before it, deleting another and reordering keep the left burning; Whole Mesh burns both; a half at weight 0.5 burns less than a half at 1, and weight 0 burns nothing; the buyer's groups are unchanged throughout. | S011, S012 | `tests/test_sim_mesh_groups.py` |
 
 ### Slice 4 — When something breaks
 
@@ -304,3 +304,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-05 | Blaxine | Initial plan. |
 | 2026-11-05 | Blaxine | Moved to in-progress. Slice 1 built: the button burns the selected mesh all over, the mesh is unchanged, Delete is clean. S028, S029 and S032 done early, since the release gate checks every preset. |
 | 2026-11-05 | Blaxine | Slice 2 built: every Simulated Fire control and preset works on a mesh fire, and Apply keeps the box fitted to the mesh. The own-flows check measures the box's corner: on 4.5 the fire's own smoke fills the cells beside the mesh, so a buyer's flow there showed no difference even unscoped. |
+| 2026-11-06 | Blaxine | Slice 3 built: Burn From is stored by name with a menu that's a view of it (Whole Mesh, the groups, and a chosen group that's gone). The emitter mirrors the mesh's groups at Create, on a change and from the depsgraph watch, writing only what differs. Changing it isn't a preset edit, and Apply keeps it. Measured on both Blenders: Left burns 25 to 27 times more on the left; weight 0.5 burns at 40%; weight 0 burns nothing. The tests are in their own file, `tests/test_sim_mesh_groups.py`. |

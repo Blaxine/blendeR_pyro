@@ -180,6 +180,31 @@ def _smoke_amount_update(self, _context):
     _simulation_change(self, change)
 
 
+@errors.guard_update("Fire and Smoke couldn't change where the fire burns from")
+def _burn_from_update(self, _context):
+    """Not part of a preset: a change simulates again but doesn't mark it modified."""
+    from ..effects import sim_fire, sim_mesh_fire
+    if self.primary is None:
+        return
+    sim_mesh_fire.sync(self)
+    sim_fire.clear_cache(self)
+
+
+def _burn_from_items(self, context):
+    from ..effects import sim_mesh_fire
+    return sim_mesh_fire.burn_from_items(self, context)
+
+
+def _burn_from_get(self):
+    from ..effects import sim_mesh_fire
+    return sim_mesh_fire.burn_from_get(self)
+
+
+def _burn_from_set(self, value):
+    from ..effects import sim_mesh_fire
+    sim_mesh_fire.burn_from_set(self, value)
+
+
 @errors.guard_update("Fire and Smoke couldn't change the fire's look")
 def _look_update(self, _context):
     """Render settings: they show straight away, so the cache stays."""
@@ -308,6 +333,14 @@ class FAS_EffectEntry(bpy.types.PropertyGroup):
                               description="How much the wind comes and goes")
     wind_direction: FloatProperty(name="Direction", default=0.0, subtype="ANGLE", update=_wind_direction_update,
                                   description="Which way the wind blows, around the spot it was added")
+    # Fire and Smoke from Mesh: the vertex group it burns from, by name.  Empty is the
+    # whole mesh.  The menu is a view of it, so a group added or removed before the
+    # chosen one never changes which part burns.
+    burn_from: StringProperty(name="Burn From Group", default="", update=_burn_from_update)
+    burn_from_choice: EnumProperty(name="Burn From", items=_burn_from_items, get=_burn_from_get,
+                                   set=_burn_from_set,
+                                   description="Where the fire comes from: the whole mesh, or one of its "
+                                               "vertex groups. Play from the first frame to see a change")
     smoke_amount: FloatProperty(name="Smoke Amount", default=1.0, min=0.0, soft_max=3.0,
                                 update=_smoke_amount_update,
                                 description="How much smoke the fire makes, and how thick it looks. "
