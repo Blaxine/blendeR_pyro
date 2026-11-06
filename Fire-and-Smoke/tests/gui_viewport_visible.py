@@ -1,0 +1,158 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""Every preset really draws in a viewport.  Needs a window, so it isn't part of the suite;
+it opens Blender, screenshots the viewport with and without each preset, reports and quits.
+
+    blender --factory-startup --python tests/gui_viewport_visible.py -- SOLID
+    blender --factory-startup --python tests/gui_viewport_visible.py -- RENDERED
+    blender --factory-startup --python tests/gui_viewport_visible.py -- MATERIAL
+    blender --factory-startup --python tests/gui_viewport_visible.py -- RENDERED SIMULATED_MESH_FIRE
+
+Final renders and particle counts can't catch this: embers once rendered correctly and
+counted correctly while drawing nothing at all in the viewport.
+
+The Simulated Fire's wireframe box and emitter change pixels by themselves, so it only
+passes on fire-coloured pixels.  Blender's Material Preview draws no fluid simulation
+(Quick Smoke's neither, on 4.5.4 and 5.2.2): that's recorded as known, and reported if
+it ever starts drawing one.
+"""
+
+import math
+import os
+import sys
+import tempfile
+
+import bpy
+
+# Never touch the owner's saved preferences.
+bpy.context.preferences.use_preferences_save = False
+
+_AFTER = sys.argv[sys.argv.index("--") + 1:]
+SHADING = _AFTER[0]
+ONLY = _AFTER[1:]
+sys.dont_write_bytecode = True
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.argv = [sys.argv[0], "--"]
+import fas_testlib as lib  # noqa: E402
+
+import bpy  # noqa: E402
+from fire_and_smoke.effects import presets  # noqa: E402
+from mathutils import Quaternion  # noqa: E402
+
+# preset -> viewing distance.  The view sits off to one side, clear of the first-run splash.
+DISTANCES = {"CANDLE": 1.0, "TORCH": 2.5, "CAMPFIRE": 9.0, "BONFIRE": 18.0, "BURNING_OBJECT": 11.0,
+             "THIN_SMOKE": 14.0, "BLACK_SMOKE_COLUMN": 34.0, "EMBERS": 9.0, "SIMULATED_CAMPFIRE": 9.0,
+             "SIMULATED_MESH_FIRE": 14.0}
+MIN_CHANGED = {"SOLID": 150, "RENDERED": 150, "MATERIAL": 150}
+SETTLE = 8.0 if SHADING in ("RENDERED", "MATERIAL") else 1.5
+OUT = tempfile.mkdtemp(prefix="fas_viewport_")
+
+WARM = {"SIMULATED_CAMPFIRE", "SIMULATED_MESH_FIRE"}
+KNOWN_HIDDEN = {("SIMULATED_CAMPFIRE", "MATERIAL"), ("SIMULATED_MESH_FIRE", "MATERIAL")}
+# These burn the factory cube, so it shows and is selected for them.
+ON_THE_CUBE = {"BURNING_OBJECT", "SIMULATED_MESH_FIRE"}
+
+QUEUE = [p for p in presets.DISPLAY_ORDER if not ONLY or p in ONLY]
+STATE = {"phase": "setup", "failed": 0}
+
+
+def _viewport():
+    window = bpy.context.window_manager.windows[0]
+    area = max((a for a in window.screen.areas if a.type == "VIEW_3D"), key=lambda a: a.width * a.height)
+    region = next(r for r in area.regions if r.type == "WINDOW")
+    return window, area, region
+
+
+def _shot(name):
+    window, area, region = _viewport()
+    path = os.path.join(OUT, f"{name}.png")
+    with bpy.context.temp_override(window=window, area=area, region=region):
+        bpy.ops.screen.screenshot_area(filepath=path)
+    return path
+
+
+def _changed(path_a, path_b, warm=False):
+    """Pixels that differ, in the part of the viewport left of the first-run splash.  With
+    ``warm``, only those that turned fire-coloured."""
+    a, b = bpy.data.images.load(path_a), bpy.data.images.load(path_b)
+    w, h = a.size
+    pa, pb = a.pixels[:], b.pixels[:]
+    count = 0
+    for y in range(h):
+        for x in range(int(w * 0.42)):
+            i = (y * w + x) * 4
+            if abs(pa[i] - pb[i]) + abs(pa[i + 1] - pb[i + 1]) + abs(pa[i + 2] - pb[i + 2]) > 0.12:
+                if not warm or (pb[i] > 0.25 and pb[i] - pb[i + 2] > 0.12):
+                    count += 1
+    bpy.data.images.remove(a)
+    bpy.data.images.remove(b)
+    return count
+
+
+def _aim(preset_id):
+    _window, area, _region = _viewport()
+    distance = DISTANCES[preset_id]
+    view = area.spaces.active.region_3d
+    view.view_perspective = "PERSP"
+    view.view_distance = distance
+    view.view_location = (distance * 0.36, 0.0, distance * 0.13)
+    view.view_rotation = Quaternion((1.0, 0.0, 0.0), math.radians(85.0))
+    area.tag_redraw()
+
+
+def run():
+    window, area, _region = _viewport()
+    scene = window.scene
+    phase = STATE["phase"]
+    if phase == "setup":
+        area.spaces.active.shading.type = SHADING
+        bpy.data.objects["Cube"].hide_viewport = True
+        STATE["phase"] = "aim"
+        return 0.5
+    if phase == "aim":
+        if not QUEUE:
+            print(f"VISIBLE done {bpy.app.version_string} {SHADING}: {STATE['failed']} failed", flush=True)
+            bpy.ops.wm.quit_blender()
+            return None
+        scene.frame_set(1)
+        _aim(QUEUE[0])
+        burning = QUEUE[0] in ON_THE_CUBE
+        bpy.data.objects["Cube"].hide_viewport = not burning
+        if burning:
+            window.view_layer.objects.active = bpy.data.objects["Cube"]
+        STATE["phase"] = "before"
+        return SETTLE
+    if phase == "before":
+        for frame in range(1, 61):
+            scene.frame_set(frame)
+        area.tag_redraw()
+        STATE["phase"] = "baseline"
+        return SETTLE
+    if phase == "baseline":
+        STATE["before"] = _shot(f"{QUEUE[0]}_before")
+        scene.frame_set(1)
+        with bpy.context.temp_override(window=window):
+            bpy.ops.fas.effect_create(preset=QUEUE[0])
+        # Embers and the simulated fire only build up when stepped from frame 1.
+        scene.frame_set(1)
+        for frame in range(1, 61):
+            scene.frame_set(frame)
+        area.tag_redraw()
+        STATE["phase"] = "after"
+        return SETTLE
+    if phase == "after":
+        changed = _changed(STATE["before"], _shot(f"{QUEUE[0]}_after"), warm=QUEUE[0] in WARM)
+        shows = changed >= MIN_CHANGED[SHADING]
+        known = (QUEUE[0], SHADING) in KNOWN_HIDDEN
+        ok = shows != known
+        STATE["failed"] += 0 if ok else 1
+        verdict = ("KNOWN" if ok else "NOW SHOWS: update the notes") if known else ("PASS" if ok else "FAIL")
+        print(f"VISIBLE {verdict} {QUEUE[0]} {SHADING}: {changed} pixels changed", flush=True)
+        with bpy.context.temp_override(window=window):
+            bpy.ops.fas.effect_delete(uuid=scene.fas_effects[-1].uuid)
+        QUEUE.pop(0)
+        STATE["phase"] = "aim"
+        return 0.5
+    return None
+
+
+bpy.app.timers.register(run, first_interval=2.0)

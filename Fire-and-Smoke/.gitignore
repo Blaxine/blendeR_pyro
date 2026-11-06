@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.blend1
+*.zip
+tests/blender_paths.local.json
+tests/*.log
+look_test_output/

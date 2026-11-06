@@ -1,0 +1,324 @@
+# Look test record
+
+The Campfire has to look like fire, by eye, in both engines. That verdict belongs to the owner.
+
+## Verdict
+
+**Round 1: pending the owner's verdict.**
+
+| Date | Round | Verdict | Who | Notes |
+| ---- | ----- | ------- | --- | ----- |
+|  | 1 |  | Owner |  |
+
+Later slices were built before this verdict, on the owner's instruction of 2026-11-01. If the Campfire fails twice, the project still stops, whatever else has been built.
+
+## How to run it
+
+The scene is built by `tests/look_test.py`: dark ground, dusk sky, Campfire at the origin, and a 50 mm camera about 9 m away orbiting 70 degrees over 96 frames. Colour management stays at factory settings.
+
+```bash
+blender -b --factory-startup --python tests/look_test.py -- --out look_test_output
+```
+
+Clips land in `look_test_output/`, which git ignores. Add `--stills` for contact sheets of frames 12 to 72.
+
+Clips ready for the verdict, rendered on 5.2.3 from the finished add-on:
+
+- `look_test_output/5.2_CAMPFIRE_CYCLES_0001-0096.mp4`
+- `look_test_output/5.2_CAMPFIRE_EEVEE_0001-0096.mp4`
+
+Every preset is rendered in both engines on 5.1 and 5.2 in `look_test_output/presets/`, with a contact sheet per version and engine. To re-create them, run `tests/render_presets.py`.
+
+## Decisions waiting on the owner's eye
+
+- **Smoke shading:** smoke carries its own shading, using the Blended render method, and matches between engines (mean pixel difference 0.001 to 0.004). It doesn't pick up scene lights or a nearby fire's colour.
+- **Ground line:** flames fade out at their base, which hides the line where planes meet the ground. Mesh fires stand clear of the mesh towards the viewer, which removes the hard cuts.
+- **Weakest looks so far:** the Black Smoke Column stays fairly even in width instead of widening, and Burning Object reads as separate flame shapes on a box.
+
+## Speed
+
+Target: the default Campfire runs at 24 fps in the EEVEE viewport, and costs no more than 3x an empty Cycles frame at 1080p, on this PC.
+
+| Check | Blender | Result | Target | How |
+| ----- | ------- | ------ | ------ | --- |
+| Cycles against an empty frame, 1080p, 64 samples, denoised | 5.2.3 | 2.63x (11.95 s empty, 31.42 s with fire) | 3x or less | `tests/look_test.py --speed`, first render discarded |
+| Cycles against an empty frame, 1080p, 64 samples, denoised | 5.1.2 | 2.71x (11.55 s empty, 31.29 s with fire) | 3x or less | `tests/look_test.py --speed`, first render discarded |
+| EEVEE viewport, 1574×888 in camera view | 5.2.3 | 59.9 fps | 24 fps or more | `tests/gui_viewport_speed.py` |
+| EEVEE viewport, 1574×888 in camera view | 5.1.2 | 59.9 fps | 24 fps or more | `tests/gui_viewport_speed.py` |
+
+Measured on the finished add-on. The Campfire has 28 flame planes and a glow card. The viewport numbers sit at the display's refresh cap, and the script redraws without accumulating samples, so the owner should confirm by playing the animation by hand. Blender 4.5 is not measured yet.
+
+The target is unchanged, pending the owner's confirmation.
+
+## Simulated Fire as a Campfire (REQ-002)
+
+A real Mantaflow fire, held to the look bar in Cycles. In EEVEE it only has to render visible fire.
+
+REQ-002's first step waits on round 1 of the Campfire look test above, which is still pending. The preset was built before that verdict on the owner's instruction of 2026-11-04 to implement every slice, as REQ-001's later slices were. The Campfire's kill rule still decides the project.
+
+### Verdict in Cycles
+
+**Pending the owner's verdict.**
+
+| Date | Verdict | Who | Notes |
+| ---- | ------- | --- | ----- |
+|  |  | Owner |  |
+
+To render it, play from the first frame and render one frame per engine:
+
+```bash
+blender -b --factory-startup --python tests/render_presets.py -- --only SIMULATED_CAMPFIRE --frame 90
+```
+
+`--frame` steps one frame at a time from frame 1 to that frame before rendering, since Replay only simulates forward.
+
+### Values proposed for the verdict
+
+Tuned by render on 5.2.2 from Quick Smoke's starting values. With those, the whole plume glowed orange in the fire light and the flame was a smooth, white-hot column. These answer REQ-002's Q16 once the owner passes them.
+
+| Setting | Quick Smoke start | Proposed |
+| ------- | ----------------- | -------- |
+| Emitter | 0.35 m disc at 0.05 m, Smoke & Fire, Inflow, surface distance 1.0 | unchanged |
+| Domain | 1.4 × 1.4 × 2.6 m, centred 1.25 m up, CFL 4.0, 64 divisions | unchanged |
+| Vorticity | 0 | 0.2 |
+| Burning rate | 0.75 | 1.1 |
+| Volume density | 5 | 3 |
+| Volume colour (smoke) | 0.5 grey | 0.05 grey |
+| Blackbody intensity | 1 | 1 |
+| Fire light | 90 W (the Campfire's) | 45 W, 0.3 m radius, 0.5 m up |
+
+Blackbody intensity stays at 1: at 0.6 the flames looked as good in Real, but lit the ground only 6% above an unlit render in Emissive, against 10% at 1.
+
+### Speed
+
+Target (AC3): the default's first play-through runs at 5 fps or more in a windowed EEVEE viewport on this PC. `tests/gui_viewport_speed.py -- SIMULATED_CAMPFIRE` times frames 1 to 96 in Rendered camera view: the first pass simulates every frame, the second reads the cache.
+
+| Blender | Detail | First play-through | From the cache | Viewport | Target |
+| ------- | ------ | ------------------ | -------------- | -------- | ------ |
+| 5.2.2 | 64 (default) | 13.7 fps | 59.1 fps | 1574×888 | met |
+| 4.5.4 | 64 (default) | 14.0 fps | 61.7 fps | 1585×886 | met |
+| 5.2.2 | 96 | 4.6 fps | 49.2 fps | 1574×888 | the slider's soft maximum |
+| 5.2.2 | 128 | 2.4 fps | 33.3 fps | 1574×888 | |
+| 5.1 | | not measured | | | not installed on this PC |
+
+The 96 and 128 rows were measured before vorticity was added. The script redraws without accumulating samples, so the owner should confirm by playing by hand.
+
+### What a render past the simulated frames shows
+
+On 4.5.4 and 5.2.2, after simulating frames 1 to 30 and jumping to frame 50, the viewport holds frame 30's fire but a Cycles render of frame 50 shows no fire at all (REQ-002's Q14). The buyer docs say to play to a frame before rendering it.
+
+### Engines
+
+EEVEE renders visible fire with no error on 4.5.4 and 5.2.2 (`tests/test_sim_fire.py`), and the Simulated Campfire draws in the viewport in Solid and Rendered on both (`tests/gui_viewport_visible.py`). In the 5.2.2 renders at frames 40 and 90 it reads close to Cycles, a little softer. The panel and store page still promise only a weaker look in EEVEE, since the Cycles look is the one held to the bar. 5.1 isn't installed on this PC.
+
+### Undo
+
+`tests/gui_undo.py -- sim` (create, play, delete, undo, play, undo, redo, play) passes in a window on 4.5.4 and 5.2.2, as do the `embers` and `plain` sequences.
+
+## Simulated Fire presets (REQ-003)
+
+The Simulated Fire has three presets, as AquaSuite's liquids do: Normal Fire, Candle Fire and Campfire. The Campfire started as the values above, and was then made to burn like a real campfire (see below). The other two were tuned by render in Cycles on 5.2.2 on 2026-11-04, from the Campfire's values, and are proposed for the owner's verdict.
+
+### Verdict in Cycles
+
+**Pending the owner's verdict, for each preset.**
+
+| Date | Preset | Verdict | Who | Notes |
+| ---- | ------ | ------- | --- | ----- |
+|  | Normal Fire |  | Owner |  |
+|  | Candle Fire |  | Owner |  |
+
+To render all three in both engines:
+
+```bash
+blender -b --factory-startup --python tests/render_presets.py -- --only SIMULATED_CAMPFIRE --frame 90
+```
+
+Add `--sim CANDLE_FIRE` to render one of them.
+
+### Values proposed for the verdict
+
+| Setting | Normal Fire | Candle Fire | Campfire |
+| ------- | ----------- | ----------- | -------- |
+| Emitter | 0.2 m disc at 0.03 m, Smoke & Fire | 5 mm disc at 5 mm, Fire only | 8 log patches, 6 to 11 cm across, 2 to 10 cm up, reaching 0.39 m, Smoke & Fire |
+| Domain | 0.9 × 0.9 × 1.8 m, centred 0.85 m up | 6 × 6 × 16 cm, centred 7.5 cm up | 1.4 × 1.4 × 2.6 m, centred 1.25 m up |
+| Detail | 64 (grid 32 × 32 × 64) | 96 (grid 36 × 36 × 96) | 64 (grid 34 × 34 × 64) |
+| Vorticity | 0.3 | 0 | 0.5 |
+| Flame vorticity | 0.5 | 0.5 | 1.5 |
+| Burning rate | 1.3 | 4.0 | 0.9 |
+| Heat buoyancy (beta) | 0.6 | 0.1 | 1.0 |
+| Flame maximum temperature | 3.5 | 6.0 | 3.0 |
+| Smoke from flames | 1.0 | 0 | 1.0 |
+| Volume density | 2 | 1 | 3 |
+| Volume colour (smoke) | 0.15 grey | 0.05 grey | 0.05 grey |
+| Blackbody intensity | 1.5 | 25 | 0 |
+| Flame colour | none | none | ramp at strength 7 |
+| Fire light | 20 W, 0.2 m radius, 0.3 m up, flicker 0.25 | 0.5 W, 0.02 m radius, 3 cm up, flicker 0.12 at speed 5 | 45 W, 0.3 m radius, 0.5 m up, flicker 0.3 |
+
+How they were found:
+
+- **Normal Fire.** With the Campfire's buoyancy, a 0.2 m emitter made a smooth, tall column, glowing orange all the way up. With heat buoyancy at 0.6 and a burning rate of 1.3, the flame burns out at about knee height and grey smoke rises above it.
+- **Candle Fire.** At full heat buoyancy a 1 cm flame burned the whole height of a 25 cm domain, two or three cells wide. With a 16 cm domain, heat buoyancy at 0.1 and a burning rate of 4, the flame is about 4 cm tall. A flame that thin rendered dull orange at blackbody 1: at 25, with a maximum temperature of 6, it's white at the base and orange at the tip. It still shows faint banding up the flame, which the owner should judge.
+
+### Speed
+
+`tests/gui_viewport_speed.py -- SIMULATED_CAMPFIRE <preset>`, frames 1 to 96 in a windowed EEVEE viewport in Rendered camera view. The target (AC3) is 5 fps on the first play-through.
+
+| Blender | Preset | First play-through | From the cache | Viewport | Target |
+| ------- | ------ | ------------------ | -------------- | -------- | ------ |
+| 5.2.2 | Normal Fire | 14.2 fps | 61.9 fps | 1574×888 | met |
+| 5.2.2 | Candle Fire | 6.7 fps | 62.1 fps | 1574×888 | met |
+| 5.2.2 | Campfire (logs) | 12.2 fps | 60.3 fps | 1574×888 | met |
+| 4.5.4 | Normal Fire | 14.7 fps | 62.1 fps | 1585×886 | met |
+| 4.5.4 | Candle Fire | 6.9 fps | 61.8 fps | 1585×886 | met |
+| 4.5.4 | Campfire (logs) | 9.8 fps | 61.9 fps | 1585×886 | met |
+| 5.1 | | not measured | | | not installed on this PC |
+
+The Candle Fire is the slowest: its 96 divisions over a small domain make more cells than the Campfire's 64.
+
+### Engines
+
+All three render visible fire in Cycles and EEVEE on 5.2.2 at frame 90 (`tests/render_presets.py`), and burn on 4.5.4 and 5.2.2 (`tests/test_sim_presets.py`).
+
+### Viewport shading
+
+Found on 2026-11-04, after the owner couldn't see the fire. Blender's **Material Preview** draws no fluid simulation, on 4.5.4 and 5.2.2. It showed only the domain's wireframe and the emitter, even after 30 seconds, and a Quick Smoke fire beside it didn't show either. **Solid** and **Rendered** both show the fire. The panel says so in the fire's box, and warns in Material Preview.
+
+`tests/gui_viewport_visible.py` used to pass the Simulated Campfire in every mode, because the wireframe box alone changed about 4,000 pixels. It now counts only fire-coloured pixels for it, and reports Material Preview as known.
+
+In the owner's own startup scene, the fire was also inside the default cube, which sits at the 3D cursor. Create now names any mesh of the buyer's that hides a fire (`core/covering.py`), and the fire's box says so too.
+
+## A real campfire, and wind (2026-11-04)
+
+The owner asked for the Campfire to look like a real one: erratic, with flames that come and go, and the orange colouring of a real fire. Tuned by render in Cycles on 5.2.2, frames 80, 86 and 92, against the values above.
+
+**Pending the owner's verdict.**
+
+What made the difference:
+
+- **Logs, not a disc.** One disc burned as one smooth, rounded column. Eight small patches at different heights, like the tops of logs, burn as separate tongues that merge, split and lean (`CAMPFIRE_LOGS` in `effects/sim_presets.py`).
+- **More swirl in the flames.** Flame vorticity 1.5 (Blender's default is 0.5) and vorticity 0.5 tear the tongues into licks. A slower burning rate, 0.9, lets them reach a little higher before they go out.
+- **A flame colour ramp.** Blackbody alone shaded the whole flame one orange. The Campfire's volume now takes its emission colour from the flame through a ramp: dark red at the thin edges, deep orange, orange, and a pale yellow core where it burns hottest (`FLAME_RAMP` in `effects/sim_fire.py`). The flame's strength times 7 is the emission strength, and blackbody is off. Normal Fire and Candle Fire keep their blackbody look.
+- **What didn't work.** Mantaflow's noise upscaling gave fine detail, but simulated 2.6 times slower, well under the 5 fps target. A noise texture on the emitter starved the flames into a few faint wisps.
+
+Headless, the Campfire simulates as fast as before: about 4.6 s for 60 frames. In a windowed viewport its first play-through is 12.2 fps on 5.2.2 (15.1 fps from one disc) and 9.8 fps on 4.5.4, above the 5 fps target.
+
+### Wind
+
+The **Wind** button in the Add panel makes an owned Wind force field, a Plane field 3 m upwind of the 3D cursor and 1 m up, facing the way it blows. Its box has **Power**, **Gusts** and **Direction**.
+
+- Blender's wind strength 1 lays a campfire flat and pushes its flames into the side of its box. **Power 1 is strength 0.25**, a strong breeze, so the slider's useful range is 0 to 1. It goes up to 4 for a gale. It starts at 0.4.
+- **Gusts 1 is the field's noise at 2.** It starts at 0.3.
+- After 40 frames at Power 1, the Campfire's plume moved from 0.49 to 0.68 of the way across its domain on 5.2.2, and from 0.44 to 0.58 on 4.5.4 (`tests/test_wind.py`).
+- Wind is not a setting the Replay cache notices, so adding, changing or deleting a wind clears every Simulated Fire's cache. The buyer plays from the first frame again to see it.
+- The plane fires and smoke are animated noise, so wind doesn't move them. The box says so.
+
+### Flame Noise
+
+The owner asked for a noise slider for the flames. It scales the domain's vorticity and flame vorticity from the preset's, so it changes the simulation and clears the cache. Rendered in Cycles on 5.2.2 at frame 80, the Campfire at:
+
+- **0:** two or three calm, straight tongues, reaching high.
+- **1:** the preset.
+- **2:** broken, licking flames, lower.
+- **3.5:** a churning, rounded fire.
+
+After 40 frames the flames reach 0.62 of the way up the domain at 0, and about 0.35 at 3 (`tests/test_sim_look.py`). Blender caps flame vorticity at 2, so past about 1.3 on the Campfire only the general vorticity rises, which still makes it wilder. The first play-through gets slower as it rises: 60 headless frames took 3.0 s at 0, 3.5 s at 1 and 5.2 s at 3.5.
+
+### The look sliders
+
+The owner asked to change the Simulated Fire's colour, density, emission strength and temperature. They're the volume material's, so they show at once, and the cache stays (`tests/test_sim_look.py`).
+
+| Slider | What it sets |
+| ------ | ------------ |
+| Flame Colour | The ramp's hue, through a Color blend whose factor is the colour's saturation, and its glow by the colour's value. Also Blackbody Tint, and the fire light's hue. |
+| Emission Strength | The ramp's strength and Blackbody Intensity, times the slider |
+| Temperature | The Principled Volume's Temperature (1000 times the slider), the ramp's input (so hotter reads towards the pale core) and the ramp's strength |
+| Density | The volume's Density, times Smoke Amount |
+| Smoke Colour | The volume's Color |
+
+Found by render on 5.2.2 on 2026-11-04: a Flame Colour that multiplied the ramp couldn't make blue, because the ramp has almost no blue in it. A blue came out yellow-green. The Color blend keeps the ramp's bright core and dark tips with the chosen hue, so blue and green flames render as blue and green. Blackbody can only be tinted, so a blue Normal Fire or Candle Fire is dim.
+
+## Fire and Smoke from Mesh (REQ-004)
+
+### Slice 1: the first render
+
+Rendered on 5.2.2 on 2026-11-05: a 1 m cube on a dark ground under a dark sky, Cycles, 32 samples, 320 × 400, the Campfire preset, frames 30, 50 and 70 side by side. The box is the cube's size plus 0.6 of it on each side, from just below its foot to 3 cube-heights above its top, at 64 divisions.
+
+- **It burns all over.** Flames rise from the cube's top and lick up its sides, and the front face shows the fire on its surface. They reach about one cube-height above the top, and change shape from frame to frame. The ground takes an orange glow.
+- **The cube stays visible.**
+- **To look at in Slice 5:** by frame 50 the thin dark smoke above the flames shows the box's straight top edge. Slice 5 tunes the box's room and the size correction.
+
+Headless, frames 1 to 30 on the same cube in `tests/test_sim_mesh_fire.py`: flame 3502 left and 4242 right of the cube's middle on 5.2, 7057 and 7077 on 4.5. The owner's verdict is pending.
+
+### Slice 3: Burn From, measured
+
+Headless in `tests/test_sim_mesh_groups.py`, a flat 2 × 1 m grid at 64 divisions, frames 1 to 20, the flame in the box's left and right halves (5.2 / 4.5):
+
+| Burn From | Left | Right |
+| --------- | ---- | ----- |
+| Whole Mesh | 313 / 315 | 315 / 314 |
+| Left (left half at weight 1) | 349 / 348 | 13 / 13 |
+| Half (left at 1, right at 0.5) | 336 / 335 | 134 / 135 |
+| Nothing (weight 0) | 0 / 0 | 0 / 0 |
+
+The right half's 13 with Left is flame drifting across the middle, not emission. Not judged by eye.
+
+### Slice 5: the size correction
+
+Uncorrected, the Campfire preset on cubes of 0.5, 2 and 8 m burned 2.9 (the box's top), 0.9 to 1.3 and 0.5 to 0.7 cube-heights above the top, headless on 5.2. Heat buoyancy barely changed it. The burning rate set the flame's height once it was steady, and the time scale set how fast a big fire grew.
+
+**The rule** (`effects/sim_mesh_fire.py`), with the size the mesh's largest dimension at Create and a ratio of size over 1.4 m:
+
+- **Time scale:** the ratio to the power 0.5, as real flames slow with size.
+- **Burning rate:** the preset's, times the ratio to the power -0.7, at most 4 (Blender's limit). On 4.5 it's 2.5 times faster again: 4.5 burned 1.5 to 2.9 cube-heights with 5.2's values.
+- **Material density, blackbody and flame colour:** divided by the ratio. They're per metre, so through an 8 m fire the smoke was 16 times thicker than through a 0.5 m one: it hid the flames and the cube, and showed the box's sides.
+- **Light:** the preset's watts per square metre of its own fire, at most Normal Fire's 125, times the size squared; its soft radius by the size, at most half of it.
+
+Headless, visible flame (above 0.3) over frames 40 to 60, in cube-heights above the top (`tests/test_sim_mesh_size.py`):
+
+| Cube | 5.2.2 | 4.5.4 |
+| ---- | ----- | ----- |
+| 0.5 m | 1.48 | 1.22 |
+| 2 m | 1.15 | 1.28 |
+| 8 m | 1.75 | 1.57 |
+
+A reference of 1.5 m put the 2 m cube at 1.05 on 5.2; 1.3 m put the 8 m cube at 1.85. 1.4 m centres all three.
+
+**Render, Cycles on 5.2.2** (a dark ground and sky, 320 × 400, 32 samples, frames 40, 50 and 60, the camera scaled with the cube):
+
+- **All three read alike.** Flames rise about 1.2 to 1.7 cube-heights above the top, with the ground lit orange.
+- **0.5 m:** tongues of flame from the top and up the sides; the cube shows clearly. The thin dark smoke above, thickened for the small size, faintly shows the box's straight sides.
+- **2 m:** the flames wrap the cube, which shows through them.
+- **8 m:** a wide wall of flame, wider than the cube, with the cube faint inside it.
+
+**Render, Cycles on 4.5.4:** the same height, with bushier, wider flames. The dark smoke above shows the box's straight sides at all three sizes.
+
+**Windowed speed** (`tests/gui_viewport_speed.py -- SIMULATED_MESH_FIRE`, a 2 m cube, EEVEE Rendered view, frames 1 to 96 at 64 divisions): the first play-through at 10.7 fps on 5.2.2 and 8.2 fps on 4.5.4, from the cache at 60 and 52 fps. The target is 5 fps.
+
+**The owner's verdict, 2026-11-06: they look right.** Blaxine approved the three sizes from the Cycles renders on 5.2 and 4.5.
+
+### Slice 6: a burning character
+
+Rendered on 5.2.2 on 2026-11-06, Cycles, 32 samples, 320 × 400, frames 24 and 48: a 2 m cylinder skinned to a two-bone armature, the upper bone swinging 60 degrees to each side, burning from the "Upper" group with the Campfire preset.
+
+- **The flames follow the arm.** At frame 24 the arm is out to one side and burning; at frame 48 it's out to the other side and burning there.
+- **The lower body doesn't burn.** It stays dark below the joint.
+- **Smoke trails** from where the arm was. The flames are short and hug the arm.
+
+Headless (`tests/test_sim_mesh_character.py`), the share of the flame within 0.35 m of the arm where it is now, of where it was or will be, and of the lower part short of the joint: frame 24, 67%, 25% and 2% on 5.2 (91%, 29% and 2% on 4.5); frame 48, 46%, 12% and 1% (39%, 11% and 3%).
+
+**The owner's verdict, 2026-11-06: looks right.** Blaxine approved the burning arm from the Cycles render.
+
+### Slice 7: the preset script and the windowed checks
+
+`tests/render_presets.py -- --only SIMULATED_MESH_FIRE --frame 60` on 5.2.2: a 2 m cube, shot from 20 m. Both engines render visible fire, wrapping the cube and rising above it; EEVEE's is softer. **For the eye check:** a faint lighter square shows on the ground under the fire, the size of the box. It's probably smoke lying along the floor and stopping at the box's sides, like the straight smoke edges above.
+
+`tests/gui_viewport_visible.py -- <shading> SIMULATED_MESH_FIRE`, on the factory cube: it draws in Solid (48,056 pixels changed on 5.2, 69,129 on 4.5) and Rendered (93,226 and 118,246). Material Preview shows nothing (9 and 6), Blender's known limit, recorded as known. `tests/gui_undo.py -- meshsim` (create, play, delete, undo, play, undo, redo, play) passes in a window on 5.2.2 and 4.5.4.
+
+### Slice 4: a dense mesh's cost
+
+Headless, a flat 2 m grid of 504,100 faces at 64 divisions, frames 2 to 11 of the first play: 214 ms a frame on 5.2.2 and 211 ms on 4.5.4. A 1 m cube costs 49 to 103 ms a frame at the same detail, so a mesh just over the warning takes about twice as long. That's what the Create warning says.
+
+## Blender 4.5
+
+4.5.4 is installed now. The suite and every Simulated Campfire check above pass on it. The Campfire's own speed scripts haven't been rerun on it yet.
