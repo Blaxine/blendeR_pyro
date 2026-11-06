@@ -30,6 +30,7 @@ We'd rather you know before you buy:
 - **The Simulated Fire plays from the first frame.** It simulates as the timeline plays forward: jumping ahead holds the last simulated frame, and a render of a frame it hasn't reached shows no fire. Going back to the first frame and playing recovers it.
 - **The Simulated Fire is made for Cycles.** EEVEE renders it with a weaker look.
 - **The Simulated Fire uses disk space.** About 140 MB for a 250-frame Campfire at the default Detail, more at higher Detail. It's kept in a `fas_cache` folder beside your saved .blend, and removed when you delete the effect.
+- **Fire and Smoke from Mesh fits its box once.** The box follows the mesh's moves, but not turns, scaling or a character's walk on its bones: add the fire again after a big change. It plays from the first frame, like the Simulated Fire.
 - **Top-down shots look weak.** From high above, flames fade to a soft glow.
 - **Embers replay from the start when scrubbed.** "No baking" means instant scrubbing for flames and smoke, not embers or the Simulated Fire.
 - **Cycles and EEVEE match with the default light.** Emissive lighting is Cycles-focused.

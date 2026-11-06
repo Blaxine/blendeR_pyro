@@ -309,6 +309,12 @@ Headless (`tests/test_sim_mesh_character.py`), the share of the flame within 0.3
 
 **The owner's verdict, 2026-11-06: looks right.** Blaxine approved the burning arm from the Cycles render.
 
+### Slice 7: the preset script and the windowed checks
+
+`tests/render_presets.py -- --only SIMULATED_MESH_FIRE --frame 60` on 5.2.2: a 2 m cube, shot from 20 m. Both engines render visible fire, wrapping the cube and rising above it; EEVEE's is softer. **For the eye check:** a faint lighter square shows on the ground under the fire, the size of the box. It's probably smoke lying along the floor and stopping at the box's sides, like the straight smoke edges above.
+
+`tests/gui_viewport_visible.py -- <shading> SIMULATED_MESH_FIRE`, on the factory cube: it draws in Solid (48,056 pixels changed on 5.2, 69,129 on 4.5) and Rendered (93,226 and 118,246). Material Preview shows nothing (9 and 6), Blender's known limit, recorded as known. `tests/gui_undo.py -- meshsim` (create, play, delete, undo, play, undo, redo, play) passes in a window on 5.2.2 and 4.5.4.
+
 ### Slice 4: a dense mesh's cost
 
 Headless, a flat 2 m grid of 504,100 faces at 64 divisions, frames 2 to 11 of the first play: 214 ms a frame on 5.2.2 and 211 ms on 4.5.4. A 1 m cube costs 49 to 103 ms a frame at the same detail, so a mesh just over the warning takes about twice as long. That's what the Create warning says.

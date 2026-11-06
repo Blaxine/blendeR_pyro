@@ -37,6 +37,8 @@ SHOTS = {
     "CAMPFIRE": (8.0, 0.9, DUSK),
     "BONFIRE": (16.0, 2.0, DUSK),
     "BURNING_OBJECT": (11.0, 1.4, DUSK),
+    # A 2 m cube, with flames about 1.5 cube-heights above it.
+    "SIMULATED_MESH_FIRE": (20.0, 2.4, DUSK),
     "THIN_SMOKE": (13.0, 2.2, OVERCAST),
     "BLACK_SMOKE_COLUMN": (32.0, 6.0, OVERCAST),
     "EMBERS": (5.0, 1.6, DUSK),
@@ -81,7 +83,7 @@ def _scene_for(preset_id, sim=None):
 
     scene.frame_start, scene.frame_end = 1, max(60, FRAME)
     scene.frame_set(1)
-    if preset_id == "BURNING_OBJECT":
+    if preset_id in ("BURNING_OBJECT", "SIMULATED_MESH_FIRE"):
         bpy.ops.mesh.primitive_cube_add(size=2.0, location=(0.0, 0.0, 1.0))
         crate = bpy.context.object
         crate.name = "Crate"

@@ -171,6 +171,81 @@ def test_a_simulated_fire_copy_has_its_own_cache():
                                           for i in getattr(bpy.data, g) if OWNER in i.keys()])
 
 
+def _flame(entry, scene):
+    from fire_and_smoke.effects import sim_fire
+    bpy.context.window.scene = scene
+    for frame in range(1, 13):
+        scene.frame_set(frame)
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    settings = sim_fire.find_modifier(entry.primary.evaluated_get(depsgraph), "DOMAIN").domain_settings
+    total = sum(settings.flame_grid)
+    scene.frame_set(1)
+    return total
+
+
+def test_a_mesh_fire_copy_burns_its_own_mesh():
+    from fire_and_smoke.core import cache_folder
+    from fire_and_smoke.effects import plane_stack, sim_fire, sim_mesh_fire
+    scene = next(s for s in bpy.data.scenes if s.name == "Fresh")
+    bpy.context.window.scene = scene
+    scene.frame_start, scene.frame_end = 1, 40
+    scene.frame_set(1)
+    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0.0, 0.0, 0.5))
+    crate = bpy.context.object
+    crate.name = "Crate"
+    crate.vertex_groups.new(name="Top").add([v.index for v in crate.data.vertices if v.co.z > 0], 1.0, "REPLACE")
+    bpy.ops.fas.effect_create(preset="SIMULATED_MESH_FIRE")
+    scene.fas_effects[-1].burn_from_choice = "Top"
+    copy_scene = _copy("FULL_COPY")
+    copies.reidentify()
+    original, copied = scene.fas_effects[-1], copy_scene.fas_effects[-1]
+    first, second = original.uuid, copied.uuid
+    theirs = copied.source
+    lib.check("the copy is a new effect", first != second)
+    lib.check("its mesh is the copy's own mesh", theirs is not None and theirs != crate
+              and theirs.name in copy_scene.objects and crate.name not in copy_scene.objects,
+              theirs.name if theirs else "None")
+    copy_mod = next(m for m in copied.emitter.modifiers if m.type == "NODES")
+    lib.check("its emitter reads the copy's mesh",
+              plane_stack.get_input(copy_mod, sim_mesh_fire.SOURCE_INPUT) == theirs)
+    follow = next(c for c in copied.primary.constraints if c.type == "COPY_LOCATION")
+    lib.check("its box follows the copy's mesh", follow.target == theirs)
+    lib.check("the original still reads the original", original.source == crate
+              and plane_stack.get_input(next(m for m in original.emitter.modifiers if m.type == "NODES"),
+                                        sim_mesh_fire.SOURCE_INPUT) == crate)
+    lib.check("it keeps Burn From", copied.burn_from == "Top"
+              and sim_fire.flow_settings(copied).density_vertex_group == "Top")
+    mine, its = cache_folder.domain_settings(original.primary), cache_folder.domain_settings(copied.primary)
+    lib.check("with its own cache folder", mine.cache_directory != its.cache_directory
+              and its.cache_directory.endswith(second), its.cache_directory)
+    theirs.location.x += 3.0
+    bpy.context.window.scene = copy_scene
+    bpy.context.view_layer.update()
+    bpy.context.window.scene = scene
+    bpy.context.view_layer.update()
+    lib.check("moving the copy's mesh moves only the copy's fire",
+              abs(copied.primary.matrix_world.translation.x - original.primary.matrix_world.translation.x - 3.0) < 1e-3,
+              f"{copied.primary.matrix_world.translation.x:.2f} / {original.primary.matrix_world.translation.x:.2f}")
+    lib.check("each burns on its own", _flame(original, scene) > 1.0 and _flame(copied, copy_scene) > 1.0)
+    bpy.context.window.scene = scene
+    delete.delete_effect(copy_scene, second)
+    lib.check("deleting the copy's fire leaves the copy's mesh", theirs.name in copy_scene.objects)
+    lib.check("and the original burning", _flame(scene.fas_effects[-1], scene) > 1.0)
+    bpy.context.window.scene = scene
+    bpy.data.scenes.remove(copy_scene)
+    linked = _copy("LINK_COPY")
+    lib.check("a linked copy shares it", linked.fas_effects[-1].uuid == first)
+    delete.delete_effect(linked, first)
+    lib.check("and Delete there only detaches it", scene.fas_effects[-1].uuid == first
+              and scene.fas_effects[-1].primary is not None and crate.name in scene.objects)
+    bpy.data.scenes.remove(linked)
+    bpy.context.window.scene = scene
+    delete.delete_effect(scene, first)
+    lib.check("the original deletes cleanly, keeping the mesh", crate.name in scene.objects
+              and not [i.name for i in bpy.data.objects if OWNER in i.keys()])
+    bpy.data.objects.remove(crate)
+
+
 def test_copies_are_noticed_without_being_asked():
     scene = next(s for s in bpy.data.scenes if s.name == "Fresh")
     bpy.ops.fas.campfire_create()

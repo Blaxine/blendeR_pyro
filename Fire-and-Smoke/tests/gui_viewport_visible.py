@@ -5,6 +5,7 @@ it opens Blender, screenshots the viewport with and without each preset, reports
     blender --factory-startup --python tests/gui_viewport_visible.py -- SOLID
     blender --factory-startup --python tests/gui_viewport_visible.py -- RENDERED
     blender --factory-startup --python tests/gui_viewport_visible.py -- MATERIAL
+    blender --factory-startup --python tests/gui_viewport_visible.py -- RENDERED SIMULATED_MESH_FIRE
 
 Final renders and particle counts can't catch this: embers once rendered correctly and
 counted correctly while drawing nothing at all in the viewport.
@@ -20,7 +21,14 @@ import os
 import sys
 import tempfile
 
-SHADING = sys.argv[sys.argv.index("--") + 1]
+import bpy
+
+# Never touch the owner's saved preferences.
+bpy.context.preferences.use_preferences_save = False
+
+_AFTER = sys.argv[sys.argv.index("--") + 1:]
+SHADING = _AFTER[0]
+ONLY = _AFTER[1:]
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.argv = [sys.argv[0], "--"]
@@ -32,15 +40,18 @@ from mathutils import Quaternion  # noqa: E402
 
 # preset -> viewing distance.  The view sits off to one side, clear of the first-run splash.
 DISTANCES = {"CANDLE": 1.0, "TORCH": 2.5, "CAMPFIRE": 9.0, "BONFIRE": 18.0, "BURNING_OBJECT": 11.0,
-             "THIN_SMOKE": 14.0, "BLACK_SMOKE_COLUMN": 34.0, "EMBERS": 9.0, "SIMULATED_CAMPFIRE": 9.0}
+             "THIN_SMOKE": 14.0, "BLACK_SMOKE_COLUMN": 34.0, "EMBERS": 9.0, "SIMULATED_CAMPFIRE": 9.0,
+             "SIMULATED_MESH_FIRE": 14.0}
 MIN_CHANGED = {"SOLID": 150, "RENDERED": 150, "MATERIAL": 150}
 SETTLE = 8.0 if SHADING in ("RENDERED", "MATERIAL") else 1.5
 OUT = tempfile.mkdtemp(prefix="fas_viewport_")
 
-WARM = {"SIMULATED_CAMPFIRE"}
-KNOWN_HIDDEN = {("SIMULATED_CAMPFIRE", "MATERIAL")}
+WARM = {"SIMULATED_CAMPFIRE", "SIMULATED_MESH_FIRE"}
+KNOWN_HIDDEN = {("SIMULATED_CAMPFIRE", "MATERIAL"), ("SIMULATED_MESH_FIRE", "MATERIAL")}
+# These burn the factory cube, so it shows and is selected for them.
+ON_THE_CUBE = {"BURNING_OBJECT", "SIMULATED_MESH_FIRE"}
 
-QUEUE = list(presets.DISPLAY_ORDER)
+QUEUE = [p for p in presets.DISPLAY_ORDER if not ONLY or p in ONLY]
 STATE = {"phase": "setup", "failed": 0}
 
 
@@ -104,7 +115,7 @@ def run():
             return None
         scene.frame_set(1)
         _aim(QUEUE[0])
-        burning = QUEUE[0] == "BURNING_OBJECT"
+        burning = QUEUE[0] in ON_THE_CUBE
         bpy.data.objects["Cube"].hide_viewport = not burning
         if burning:
             window.view_layer.objects.active = bpy.data.objects["Cube"]

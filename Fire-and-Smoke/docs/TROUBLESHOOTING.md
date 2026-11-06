@@ -42,6 +42,10 @@ A render of a frame the simulation hasn't reached shows no fire. Go to the first
 
 The first play-through simulates every frame. Lower **Detail** for a faster, coarser fire; playing the same frames again reads them from disk, which is much faster.
 
+## Fire and Smoke from Mesh is cut off at one side
+
+The fire's box is fitted around the mesh when you add it, and follows the mesh's moves. It doesn't turn or grow with the mesh: after a big turn or scale, part of the mesh can stick out of the box, and its flames stop at the box's side. Delete the fire, select the mesh and add it again.
+
 ## My character's fire stays behind when it walks
 
 The fire's box follows the character's object, not its bones. If the walk is animated on the rig's bones, the character leaves the box and its flames stop at the box's side. Animate the object's own location to move it, or keep the character walking in place.
@@ -80,7 +84,7 @@ The default Solid view can't show them properly. Switch the viewport to **Materi
 
 Jump back to the first frame and play forward.
 
-## Burning Object is refused
+## Burning Object or Fire and Smoke from Mesh is refused
 
 - **Nothing selected:** select a mesh first.
 - **Part of an effect:** select one of your own meshes.

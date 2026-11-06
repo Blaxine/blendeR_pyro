@@ -15,6 +15,8 @@
 
 > Grilled in conversation on 2026-11-05, with no PRD. It builds on REQ-002's Simulated Fire and REQ-003's presets and sliders, and changes REQ-001's preset and eye-check counts again: 10 presets, 40 eye checks. See Dependencies.
 
+> Status on 2026-11-06: all seven slices are built, and every criterion below is verified on 4.5.4 and 5.2.2, with the owner's verdicts on the sizes and the character. Still open: 5.1, which isn't installed (Q14), and the release checklist's eye checks for this preset, which are the owner's.
+
 ## Short Description
 
 A tenth preset, **Fire and Smoke from Mesh**, for the add-on's beginners. Select any mesh, click, and it burns with a real Mantaflow fire and smoke that has every Simulated Fire control: the simulation presets, Detail, Flame Intensity, Flame Noise, Smoke Amount, the look sliders, the light and wind. Fire comes from the whole mesh, or, with **Burn From**, only from one of its vertex groups, with painted weights setting how strongly each part burns. The buyer's mesh is never changed: the add-on's own hidden emitter reads it live, so the fire follows it as it's moved, edited or animated in place. The buyer's mesh stays visible and burns.
@@ -58,20 +60,20 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-05, headless, with a G
 
 ## Acceptance Criteria
 
-- [ ] **AC1 — Create.** With a mesh selected, the button builds an owned domain fitted around it, an emitter that reads it live and a fire light, all tagged for one effect, with a Replay cache. Playing from the first frame burns the whole mesh. It's preset number 9, shown after Burning Object, with the Campfire preset by default.
-- [ ] **AC2 — The buyer's mesh is never changed.** Its object, mesh data, modifiers, constraints, vertex groups and visibility are identical before and after Create, every control, Burn From, Apply and Delete.
-- [ ] **AC3 — Delete.** Delete removes only the effect's tagged IDs and its cache folder. The buyer's mesh stays, in its place.
-- [ ] **AC4 — Behaves as a Simulated Fire.** Its cache folder, timeline following, wind, "(modified)" tracking, light modes, Material Preview note and own-flows-only scope work as they do on the Simulated Fire.
-- [ ] **AC5 — Controls and presets.** Every Simulated Fire control is in its box in both views. Simulation settings show on the next play from the first frame; look settings show straight away. Apply sets a preset's look and behaviour and keeps the box fitted to the mesh.
-- [ ] **AC6 — Burn From.** Whole Mesh is the default. Choosing a group makes fire come only from it. Adding, removing or reordering the mesh's other groups doesn't change which part burns.
-- [ ] **AC7 — Weights.** A part painted at weight 0.5 burns measurably less than a part at 1, and weight 0 doesn't burn.
-- [ ] **AC8 — Breakage and refusals.** A renamed or deleted chosen group stops the fire and the box names it. Restoring it, or choosing another, brings the fire back on the next play from the first frame. A deleted mesh is reported in the box, and Delete still cleans up. Create refuses a non-mesh, an effect's own part, a mesh with no faces and one over 2,000,000 faces, in plain words, and warns above 500,000.
-- [ ] **AC9 — Size.** With the Campfire preset, cubes of 0.5, 2 and 8 m each burn with flames rising one to two times the cube's height above it, measured headless and judged in Cycles on 5.2. The values and the owner's verdict are recorded in `docs/LOOK_TEST.md`.
-- [ ] **AC10 — Moves.** A mesh moved or animated in place carries its fire: after the move, the flame centre is within a tenth of the mesh's width of the mesh's centre.
-- [ ] **AC11 — Speed.** A 2 m cube's first play-through runs at 5 fps or more in a windowed EEVEE viewport on 4.5.4 and 5.2.2, recorded in `docs/LOOK_TEST.md`.
-- [ ] **AC12 — Character.** A rigged mesh animated in place burns from one vertex group only, and the flames follow that part as it deforms.
-- [ ] **AC13 — Copies.** In a full scene copy, the copy's fire reads the copy's mesh, has its own cache folder and simulates on its own. Deleting it in either scene leaves the other working. A linked copy detaches, as other effects do.
-- [ ] **AC14 — Gate and docs.** 10 presets with numbers 0 to 8 unchanged. The release checklist has 40 eye checks and ten 4.5 renders, and the gate refuses a version with any open. README, troubleshooting, store page and glossary describe the preset.
+- [x] **AC1 — Create.** With a mesh selected, the button builds an owned domain fitted around it, an emitter that reads it live and a fire light, all tagged for one effect, with a Replay cache. Playing from the first frame burns the whole mesh. It's preset number 9, shown after Burning Object, with the Campfire preset by default.
+- [x] **AC2 — The buyer's mesh is never changed.** Its object, mesh data, modifiers, constraints, vertex groups and visibility are identical before and after Create, every control, Burn From, Apply and Delete.
+- [x] **AC3 — Delete.** Delete removes only the effect's tagged IDs and its cache folder. The buyer's mesh stays, in its place.
+- [x] **AC4 — Behaves as a Simulated Fire.** Its cache folder, timeline following, wind, "(modified)" tracking, light modes, Material Preview note and own-flows-only scope work as they do on the Simulated Fire.
+- [x] **AC5 — Controls and presets.** Every Simulated Fire control is in its box in both views. Simulation settings show on the next play from the first frame; look settings show straight away. Apply sets a preset's look and behaviour and keeps the box fitted to the mesh.
+- [x] **AC6 — Burn From.** Whole Mesh is the default. Choosing a group makes fire come only from it. Adding, removing or reordering the mesh's other groups doesn't change which part burns.
+- [x] **AC7 — Weights.** A part painted at weight 0.5 burns measurably less than a part at 1, and weight 0 doesn't burn.
+- [x] **AC8 — Breakage and refusals.** A renamed or deleted chosen group stops the fire and the box names it. Restoring it, or choosing another, brings the fire back on the next play from the first frame. A deleted mesh is reported in the box, and Delete still cleans up. Create refuses a non-mesh, an effect's own part, a mesh with no faces and one over 2,000,000 faces, in plain words, and warns above 500,000.
+- [x] **AC9 — Size.** With the Campfire preset, cubes of 0.5, 2 and 8 m each burn with flames rising one to two times the cube's height above it, measured headless and judged in Cycles on 5.2. The values and the owner's verdict are recorded in `docs/LOOK_TEST.md`.
+- [x] **AC10 — Moves.** A mesh moved or animated in place carries its fire: after the move, the flame centre is within a tenth of the mesh's width of the mesh's centre.
+- [x] **AC11 — Speed.** A 2 m cube's first play-through runs at 5 fps or more in a windowed EEVEE viewport on 4.5.4 and 5.2.2, recorded in `docs/LOOK_TEST.md`.
+- [x] **AC12 — Character.** A rigged mesh animated in place burns from one vertex group only, and the flames follow that part as it deforms.
+- [x] **AC13 — Copies.** In a full scene copy, the copy's fire reads the copy's mesh, has its own cache folder and simulates on its own. Deleting it in either scene leaves the other working. A linked copy detaches, as other effects do.
+- [x] **AC14 — Gate and docs.** 10 presets with numbers 0 to 8 unchanged. The release checklist has 40 eye checks and ten 4.5 renders, and the gate refuses a version with any open. README, troubleshooting, store page and glossary describe the preset.
 
 ## Technical Notes
 
@@ -190,14 +192,14 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-05, headless, with a G
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S024 | T | Test copied scenes | Extend `tests/test_copied_scene.py`: a full copy's emitter reads the copy's mesh, its domain follows the copy's mesh, it has its own cache folder, and deleting either leaves the other burning; a linked copy detaches. | S009 | `tests/test_copied_scene.py` |
-|  | S025 | S | Give a copy its own mesh | Make the copy's emitter, Copy Location and entry source point at the copy's mesh, in `_split`, wherever S024 finds the copy still on the original. | S024 | `core/copies.py` |
-|  | S026 | T | Make the preset scripts play it | A `SHOTS` entry and a mesh for `SIMULATED_MESH_FIRE` in `tests/render_presets.py`; `tests/gui_viewport_visible.py` selects a mesh and steps from frame 1 before capturing it. | S004 | `tests/render_presets.py`, `tests/gui_viewport_visible.py` |
-|  | S027 | T | Run the windowed undo check | A create, undo and redo sequence with the new preset in `tests/gui_undo.py`, run in a window on 4.5 and 5.2. | S014 | `tests/gui_undo.py` |
+| ✅ | S024 | T | Test copied scenes | Extend `tests/test_copied_scene.py`: a full copy's emitter reads the copy's mesh, its domain follows the copy's mesh, it has its own cache folder, and deleting either leaves the other burning; a linked copy detaches. | S009 | `tests/test_copied_scene.py` |
+| ✅ | S025 | S | Give a copy its own mesh | Make the copy's emitter, Copy Location and entry source point at the copy's mesh, in `_split`, wherever S024 finds the copy still on the original. | S024 | `core/copies.py` |
+| ✅ | S026 | T | Make the preset scripts play it | A `SHOTS` entry and a mesh for `SIMULATED_MESH_FIRE` in `tests/render_presets.py`; `tests/gui_viewport_visible.py` selects a mesh and steps from frame 1 before capturing it. | S004 | `tests/render_presets.py`, `tests/gui_viewport_visible.py` |
+| ✅ | S027 | T | Run the windowed undo check | A create, undo and redo sequence with the new preset in `tests/gui_undo.py`, run in a window on 4.5 and 5.2. | S014 | `tests/gui_undo.py` |
 | ✅ | S028 | D | Extend the checklist | Eye checks for Fire and Smoke from Mesh in Cycles and EEVEE on 5.1 and 5.2, the EEVEE boxes judged on "renders visible fire", and a 4.5 render box. | S021 | `docs/RELEASE_CHECKLIST.md` |
 | ✅ | S029 | T | Fix the gate counts | Extend `tests/test_release_gate.py`: 40 eye checks, ten 4.5 renders, and four "renders visible fire" boxes. | S028 | `tests/test_release_gate.py` |
-|  | S030 | D | Write the buyer docs | README Good to know: select a mesh first, the mesh stays visible, Burn From and painting at weight 1, the fire follows moves in place. TROUBLESHOOTING: the fire stopped (the group was renamed or deleted), weak fire (low weights), a character walking out of its fire's box, a rotated mesh leaving its box. STORE_PAGE: the feature and its limits. | S021 | `README.md`, `docs/TROUBLESHOOTING.md`, `docs/STORE_PAGE.md` |
-|  | S031 | D | Add the glossary terms | Fire and Smoke from Mesh, Burn From, Source mesh and Live copy in `reqs/GLOSSARY.md`. | S001 | `reqs/GLOSSARY.md` |
+| ✅ | S030 | D | Write the buyer docs | README Good to know: select a mesh first, the mesh stays visible, Burn From and painting at weight 1, the fire follows moves in place. TROUBLESHOOTING: the fire stopped (the group was renamed or deleted), weak fire (low weights), a character walking out of its fire's box, a rotated mesh leaving its box. STORE_PAGE: the feature and its limits. | S021 | `README.md`, `docs/TROUBLESHOOTING.md`, `docs/STORE_PAGE.md` |
+| ✅ | S031 | D | Add the glossary terms | Fire and Smoke from Mesh, Burn From, Source mesh and Live copy in `reqs/GLOSSARY.md`. | S001 | `reqs/GLOSSARY.md` |
 | ✅ | S032 | X | Update REQ-001's numbers | Change REQ-001's AC16 and AC19 to 10 presets and 40 eye checks, with a revision row. | S028 | `reqs/in-progress/REQ-001-Fire-And-Smoke-Addon.md` |
 
 ### Dependency graph
@@ -311,3 +313,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-06 | Blaxine | S021: the owner judged the three sizes from the Cycles renders and said they look right. Q13 is settled. |
 | 2026-11-06 | Blaxine | Slice 6 built: a 2 m cylinder skinned to a two-bone armature, its arm swinging 60 degrees each way, burns from "Upper" only and the flames follow the arm: 39 to 91% of the flame by the arm where it is, 11 to 29% by where it was or will be, 1 to 3% by the lower part, on both Blenders. Nothing in the add-on needed changing. Rendered at frames 24 and 48; the owner's verdict is pending. Tests in `tests/test_sim_mesh_character.py`. |
 | 2026-11-06 | Blaxine | S023: the owner judged the character render and said it looks right. |
+| 2026-11-06 | Blaxine | Slice 7 built. Copied scenes already worked: Blender points a full copy's emitter, Copy Location and entry at the copy's mesh, so S025 needed no code. `tests/test_copied_scene.py` covers it, with a linked copy that detaches. The preset render script, the viewport visibility script and the windowed undo check play the new preset, and both windowed scripts now leave saved preferences alone. Troubleshooting, store page and glossary finished. Every criterion ticked for 4.5 and 5.2; 5.1 and the release eye checks stay open. |
