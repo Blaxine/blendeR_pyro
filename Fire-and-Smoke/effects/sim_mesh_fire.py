@@ -14,6 +14,9 @@ is a name on the emitter's own list, but Blender keeps it as a position and read
 position in the evaluated mesh's weights, which come from the buyer's mesh in the
 buyer's order.  So the emitter's list always mirrors the buyer's group names, in their
 order, and the flow's group is set again by name after every sync.
+
+While the chosen group or the mesh is gone, the flow's Fluid modifier is muted, so the
+fire stops rather than burning somewhere the buyer didn't choose.
 """
 
 import bpy
@@ -100,34 +103,69 @@ def burn_from_set(entry, value):
         entry.burn_from = names[value - 1]
 
 
+def missing_group(entry):
+    """The chosen group's name while the mesh no longer has it, or None."""
+    if entry.kind != C.KIND_SIM_MESH_FIRE or not entry.burn_from or entry.source is None:
+        return None
+    return None if entry.burn_from in group_names(entry.source) else entry.burn_from
+
+
+def can_burn(entry):
+    return entry.source is not None and missing_group(entry) is None
+
+
+def _set_burning(entry, burning):
+    """Mute or unmute the flow, in the viewport and renders.  True if it changed."""
+    modifier = sim_fire.find_modifier(entry.emitter, "FLOW")
+    if modifier is None or (modifier.show_viewport == burning and modifier.show_render == burning):
+        return False
+    modifier.show_viewport = burning
+    modifier.show_render = burning
+    return True
+
+
 def sync(entry):
-    """Mirror the mesh's group names on the emitter, in order, then point the flow at
-    the chosen group by name.  Writes only what differs; True if anything changed."""
+    """Mirror the mesh's group names on the emitter, in order, point the flow at the
+    chosen group by name, and stop the flow while the group or mesh is gone.  Writes
+    only what differs.  True if the fire it makes changed, so it must simulate again."""
     source, emitter = entry.source, entry.emitter
-    if source is None or emitter is None:
+    if emitter is None:
         return False
     changed = False
     names = group_names(source)
-    if group_names(emitter) != names:
+    if source is not None and group_names(emitter) != names:
         emitter.vertex_groups.clear()
         for group in names:
             emitter.vertex_groups.new(name=group)
-        changed = True
+        # 4.5 can keep the copy's weights in the old order after a group is removed from
+        # Python: re-evaluate both.  A tag only refreshes the mesh, never changes it.
+        source.update_tag(refresh={"DATA"})
+        emitter.update_tag(refresh={"DATA"})
+        # Positions moved: only fire from a group depends on them.
+        changed = bool(entry.burn_from)
     flow = sim_fire.flow_settings(entry)
     if flow is not None:
         wanted = entry.burn_from if entry.burn_from in names else ""
         if flow.density_vertex_group != wanted:
             flow.density_vertex_group = wanted
             changed = True
+    if _set_burning(entry, can_burn(entry)):
+        changed = True
     return changed
 
 
 def watch(scene):
-    """The mesh's group list changed: mirror it again.  Fire from a chosen group
-    simulates again, in case anything was played before the sync."""
+    """The mesh or its group list changed: mirror it again, and simulate again if the
+    fire changed, in case anything was played before the sync."""
     for entry in getattr(scene, "fas_effects", ()):
-        if entry.kind == C.KIND_SIM_MESH_FIRE and sync(entry) and entry.burn_from:
+        if entry.kind == C.KIND_SIM_MESH_FIRE and sync(entry):
             sim_fire.clear_cache(entry)
+
+
+def dense_warning(source):
+    if source is not None and source.type == "MESH" and len(source.data.polygons) > mesh_fire.WARN_FACES:
+        return "This mesh is dense, so the fire will be slower to simulate"
+    return None
 
 
 def create_sim_mesh_fire(context, source, preset=sim_presets.DEFAULT):

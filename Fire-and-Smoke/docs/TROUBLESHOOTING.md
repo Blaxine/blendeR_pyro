@@ -89,6 +89,14 @@ Jump back to the first frame and play forward.
 
 The mesh it was burning was deleted. Delete the fire, then set a new mesh on fire.
 
+## Fire and Smoke from Mesh stopped burning
+
+The vertex group picked in **Burn From** was renamed or deleted, so the fire stopped rather than burn somewhere you didn't choose. The fire's box names the group. Pick another group, or **Whole Mesh**, in **Burn From**, or give the group its old name back. Then go to the first frame and play.
+
+## Fire and Smoke from Mesh is slow on a detailed mesh
+
+Above 500,000 faces, the fire warns that it will be slower to simulate: it reads the whole mesh on every frame. Lower **Detail**, or burn a simpler copy of the mesh and hide that copy from the camera.
+
 ## Top-down shots look weak
 
 This is a known limit. Planes only spin around the vertical axis, so from high above they fade to a soft glow.

@@ -250,6 +250,23 @@ Rendered on 5.2.2 on 2026-11-05: a 1 m cube on a dark ground under a dark sky, C
 
 Headless, frames 1 to 30 on the same cube in `tests/test_sim_mesh_fire.py`: flame 3502 left and 4242 right of the cube's middle on 5.2, 7057 and 7077 on 4.5. The owner's verdict is pending.
 
+### Slice 3: Burn From, measured
+
+Headless in `tests/test_sim_mesh_groups.py`, a flat 2 × 1 m grid at 64 divisions, frames 1 to 20, the flame in the box's left and right halves (5.2 / 4.5):
+
+| Burn From | Left | Right |
+| --------- | ---- | ----- |
+| Whole Mesh | 313 / 315 | 315 / 314 |
+| Left (left half at weight 1) | 349 / 348 | 13 / 13 |
+| Half (left at 1, right at 0.5) | 336 / 335 | 134 / 135 |
+| Nothing (weight 0) | 0 / 0 | 0 / 0 |
+
+The right half's 13 with Left is flame drifting across the middle, not emission. Not judged by eye.
+
+### Slice 4: a dense mesh's cost
+
+Headless, a flat 2 m grid of 504,100 faces at 64 divisions, frames 2 to 11 of the first play: 214 ms a frame on 5.2.2 and 211 ms on 4.5.4. A 1 m cube costs 49 to 103 ms a frame at the same detail, so a mesh just over the warning takes about twice as long. That's what the Create warning says.
+
 ## Blender 4.5
 
 4.5.4 is installed now. The suite and every Simulated Campfire check above pass on it. The Campfire's own speed scripts haven't been rerun on it yet.

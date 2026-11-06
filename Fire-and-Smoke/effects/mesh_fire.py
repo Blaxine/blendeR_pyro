@@ -58,7 +58,7 @@ def source_problem(obj):
 
 
 def is_missing_source(entry):
-    return entry.kind == C.KIND_MESH_FIRE and entry.source is None
+    return entry.kind in (C.KIND_MESH_FIRE, C.KIND_SIM_MESH_FIRE) and entry.source is None
 
 
 def create_mesh_fire(context, source):

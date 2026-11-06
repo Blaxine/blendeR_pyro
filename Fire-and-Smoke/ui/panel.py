@@ -5,7 +5,7 @@ import bpy
 
 from .. import constants as C
 from ..core import covering, errors, registry
-from ..effects import light_mode, mesh_fire, presets, sim_fire, sim_presets, wind
+from ..effects import light_mode, mesh_fire, presets, sim_fire, sim_mesh_fire, sim_presets, wind
 from . import control_spec
 
 PREVIEW_NOTE = "Preview only: final renders always face the scene camera"
@@ -50,6 +50,10 @@ def entry_problem(entry):
         return sim_fire.NO_FLUID_HERE
     if mesh_fire.is_missing_source(entry):
         return "The mesh this fire was on is gone. Delete the fire, then set a new mesh on fire"
+    group = sim_mesh_fire.missing_group(entry)
+    if group:
+        return (f'The fire has stopped: the mesh has no vertex group called "{group}" any more. '
+                "Pick another in Burn From, or give the group its old name back")
     if entry.source is not None and len(entry.source.data.polygons) > mesh_fire.MAX_FACES:
         return "This mesh is now over the face limit, so scrubbing will be slow"
     return None

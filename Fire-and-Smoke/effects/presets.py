@@ -155,6 +155,9 @@ class FAS_OT_effect_create(bpy.types.Operator):
             self.report({"INFO"}, "Press play from the first frame to see the embers")
         if self.preset in SIMULATED:
             self.report({"INFO"}, "Press play from the first frame to see the fire, in Rendered or Solid view")
+        dense = sim_mesh_fire.dense_warning(entry.source) if self.preset == "SIMULATED_MESH_FIRE" else None
+        if dense:
+            self.report({"WARNING"}, dense)
         # New objects get their final positions on the next update.
         context.view_layer.update()
         hidden_by = covering.covering(scene, entry)
