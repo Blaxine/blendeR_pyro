@@ -180,8 +180,8 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-05, headless, with a G
 
 | Done | # | Phase | Title | Description | Depends on | Primary files |
 | ---- | - | ----- | ----- | ----------- | ---------- | ------------- |
-|  | S022 | T | Test a rigged mesh | Extend `tests/test_sim_mesh_fire.py`: build a two-bone armature and a skinned cylinder with "Lower" and "Upper" groups in the test, animate the upper bone swinging in place, burn from "Upper"; flame sits near the evaluated upper part at two frames with the arm in different places, and none near the lower part. | S013, S019 | `tests/test_sim_mesh_fire.py` |
-|  | S023 | T | Render the character | A Cycles render of the test character at two frames for the owner, recorded in `docs/LOOK_TEST.md` with the verdict pending. | S022 | `docs/LOOK_TEST.md` |
+| ✅ | S022 | T | Test a rigged mesh | In `tests/test_sim_mesh_character.py`: build a two-bone armature and a skinned cylinder with "Lower" and "Upper" groups in the test, animate the upper bone swinging in place, burn from "Upper"; flame sits near the evaluated upper part at two frames with the arm in different places, and none near the lower part. | S013, S019 | `tests/test_sim_mesh_character.py` |
+| ✅ | S023 | T | Render the character | A Cycles render of the test character at two frames for the owner, recorded in `docs/LOOK_TEST.md` with the verdict pending. | S022 | `docs/LOOK_TEST.md` |
 
 ### Slice 7 — Copies, gate and docs
 
@@ -309,3 +309,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-06 | Blaxine | S017 built: the mesh's largest size is measured once at Create, and Apply scales each preset to it. Time runs with the square root of the size, the burn slows with size (power 0.7, 2.5 times faster on 4.5, capped at Blender's 4.0), and the light's energy and radius follow the fire's area and size. The values are untuned until S018. `tests/gui_viewport_speed.py` can now build the new preset on a 2 m cube for S020. |
 | 2026-11-06 | Blaxine | Slice 5 built, S018 to S020: tuned by render to a 1.4 m reference. The material's density and glow thin with size too: a big fire's smoke hid its flames and cube. 0.5, 2 and 8 m cubes burn 1.15 to 1.75 cube-heights above their top on both Blenders; a moving cube carries its fire; a 2 m cube plays at 10.7 fps (5.2) and 8.2 fps (4.5) in a window. Tests in `tests/test_sim_mesh_size.py`. S021, the owner's verdict, is open. |
 | 2026-11-06 | Blaxine | S021: the owner judged the three sizes from the Cycles renders and said they look right. Q13 is settled. |
+| 2026-11-06 | Blaxine | Slice 6 built: a 2 m cylinder skinned to a two-bone armature, its arm swinging 60 degrees each way, burns from "Upper" only and the flames follow the arm: 39 to 91% of the flame by the arm where it is, 11 to 29% by where it was or will be, 1 to 3% by the lower part, on both Blenders. Nothing in the add-on needed changing. Rendered at frames 24 and 48; the owner's verdict is pending. Tests in `tests/test_sim_mesh_character.py`. |

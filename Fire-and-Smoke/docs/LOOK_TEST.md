@@ -297,6 +297,16 @@ A reference of 1.5 m put the 2 m cube at 1.05 on 5.2; 1.3 m put the 8 m cube at 
 
 **The owner's verdict, 2026-11-06: they look right.** Blaxine approved the three sizes from the Cycles renders on 5.2 and 4.5.
 
+### Slice 6: a burning character
+
+Rendered on 5.2.2 on 2026-11-06, Cycles, 32 samples, 320 × 400, frames 24 and 48: a 2 m cylinder skinned to a two-bone armature, the upper bone swinging 60 degrees to each side, burning from the "Upper" group with the Campfire preset.
+
+- **The flames follow the arm.** At frame 24 the arm is out to one side and burning; at frame 48 it's out to the other side and burning there.
+- **The lower body doesn't burn.** It stays dark below the joint.
+- **Smoke trails** from where the arm was. The flames are short and hug the arm.
+
+Headless (`tests/test_sim_mesh_character.py`), the share of the flame within 0.35 m of the arm where it is now, of where it was or will be, and of the lower part short of the joint: frame 24, 67%, 25% and 2% on 5.2 (91%, 29% and 2% on 4.5); frame 48, 46%, 12% and 1% (39%, 11% and 3%). The owner's verdict is pending.
+
 ### Slice 4: a dense mesh's cost
 
 Headless, a flat 2 m grid of 504,100 faces at 64 divisions, frames 2 to 11 of the first play: 214 ms a frame on 5.2.2 and 211 ms on 4.5.4. A 1 m cube costs 49 to 103 ms a frame at the same detail, so a mesh just over the warning takes about twice as long. That's what the Create warning says.

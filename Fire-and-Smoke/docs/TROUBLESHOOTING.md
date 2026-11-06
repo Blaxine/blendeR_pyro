@@ -42,6 +42,10 @@ A render of a frame the simulation hasn't reached shows no fire. Go to the first
 
 The first play-through simulates every frame. Lower **Detail** for a faster, coarser fire; playing the same frames again reads them from disk, which is much faster.
 
+## My character's fire stays behind when it walks
+
+The fire's box follows the character's object, not its bones. If the walk is animated on the rig's bones, the character leaves the box and its flames stop at the box's side. Animate the object's own location to move it, or keep the character walking in place.
+
 ## Fire and Smoke from Mesh looks too big or too small for my mesh
 
 The fire is sized to the mesh when you add it. If you scaled the mesh a lot afterwards, delete the fire, select the mesh and add it again.
