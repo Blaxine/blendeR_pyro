@@ -305,7 +305,9 @@ Rendered on 5.2.2 on 2026-11-06, Cycles, 32 samples, 320 × 400, frames 24 and 4
 - **The lower body doesn't burn.** It stays dark below the joint.
 - **Smoke trails** from where the arm was. The flames are short and hug the arm.
 
-Headless (`tests/test_sim_mesh_character.py`), the share of the flame within 0.35 m of the arm where it is now, of where it was or will be, and of the lower part short of the joint: frame 24, 67%, 25% and 2% on 5.2 (91%, 29% and 2% on 4.5); frame 48, 46%, 12% and 1% (39%, 11% and 3%). The owner's verdict is pending.
+Headless (`tests/test_sim_mesh_character.py`), the share of the flame within 0.35 m of the arm where it is now, of where it was or will be, and of the lower part short of the joint: frame 24, 67%, 25% and 2% on 5.2 (91%, 29% and 2% on 4.5); frame 48, 46%, 12% and 1% (39%, 11% and 3%).
+
+**The owner's verdict, 2026-11-06: looks right.** Blaxine approved the burning arm from the Cycles render.
 
 ### Slice 4: a dense mesh's cost
 
