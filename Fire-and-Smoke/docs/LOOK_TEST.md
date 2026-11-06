@@ -295,7 +295,7 @@ A reference of 1.5 m put the 2 m cube at 1.05 on 5.2; 1.3 m put the 8 m cube at 
 
 **Windowed speed** (`tests/gui_viewport_speed.py -- SIMULATED_MESH_FIRE`, a 2 m cube, EEVEE Rendered view, frames 1 to 96 at 64 divisions): the first play-through at 10.7 fps on 5.2.2 and 8.2 fps on 4.5.4, from the cache at 60 and 52 fps. The target is 5 fps.
 
-The owner's verdict on the three sizes is pending.
+**The owner's verdict, 2026-11-06: they look right.** Blaxine approved the three sizes from the Cycles renders on 5.2 and 4.5.
 
 ### Slice 4: a dense mesh's cost
 

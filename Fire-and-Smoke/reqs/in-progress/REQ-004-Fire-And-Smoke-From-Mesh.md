@@ -171,7 +171,7 @@ Measured on Blender 4.5.4 and 5.2.2 on this PC on 2026-11-05, headless, with a G
 | ✅ | S018 | T | Tune the size correction by render | Probe flame height at 0.5, 2 and 8 m on 5.2 headless, then render each in Cycles (dark ground and sky, a few frames side by side); tune until each is one to two cube-heights; check 4.5 by render; record values and findings in `docs/LOOK_TEST.md`. | S017 | `docs/LOOK_TEST.md`, add-on package |
 | ✅ | S019 | T | Test size and movement | In `tests/test_sim_mesh_size.py`: flame height at the three sizes is within the tuned range; a cube animated 1.5 m over 30 frames ends with its flame centre within a tenth of its width of the cube. | S018 | `tests/test_sim_mesh_size.py` |
 | ✅ | S020 | T | Measure windowed speed | Make `tests/gui_viewport_speed.py` build the new preset on a 2 m cube, time the first play-through in an EEVEE viewport on 4.5.4 and 5.2.2, and record it in `docs/LOOK_TEST.md`. | S018 | `tests/gui_viewport_speed.py`, `docs/LOOK_TEST.md` |
-|  | S021 | O | Judge the sizes | The owner's Cycles verdict on the three sizes, recorded in `docs/LOOK_TEST.md`. | S018 | `docs/LOOK_TEST.md` |
+| ✅ | S021 | O | Judge the sizes | The owner's Cycles verdict on the three sizes, recorded in `docs/LOOK_TEST.md`. | S018 | `docs/LOOK_TEST.md` |
 
 ### Slice 6 — A burning character
 
@@ -252,7 +252,7 @@ S021 → S030
 - [x] **Q10 — Resolved.** Always fire and smoke; no smoke-only mode. *(Blaxine)*
 - [x] **Q11 — Resolved.** Done includes a rigged character animated in place. *(Blaxine)*
 - [x] **Q12 — Resolved.** Seven slices, as below. *(Blaxine)*
-- [x] **Q13 — Resolved, pending the owner's verdict in S021.** The time scale (size over 1.4 m, to the power 0.5), the burning rate (to the power -0.7, and 2.5 times faster on 4.5), and the material's density and glow (divided by the ratio). Heat buoyancy and the box's headroom stay. *(Tuned by render, `docs/LOOK_TEST.md`)*
+- [x] **Q13 — Resolved, and approved by the owner in S021.** The time scale (size over 1.4 m, to the power 0.5), the burning rate (to the power -0.7, and 2.5 times faster on 4.5), and the material's density and glow (divided by the ratio). Heat buoyancy and the box's headroom stay. *(Tuned by render, `docs/LOOK_TEST.md`)*
 - [ ] **Q14 — Blender 5.1.** Nothing has been measured on 5.1 on this PC. Deferred until 5.1 is installed here: rerun the probes behind Constraints and S005.
 
 ## Smoke Test
@@ -308,3 +308,4 @@ Nothing here is built. Each entry names the alternative, then why it lost.
 | 2026-11-06 | Blaxine | Slice 4 built: a renamed or deleted chosen group, or a deleted mesh, mutes the flow in viewport and render and the box says why; it burns again when the group is back or another is chosen. Create warns above 500,000 faces; a 504,100-face grid costs 211 to 214 ms a frame headless. Found on 4.5: after a group is removed from Python, the copy kept its weights in the old order, so the sync now tags the mesh and the emitter to re-evaluate whenever the group list changes. |
 | 2026-11-06 | Blaxine | S017 built: the mesh's largest size is measured once at Create, and Apply scales each preset to it. Time runs with the square root of the size, the burn slows with size (power 0.7, 2.5 times faster on 4.5, capped at Blender's 4.0), and the light's energy and radius follow the fire's area and size. The values are untuned until S018. `tests/gui_viewport_speed.py` can now build the new preset on a 2 m cube for S020. |
 | 2026-11-06 | Blaxine | Slice 5 built, S018 to S020: tuned by render to a 1.4 m reference. The material's density and glow thin with size too: a big fire's smoke hid its flames and cube. 0.5, 2 and 8 m cubes burn 1.15 to 1.75 cube-heights above their top on both Blenders; a moving cube carries its fire; a 2 m cube plays at 10.7 fps (5.2) and 8.2 fps (4.5) in a window. Tests in `tests/test_sim_mesh_size.py`. S021, the owner's verdict, is open. |
+| 2026-11-06 | Blaxine | S021: the owner judged the three sizes from the Cycles renders and said they look right. Q13 is settled. |
