@@ -263,6 +263,40 @@ Headless in `tests/test_sim_mesh_groups.py`, a flat 2 × 1 m grid at 64 division
 
 The right half's 13 with Left is flame drifting across the middle, not emission. Not judged by eye.
 
+### Slice 5: the size correction
+
+Uncorrected, the Campfire preset on cubes of 0.5, 2 and 8 m burned 2.9 (the box's top), 0.9 to 1.3 and 0.5 to 0.7 cube-heights above the top, headless on 5.2. Heat buoyancy barely changed it. The burning rate set the flame's height once it was steady, and the time scale set how fast a big fire grew.
+
+**The rule** (`effects/sim_mesh_fire.py`), with the size the mesh's largest dimension at Create and a ratio of size over 1.4 m:
+
+- **Time scale:** the ratio to the power 0.5, as real flames slow with size.
+- **Burning rate:** the preset's, times the ratio to the power -0.7, at most 4 (Blender's limit). On 4.5 it's 2.5 times faster again: 4.5 burned 1.5 to 2.9 cube-heights with 5.2's values.
+- **Material density, blackbody and flame colour:** divided by the ratio. They're per metre, so through an 8 m fire the smoke was 16 times thicker than through a 0.5 m one: it hid the flames and the cube, and showed the box's sides.
+- **Light:** the preset's watts per square metre of its own fire, at most Normal Fire's 125, times the size squared; its soft radius by the size, at most half of it.
+
+Headless, visible flame (above 0.3) over frames 40 to 60, in cube-heights above the top (`tests/test_sim_mesh_size.py`):
+
+| Cube | 5.2.2 | 4.5.4 |
+| ---- | ----- | ----- |
+| 0.5 m | 1.48 | 1.22 |
+| 2 m | 1.15 | 1.28 |
+| 8 m | 1.75 | 1.57 |
+
+A reference of 1.5 m put the 2 m cube at 1.05 on 5.2; 1.3 m put the 8 m cube at 1.85. 1.4 m centres all three.
+
+**Render, Cycles on 5.2.2** (a dark ground and sky, 320 × 400, 32 samples, frames 40, 50 and 60, the camera scaled with the cube):
+
+- **All three read alike.** Flames rise about 1.2 to 1.7 cube-heights above the top, with the ground lit orange.
+- **0.5 m:** tongues of flame from the top and up the sides; the cube shows clearly. The thin dark smoke above, thickened for the small size, faintly shows the box's straight sides.
+- **2 m:** the flames wrap the cube, which shows through them.
+- **8 m:** a wide wall of flame, wider than the cube, with the cube faint inside it.
+
+**Render, Cycles on 4.5.4:** the same height, with bushier, wider flames. The dark smoke above shows the box's straight sides at all three sizes.
+
+**Windowed speed** (`tests/gui_viewport_speed.py -- SIMULATED_MESH_FIRE`, a 2 m cube, EEVEE Rendered view, frames 1 to 96 at 64 divisions): the first play-through at 10.7 fps on 5.2.2 and 8.2 fps on 4.5.4, from the cache at 60 and 52 fps. The target is 5 fps.
+
+The owner's verdict on the three sizes is pending.
+
 ### Slice 4: a dense mesh's cost
 
 Headless, a flat 2 m grid of 504,100 faces at 64 divisions, frames 2 to 11 of the first play: 214 ms a frame on 5.2.2 and 211 ms on 4.5.4. A 1 m cube costs 49 to 103 ms a frame at the same detail, so a mesh just over the warning takes about twice as long. That's what the Create warning says.

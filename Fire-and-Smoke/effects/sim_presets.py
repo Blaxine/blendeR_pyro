@@ -250,6 +250,9 @@ def apply(context, entry, preset_id):
     domain, flow = sim_fire.domain_settings(entry), sim_fire.flow_settings(entry)
     if domain is None or flow is None or entry.primary.type != "MESH":
         raise RuntimeError(NO_DOMAIN)
+    if entry.kind == C.KIND_SIM_MESH_FIRE:
+        from . import sim_mesh_fire
+        package = sim_mesh_fire.corrected(entry, package)
     with applying(entry):
         if entry.kind == C.KIND_SIM_FIRE:
             _reshape(entry, package["shape"])

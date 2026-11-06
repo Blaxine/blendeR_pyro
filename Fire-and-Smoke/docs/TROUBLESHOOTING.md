@@ -42,6 +42,10 @@ A render of a frame the simulation hasn't reached shows no fire. Go to the first
 
 The first play-through simulates every frame. Lower **Detail** for a faster, coarser fire; playing the same frames again reads them from disk, which is much faster.
 
+## Fire and Smoke from Mesh looks too big or too small for my mesh
+
+The fire is sized to the mesh when you add it. If you scaled the mesh a lot afterwards, delete the fire, select the mesh and add it again.
+
 ## My own smoke simulation shows flames I didn't add
 
 Your smoke domain has no **Flow** collection, so it takes every emitter in the scene, including the Simulated Fire's. In your domain's **Physics > Fluid > Collections**, set **Flow** to a collection holding only your own emitters.

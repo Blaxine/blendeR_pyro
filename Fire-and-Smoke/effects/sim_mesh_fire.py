@@ -17,7 +17,18 @@ order, and the flow's group is set again by name after every sync.
 
 While the chosen group or the mesh is gone, the flow's Fluid modifier is muted, so the
 fire stops rather than burning somewhere the buyer didn't choose.
+
+Size: the presets were tuned for a fire about 1.5 m across, and Mantaflow doesn't
+scale with its box: uncorrected, a 0.5 m cube's flames fill a box three cube-heights
+tall and an 8 m cube's barely clear its top.  The mesh's size, measured once at Create,
+corrects the preset as Apply writes it: time runs with the square root of the size, as
+real flames do, and the burn slows as the size grows, so flames rise one to two
+cube-heights at any size.  The material's density and glow thin as the size grows, so
+a big fire's smoke is as see-through as a small one's.  The light grows with the
+fire's area.
 """
+
+import copy
 
 import bpy
 from mathutils import Vector
@@ -34,6 +45,18 @@ HEADROOM = 3.0
 FLOOR_ROOM = 0.05
 LIGHT_ABOVE = 0.6
 SMALLEST = 0.01
+
+# The size correction, tuned by render in docs/LOOK_TEST.md, pending the owner's verdict.
+REFERENCE_SIZE = 1.4     # metres: the size the presets suit as they are
+TIME_POWER = 0.5
+BURN_POWER = 0.7
+MAX_BURN = 4.0           # Blender's limit
+# 4.5 simulates denser, taller flames than 5.2 from the same values: it burns faster.
+OLDER_BURN = 2.5
+# A light's watts for each square metre of fire, at most: Normal Fire's.
+MAX_WATTS_PER_SQUARE_METRE = 125.0
+# The light's soft radius, as a share of the mesh's size, at most: Normal Fire's.
+MAX_RADIUS_SHARE = 0.5
 
 WHOLE_MESH = "FAS_WHOLE_MESH"
 WHOLE_MESH_LABEL = "Whole Mesh"
@@ -67,6 +90,42 @@ def _copy_tree(name, kind, effect_uuid):
     tree.links.new(group_in.outputs[SOURCE_INPUT], info.inputs["Object"])
     tree.links.new(info.outputs["Geometry"], group_out.inputs["Geometry"])
     return tree
+
+
+def mesh_size(obj):
+    low, high = world_bounds(obj)
+    return max(max(high - low), SMALLEST)
+
+
+def _preset_width(package):
+    return max(2.0 * package["shape"]["emitter_radius"], SMALLEST)
+
+
+def corrected(entry, package):
+    """The package as it suits this fire's mesh: its burn, time and light scaled from
+    the size measured at Create.  The catalogue itself is never changed."""
+    if entry.mesh_size <= 0.0:
+        # Measured once, at Create, or at the first Apply of a fire saved before.
+        entry.mesh_size = mesh_size(entry.source) if entry.source is not None else REFERENCE_SIZE
+    size = entry.mesh_size
+    ratio = size / REFERENCE_SIZE
+    package = copy.deepcopy(package)
+    domain = package["domain"]
+    burn = domain["burning_rate"] * ratio ** -BURN_POWER
+    if bpy.app.version < (5, 0, 0):
+        burn *= OLDER_BURN
+    domain["burning_rate"] = min(burn, MAX_BURN)
+    domain["time_scale"] = ratio ** TIME_POWER
+    # The material's density and glow are per metre: through a bigger fire they add up.
+    # Thinned to the size, a big fire's smoke doesn't swallow its flames and mesh.
+    material = package["material"]
+    for field in ("density", "blackbody", "flame_colour"):
+        material[field] = material[field] / ratio
+    light = package["light"]
+    width = _preset_width(package)
+    light["energy"] = min(light["energy"] / width ** 2, MAX_WATTS_PER_SQUARE_METRE) * size ** 2
+    light["radius"] = min(light["radius"] / width, MAX_RADIUS_SHARE) * size
+    return package
 
 
 def group_names(obj):

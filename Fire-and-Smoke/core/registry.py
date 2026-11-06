@@ -337,6 +337,8 @@ class FAS_EffectEntry(bpy.types.PropertyGroup):
     # whole mesh.  The menu is a view of it, so a group added or removed before the
     # chosen one never changes which part burns.
     burn_from: StringProperty(name="Burn From Group", default="", update=_burn_from_update)
+    # The mesh's largest size, in metres, measured at Create: presets are scaled to it.
+    mesh_size: FloatProperty(default=0.0)
     burn_from_choice: EnumProperty(name="Burn From", items=_burn_from_items, get=_burn_from_get,
                                    set=_burn_from_set,
                                    description="Where the fire comes from: the whole mesh, or one of its "

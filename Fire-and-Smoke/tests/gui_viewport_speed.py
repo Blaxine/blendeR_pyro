@@ -6,15 +6,22 @@ the suite; it opens Blender, measures for a few seconds and quits.
     blender --factory-startup --python tests/gui_viewport_speed.py -- SIMULATED_CAMPFIRE
     blender --factory-startup --python tests/gui_viewport_speed.py -- SIMULATED_CAMPFIRE 96
     blender --factory-startup --python tests/gui_viewport_speed.py -- SIMULATED_CAMPFIRE CANDLE_FIRE
+    blender --factory-startup --python tests/gui_viewport_speed.py -- SIMULATED_MESH_FIRE
 
 The Campfire is timed playing frames it can show at once.  The Simulated Fire is timed
 on its first play-through from frame 1, which simulates every frame, then on a second
 pass that reads the cache.  It takes a Detail and a simulation preset, in any order.
+Fire and Smoke from Mesh is timed the same way, burning a 2 m cube.
 """
 
 import os
 import sys
 import time
+
+import bpy
+
+# Never touch the owner's saved preferences.
+bpy.context.preferences.use_preferences_save = False
 
 _AFTER = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PRESET = _AFTER[0] if _AFTER else "CAMPFIRE"
@@ -63,7 +70,9 @@ def measure_campfire(scene, area):
 def measure_simulated(scene, area):
     scene.frame_start, scene.frame_end = 1, 250
     scene.frame_set(1)
-    bpy.ops.fas.effect_create(preset="SIMULATED_CAMPFIRE", sim_preset=SIM_PRESET)
+    if PRESET == "SIMULATED_MESH_FIRE":
+        bpy.ops.mesh.primitive_cube_add(size=2.0, location=(0.0, 0.0, 1.0))
+    bpy.ops.fas.effect_create(preset=PRESET, sim_preset=SIM_PRESET)
     entry = scene.fas_effects[-1]
     if DETAIL:
         entry.detail = DETAIL
@@ -72,7 +81,7 @@ def measure_simulated(scene, area):
     first = _play(scene, SIM_FRAMES)
     scene.frame_set(1)
     cached = _play(scene, SIM_FRAMES)
-    print(f"LOOK simulated {SIM_PRESET} {bpy.app.version_string}: first play-through {first:.1f} fps, "
+    print(f"LOOK simulated {PRESET} {SIM_PRESET} {bpy.app.version_string}: first play-through {first:.1f} fps, "
           f"from the cache {cached:.1f} fps, frames 1 to {SIM_FRAMES} at {entry.detail} divisions "
           f"({area.width}x{area.height})", flush=True)
 
@@ -87,7 +96,7 @@ def measure():
     with bpy.context.temp_override(window=window, area=area, region=region):
         # Shaders compile on the first pass: discard it.
         bpy.ops.wm.redraw_timer(type="ANIM_STEP", iterations=1)
-        if PRESET == "SIMULATED_CAMPFIRE":
+        if PRESET in ("SIMULATED_CAMPFIRE", "SIMULATED_MESH_FIRE"):
             measure_simulated(scene, area)
         else:
             measure_campfire(scene, area)
